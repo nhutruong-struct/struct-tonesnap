@@ -8,13 +8,14 @@ review, merge and release.
 | Setting | Value | Why |
 |---|---|---|
 | Default branch | `develop` | Pull requests target it without anyone having to change the base |
-| `develop` ruleset | Pull request required (1 approval, stale approvals dismissed, conversations resolved), `check` CI job green, squash merge only, no force push, no deletion | One commit per change, every change reviewed and tested |
+| `develop` ruleset | Pull request required (1 code-owner approval, stale approvals dismissed, approval of the last push, conversations resolved); `check` and `dependency-review` green; no new high or critical CodeQL alert; squash merge only; no force push, no deletion | One commit per change, every change reviewed, tested and scanned |
 | `master` ruleset | Same, but merge commits only | Releases keep `develop`'s history, so the next release merges cleanly |
+| Tag ruleset | Only admins create, move or delete `v*` tags | A release cannot be tagged by anyone else |
 | Ruleset bypass | Repository admins, **through pull requests only** | A sole maintainer cannot approve their own PR; the bypass lets them merge it, but never lets anyone push directly |
 | Merge buttons | Squash and merge commit; rebase off; auto-merge on; "Update branch" suggested | Squash for `develop`, merge commit for releases |
 | Head branches | Deleted automatically after the merge | No stale branches; protected branches are never deleted |
-| Actions | `GITHUB_TOKEN` read-only by default; workflows from first-time contributors need approval | A fork's PR cannot run code with write access, nor run before someone looks at it |
-| Security | Private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection | See [SECURITY.md](../SECURITY.md) |
+| Actions | `GITHUB_TOKEN` read-only by default; every action pinned to a commit SHA; workflows from all outside contributors need approval | A fork's PR cannot run code with write access, nor run before someone looks at it; a hijacked action tag cannot change what runs |
+| Security | Private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, CodeQL, dependency review, OpenSSF Scorecard | See [SECURITY.md](../SECURITY.md) |
 | Community | Issues (forms only), Discussions, no wiki | Questions and ideas go to Discussions; issues stay actionable |
 
 Change these in **Settings → Rules → Rulesets** and **Settings → General**; update this table in the same PR.
@@ -43,10 +44,20 @@ App compatibility reports also go into the compatibility table of [PLAN.md](PLAN
 2. Check the change against the project rules in [CLAUDE.md](../CLAUDE.md), privacy first: no user text in
    logs, no new network host, no secrets, Rust ⇄ TypeScript contracts on both sides, strings in both languages.
 3. Check that it has tests, and that the docs (`docs/specs/`, `docs/PLAN.md`) follow the behavior.
-4. Significant changes to `platform/win`, `capture.rs`, `redact.rs`, `llm/` or the capabilities: also run the
+4. **Security review**: approve only code you understand. Look hard at anything that runs at build, install
+   or CI time and could ship to every user:
+   - `.github/workflows/` (new actions must be pinned to a SHA; no `pull_request_target`; no untrusted
+     `${{ github.event.* }}` inside `run:`), `scripts/`, `.claude/`, `dev.ps1`, `build.rs`;
+   - `package.json` scripts and lifecycle hooks, new dependencies, lockfile entries that point to a registry
+     or Git URL other than npm / crates.io, `tauri.conf.json` and `capabilities/` (new permissions, CSP);
+   - obfuscated or minified code, encoded strings, binary files, downloads at runtime, new network hosts,
+     process spawning, registry or file writes outside the app's folders.
+   When in doubt, ask for the change to be split or explained. CodeQL and dependency review help, but they do
+   not replace reading the diff.
+5. Significant changes to `platform/win`, `capture.rs`, `redact.rs`, `llm/` or the capabilities: also run the
    `tonesnap-reviewer` agent or review against the same list by hand.
-5. Prompt changes: try `scripts/bench-cases.json` on a real provider (`/smoke-test`) and compare.
-6. Request changes with concrete suggestions; approve when it is ready.
+6. Prompt changes: try `scripts/bench-cases.json` on a real provider (`/smoke-test`) and compare.
+7. Request changes with concrete suggestions; approve when it is ready.
 
 ## Merging
 
@@ -83,8 +94,8 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    gh release create vX.Y.Z --generate-notes --verify-tag
    ```
 
-4. Build the installer (`pnpm tauri build`) and attach it to the release, then announce it in
-   Discussions → Announcements.
+4. Installers are built by the release workflow from the tag, with a build provenance attestation ([issue 24](https://github.com/nhutruong-struct/struct-tonesnap/issues/24));
+   never attach an installer built on a personal machine. Announce the release in Discussions → Announcements.
 
 ## Security reports
 

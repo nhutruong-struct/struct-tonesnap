@@ -10,6 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-0078d4.svg)](#status)
 [![Discussions](https://img.shields.io/github/discussions/nhutruong-struct/struct-tonesnap)](https://github.com/nhutruong-struct/struct-tonesnap/discussions)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nhutruong-struct/struct-tonesnap/badge)](https://scorecard.dev/viewer/?uri=github.com/nhutruong-struct/struct-tonesnap)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 </div>
