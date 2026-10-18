@@ -140,6 +140,8 @@ Test automatically whatever can be, at the lowest layer that shows the behavior:
 - Win32 code: against windows the test owns (`platform/win/test_window.rs`), in `mod integration_tests`, run by
   `check.mjs --full`.
 - UI behavior: a vitest test next to the component, with the backend faked by `src/test/backend.ts`.
+- Redaction (`redact.rs`): also fuzzed by `src-tauri/fuzz/` in CI; a change to how placeholders are made or
+  restored updates the fuzz target too.
 
 Only behavior that depends on other apps, the global hotkey or the mouse hook is tested by hand; describe the
 manual steps you followed in the pull request.

@@ -1,0 +1,26 @@
+[package]
+name = "tonesnap-fuzz"
+version = "0.0.0"
+description = "cargo-fuzz targets for ToneSnap (run with `cargo +nightly fuzz run <target>` from src-tauri)"
+license = "MIT"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+# The fuzz targets compile the app's modules by path (see fuzz_targets/), so they need the app's dependencies.
+regex = "1"
+
+# Its own workspace: the fuzz targets need a nightly compiler and stay out of the app's build.
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "redact"
+path = "fuzz_targets/redact.rs"
+test = false
+doc = false
+bench = false
