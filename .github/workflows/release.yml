@@ -54,15 +54,10 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # No build cache: a release is always built from scratch, so nothing from another run can end up in it.
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
-
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          workspaces: src-tauri -> target
-          # A release is built from a clean cache so nothing from a PR build can end up in it.
-          save-if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
