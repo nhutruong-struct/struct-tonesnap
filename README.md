@@ -6,6 +6,8 @@
 
 **Select text in any app, press a hotkey, and get it back in the tone you need.**
 
+[Website](https://nhutruong-struct.github.io/struct-tonesnap/) · [Discussions](https://github.com/nhutruong-struct/struct-tonesnap/discussions) · [Roadmap](docs/PLAN.md) · [Contributing](CONTRIBUTING.md)
+
 [![CI](https://github.com/nhutruong-struct/struct-tonesnap/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/nhutruong-struct/struct-tonesnap/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2010%2F11-0078d4.svg)](#status)
