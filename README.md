@@ -14,6 +14,7 @@
 [![Discussions](https://img.shields.io/github/discussions/nhutruong-struct/struct-tonesnap)](https://github.com/nhutruong-struct/struct-tonesnap/discussions)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nhutruong-struct/struct-tonesnap/badge)](https://scorecard.dev/viewer/?uri=github.com/nhutruong-struct/struct-tonesnap)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-db61a2.svg)](https://github.com/sponsors/nhutruong-struct)
 
 </div>
 
@@ -137,6 +138,12 @@ pull request must pass, and the project rules (privacy above all).
 - Security problems: see [SECURITY.md](SECURITY.md); please do not open a public issue.
 
 Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Support the project
+
+ToneSnap is free and MIT licensed, and it will stay that way. If it saves you time and you would like to help,
+you can [sponsor the project on GitHub](https://github.com/sponsors/nhutruong-struct). Support is entirely
+voluntary; it helps pay for development time and for testing on real apps and machines.
 
 ## License
 
