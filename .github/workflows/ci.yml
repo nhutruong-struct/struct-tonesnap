@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+  workflow_dispatch:
+
+# Pull requests from forks run with a read-only token and no secrets.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    # The name is the required status check in the branch rulesets; rename both together.
+    name: check
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      # tauri-build embeds dist/, so the frontend is built before clippy and the Rust tests.
+      - name: Build the frontend
+        run: node node_modules/vite/bin/vite.js build
+
+      # Invariants, rustfmt, Prettier, tsc, ESLint, clippy, Rust unit tests, vitest. The Win32 integration
+      # tests (check.mjs --full) need an interactive desktop and run locally before a PR.
+      - name: Run the quality gates
+        run: node scripts/harness/check.mjs

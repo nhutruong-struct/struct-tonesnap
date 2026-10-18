@@ -1,0 +1,352 @@
+/* The popup window: header, meta row, one card per tone, footer. */
+
+html[data-window="popup"],
+html[data-window="popup"] body,
+html[data-window="popup"] #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--control-border);
+  background: var(--bg);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.popup header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  user-select: none;
+}
+
+.popup header svg {
+  pointer-events: none;
+}
+
+.app-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* Where the text came from, shown as small chips under the header. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4) 0;
+  user-select: none;
+}
+
+/* ------------------------------------------------------------------ body */
+
+.popup main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  overflow-y: auto;
+}
+
+.hint {
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--fs-small);
+}
+
+/* -------------------------------------------------------------- variants */
+
+.variants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.variant {
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+
+.variant:hover,
+.variant:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Not finished yet: the buttons are off and the text is still arriving. */
+.variant.pending {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+
+.variant.pending:hover {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.variant-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* The number is also the key that applies this version. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+}
+
+.tone {
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.variant-text {
+  margin-top: var(--s-2);
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.note {
+  margin-top: var(--s-1);
+  color: var(--text-2);
+  font-size: var(--fs-small);
+}
+
+.skeleton {
+  height: 14px;
+  width: 88%;
+  margin-top: var(--s-3);
+  border-radius: var(--s-1);
+  background: linear-gradient(90deg, var(--surface-3), var(--surface-2), var(--surface-3));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skeleton::after {
+  content: "";
+  display: block;
+  width: 56%;
+  height: 14px;
+  margin-top: var(--s-2);
+  border-radius: inherit;
+  background: inherit;
+  background-size: inherit;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ---------------------------------------------------------------- issues */
+
+.issues,
+.preview {
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.issues h3,
+.preview h3 {
+  margin-bottom: var(--s-2);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.issues ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.issues .from,
+.issues .to {
+  padding: 1px var(--s-1);
+  border-radius: var(--s-1);
+}
+
+.issues .from {
+  background: var(--bad-bg);
+  color: var(--bad);
+  text-decoration: line-through;
+}
+
+.issues .arrow {
+  margin: 0 var(--s-2);
+  color: var(--text-3);
+}
+
+.issues .to {
+  background: var(--safe-bg);
+  color: var(--safe);
+  font-weight: 600;
+}
+
+.issues p {
+  margin-top: var(--s-1);
+  color: var(--text-2);
+  font-size: var(--fs-small);
+}
+
+/* --------------------------------------------------------------- preview */
+
+.preview dl {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--s-2) var(--s-3);
+  margin: 0 0 var(--s-4);
+  font-size: var(--fs-small);
+}
+
+.preview dt {
+  color: var(--text-2);
+}
+
+.preview dd {
+  max-height: 90px;
+  margin: 0;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.preview .actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+/* ----------------------------------------------------------------- error */
+
+.error {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--bad-line);
+  border-radius: var(--r-lg);
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.error > svg {
+  margin-top: 2px;
+}
+
+.error p {
+  margin: var(--s-1) 0 var(--s-3);
+  color: var(--text);
+}
+
+.error .actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.popup footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+  user-select: none;
+}
+
+.keys {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.timing {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------- notice and empty */
+
+.popup.notice-view {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface);
+}
+
+.notice-view > svg {
+  color: var(--accent);
+}
+
+.notice-text {
+  flex: 1;
+}
+
+.popup.empty {
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  color: var(--text-2);
+}

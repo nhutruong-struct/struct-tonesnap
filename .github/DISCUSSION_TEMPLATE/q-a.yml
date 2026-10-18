@@ -1,0 +1,18 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about installing, configuring or using ToneSnap. You can write in English or Vietnamese.
+        **Never paste an API key**, and remove private text from screenshots.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What are you trying to do, what did you try, and what happened?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: ToneSnap version, Windows version, AI provider
+      placeholder: 0.1.0, Windows 11 24H2, Gemini

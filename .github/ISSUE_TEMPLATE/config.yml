@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help
+    url: https://github.com/nhutruong-struct/struct-tonesnap/discussions/categories/q-a
+    about: Ask in Discussions → Q&A.
+  - name: Idea to discuss
+    url: https://github.com/nhutruong-struct/struct-tonesnap/discussions/categories/ideas
+    about: Shape an idea with the community before it becomes a feature request.
+  - name: Security vulnerability
+    url: https://github.com/nhutruong-struct/struct-tonesnap/security/advisories/new
+    about: Report it privately. Never in a public issue.

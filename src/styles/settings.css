@@ -1,0 +1,363 @@
+/*
+ * The Settings window: a sidebar of sections and one section at a time. Each section is a title and
+ * cards; a card is a list of rows, each row a label with its hint on the left and its control on the right.
+ */
+
+html[data-window="settings"],
+html[data-window="settings"] body,
+html[data-window="settings"] #root {
+  height: 100%;
+}
+
+.settings {
+  --control-w: 260px;
+
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  height: 100%;
+}
+
+.settings.loading {
+  place-items: center;
+  color: var(--text-2);
+}
+
+/* --------------------------------------------------------------- sidebar */
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-4) var(--s-3);
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--s-2) var(--s-4);
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 600;
+}
+
+.nav-item {
+  position: relative;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+}
+
+.nav-item:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.nav-item[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* The bar beside the open section, as in Windows 11. */
+.nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A problem inside a section that is not open. */
+.nav-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-radius: 50%;
+}
+
+.nav-dot.warn {
+  background: var(--warn);
+}
+
+.nav-dot.bad {
+  background: var(--bad);
+}
+
+.nav-tip {
+  margin-top: auto;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+}
+
+.nav-tip kbd {
+  vertical-align: 1px;
+}
+
+/* ------------------------------------------------------------------ main */
+
+.settings-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.settings-scroll {
+  flex: 1;
+  padding: var(--s-6);
+  overflow-y: auto;
+}
+
+.banners {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-6) 0;
+}
+
+.banner {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+}
+
+.banner > svg {
+  margin-top: 2px;
+}
+
+.banner.bad {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.banner.warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.save-bar .status {
+  flex: 1;
+  text-align: right;
+}
+
+.status.ok {
+  color: var(--safe);
+}
+
+.status.bad {
+  color: var(--bad);
+}
+
+/* --------------------------------------------------------------- section */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.section-head h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-headline);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.section-head p {
+  margin-top: var(--s-1);
+  color: var(--text-2);
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.card > * + * {
+  border-top: 1px solid var(--border);
+}
+
+/* ------------------------------------------------------------------ rows */
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--s-6);
+  min-height: 56px;
+  padding: var(--s-3) var(--s-4);
+}
+
+.item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item-label {
+  font-weight: 500;
+}
+
+/* A line of explanation or a message inside a card, not tied to one control. */
+.item-note {
+  padding: var(--s-3) var(--s-4);
+  color: var(--text-2);
+  font-size: var(--fs-small);
+}
+
+/* A label above a full-width control, for text areas and long values. */
+.item.stack {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--s-2);
+  align-items: start;
+}
+
+.field > :is(input, select) {
+  width: var(--control-w);
+}
+
+.field > input[type="number"] {
+  width: 120px;
+}
+
+.field > input.hotkey {
+  width: 160px;
+}
+
+.field > .row {
+  width: 320px;
+}
+
+.item.stack > :is(input, select, textarea, .row) {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* Inputs give up space so the buttons next to them keep their label on one line. */
+.row > :is(input, select) {
+  flex: 1;
+  min-width: 0;
+}
+
+.hotkey {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Rows that are one big click target. */
+.toggle,
+.check,
+.radio {
+  cursor: pointer;
+}
+
+.toggle:hover,
+.check:hover,
+.radio:hover:not(.disabled) {
+  background: var(--surface-2);
+}
+
+.check,
+.radio {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--s-3);
+}
+
+.check > input,
+.radio > input {
+  margin-top: 2px;
+}
+
+.radio:has(input:checked) {
+  background: var(--accent-soft);
+}
+
+.radio.disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.soon {
+  margin-left: var(--s-2);
+  padding: 1px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ----------------------------------------------------------- narrow window */
+
+/* Below this the sidebar shrinks to icons; the section title still names the page. */
+@media (max-width: 680px) {
+  .settings {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .brand,
+  .nav-item {
+    justify-content: center;
+  }
+
+  .brand {
+    padding-inline: 0;
+  }
+
+  .brand-name,
+  .nav-label,
+  .nav-tip {
+    display: none;
+  }
+
+  .nav-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    margin: 0;
+  }
+}

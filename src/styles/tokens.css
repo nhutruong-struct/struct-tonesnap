@@ -1,0 +1,128 @@
+/*
+ * Design tokens. Every colour, space, radius and duration in the other stylesheets comes from here.
+ * The accent follows the app icon (blue to violet); status colours are used only for meaning.
+ * Dark mode follows Windows (prefers-color-scheme).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Spacing: a 4px grid. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+
+  /* Corner radius: controls, cards, pills. */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+
+  /* Type. */
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", var(--font);
+  --fs-caption: 12px;
+  --fs-small: 12.5px;
+  --fs-body: 14px;
+  --fs-title: 16px;
+  --fs-headline: 20px;
+
+  /* Control heights. */
+  --h-control: 32px;
+  --h-control-sm: 26px;
+
+  /* Motion. */
+  --dur: 120ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Surfaces: canvas, cards, and three steps of fill for hover and pressed states. */
+  --bg: #f4f5f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f7;
+  --surface-3: #e6e9f1;
+
+  /* Lines. `--border` separates areas; `--control-border` outlines buttons and fields;
+     `--border-strong` outlines checkboxes, radios and switches, which have no other edge (3:1). */
+  --border: #e4e7ef;
+  --control-border: #c8cddb;
+  --border-strong: #8b93a8;
+
+  --text: #171a22;
+  --text-2: #56607a;
+  --text-3: #66708a;
+
+  --accent: #4f5fe8;
+  --accent-hover: #4453d6;
+  --accent-active: #3a48c0;
+  --on-accent: #ffffff;
+  --accent-soft: #eceefe;
+  --accent-text: #4352d4;
+  --accent-ring: rgba(79, 95, 232, 0.35);
+  --brand-gradient: linear-gradient(135deg, #3b7bff, #7a5cfa);
+
+  --safe: #146c43;
+  --safe-bg: #e3f5ec;
+  --warn: #8a5300;
+  --warn-bg: #fdf0d8;
+  --bad: #b42318;
+  --bad-bg: #fdecea;
+  --bad-line: rgba(180, 35, 24, 0.25);
+
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.06);
+  --shadow-md: 0 4px 14px rgba(20, 24, 40, 0.1);
+  --shadow-control: 0 1px 1px rgba(20, 24, 40, 0.04);
+
+  --scroll: rgba(86, 96, 122, 0.4);
+  --scroll-hover: rgba(86, 96, 122, 0.65);
+
+  /* The select arrow, as a data URI because it cannot take a theme colour. */
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%2356607a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg: #14161c;
+    --surface: #1c1f27;
+    --surface-2: #242833;
+    --surface-3: #2d3240;
+
+    --border: #2a2e3a;
+    --control-border: #3a4050;
+    --border-strong: #6b7390;
+
+    --text: #e8eaf2;
+    --text-2: #a3abbe;
+    --text-3: #8a93a8;
+
+    --accent: #8b9aff;
+    --accent-hover: #a0acff;
+    --accent-active: #7686f5;
+    --on-accent: #0e1226;
+    --accent-soft: #262c4d;
+    --accent-text: #a9b4ff;
+    --accent-ring: rgba(139, 154, 255, 0.4);
+
+    --safe: #6fd3a0;
+    --safe-bg: #183a2b;
+    --warn: #f1b85b;
+    --warn-bg: #3a2d14;
+    --bad: #ff9a90;
+    --bad-bg: #3d1f1d;
+    --bad-line: rgba(255, 154, 144, 0.3);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --shadow-control: none;
+
+    --scroll: rgba(163, 171, 190, 0.35);
+    --scroll-hover: rgba(163, 171, 190, 0.6);
+
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23a3abbe' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}

@@ -1,0 +1,87 @@
+name: Bug report
+description: Something in ToneSnap does not work as it should.
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. You can write in English or Vietnamese.
+
+        **Privacy:** never paste an API key, and remove private text from screenshots and logs.
+        Security problems go through [SECURITY.md](https://github.com/nhutruong-struct/struct-tonesnap/blob/develop/SECURITY.md), not here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Notepad and type "pls check my PR"
+        2. Select it and press Ctrl+Alt+E
+        3. Click Apply on the "polite" version
+        4. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: App where it happened
+      description: The app you selected text in, with its version if you know it.
+      placeholder: Slack desktop 4.41, Outlook (new), Chrome 141 on gmail.com…
+  - type: dropdown
+    id: trigger
+    attributes:
+      label: Trigger
+      options:
+        - Hotkey
+        - Floating icon
+        - Not related to a trigger
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI provider
+      options:
+        - Google Gemini
+        - Groq
+        - OpenRouter
+        - Claude API
+        - Not related to the AI request
+  - type: input
+    id: version
+    attributes:
+      label: ToneSnap version or commit
+      placeholder: 0.1.0, or the commit you built from
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, error messages, anything else
+      description: Remove private text before attaching.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: This report contains no API key and no private text.
+          required: true

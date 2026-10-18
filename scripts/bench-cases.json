@@ -1,0 +1,79 @@
+[
+  {
+    "id": "slack-urgent-pr",
+    "app": "Slack",
+    "contextBefore": "Minh: I'm heading to lunch, back in 30 mins",
+    "selection": "pls check my PR, it urgent",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-delay",
+    "app": "Outlook",
+    "contextBefore": "Dear Mr. Tanaka,",
+    "selection": "I want to inform that the meeting tomorrow will be delay to 3pm because customer is busy.",
+    "contextAfter": "Best regards,\nNhu"
+  },
+  {
+    "id": "slack-bug",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "We has finished the task but there is some bug need to fix before release.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-already-fine",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Could you review this document and share your feedback before Friday?",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-weekly-report",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Anh ơi em gửi báo cáo tuần rồi nhé, anh xem giúp em với",
+    "contextAfter": ""
+  },
+  {
+    "id": "mixed-deploy",
+    "app": "Slack",
+    "contextBefore": "PM: Is the login fix on staging yet?",
+    "selection": "em đã fix bug login rồi, nhưng chưa deploy lên staging được vì server down",
+    "contextAfter": ""
+  },
+  {
+    "id": "email-late-reply",
+    "app": "Outlook",
+    "contextBefore": "Hi Sarah,",
+    "selection": "Sorry for late reply, I was busy with other project so I didn't see your email.",
+    "contextAfter": "Regarding your question about the API limits, ..."
+  },
+  {
+    "id": "code-review",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/auth/login.ts line 42:",
+    "selection": "This function return null when input is empty, I think we should handle this case.",
+    "contextAfter": ""
+  },
+  {
+    "id": "do-the-needful",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Please kindly do the needful and revert back to me asap.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-indented-list",
+    "app": "Slack",
+    "contextBefore": "Dear Mr. Sato,\nI summarize today's work\n1. Work completed",
+    "selection": "+ Task #101 => Waiting for review.\n    + Rechecked the checklist and fix related bugs => Done.\n    + Rerun failed tests => Passed all.\n+ Issue #202 => In progress.\n    + Investigate and fix the login bugs => Done.",
+    "contextAfter": "2. Next steps:"
+  },
+  {
+    "id": "word-client-thanks",
+    "app": "Microsoft Word",
+    "contextBefore": "Project Closing Report\n\n5. Conclusion",
+    "selection": "Thank you for your support during the project. Hope we can cooperate in the future project.",
+    "contextAfter": ""
+  }
+]

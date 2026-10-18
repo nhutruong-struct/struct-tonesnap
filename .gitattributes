@@ -1,0 +1,12 @@
+# LF everywhere, in the repository and in the working tree, whatever core.autocrlf says.
+* text=auto eol=lf
+
+# cmd.exe needs CRLF; PowerShell reads LF fine.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.woff2 binary

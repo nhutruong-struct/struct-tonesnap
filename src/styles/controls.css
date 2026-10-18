@@ -1,0 +1,140 @@
+/*
+ * Checkbox, radio and switch, drawn by hand on top of the native inputs so they keep their
+ * keyboard and screen-reader behavior. The state shows in the control itself (fill and mark);
+ * the focus ring (base.css) appears only for the keyboard and sits outside the control.
+ */
+
+input[type="checkbox"],
+input[type="radio"] {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  appearance: none;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+input[type="checkbox"] {
+  border-radius: 5px;
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--text-2);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked,
+input[role="switch"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+input[type="checkbox"]:checked:hover:not(:disabled),
+input[type="radio"]:checked:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+input[type="checkbox"]:checked:active:not(:disabled),
+input[type="radio"]:checked:active:not(:disabled) {
+  border-color: var(--accent-active);
+  background: var(--accent-active);
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The mark scales in, so ticking feels like a response and not a flash. */
+input[type="checkbox"]:not([role="switch"])::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 4.5px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform var(--dur) var(--ease);
+}
+
+input[type="checkbox"]:not([role="switch"]):checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+input[type="radio"]::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--on-accent);
+  transform: scale(0);
+  transition: transform var(--dur) var(--ease);
+}
+
+input[type="radio"]:checked::after {
+  transform: scale(1);
+}
+
+/* ---------------------------------------------------------------- switch */
+
+input[role="switch"] {
+  width: 40px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+input[role="switch"]:hover:not(:disabled) {
+  border-color: var(--text-2);
+}
+
+input[role="switch"]:checked:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+/* The knob stretches while pressed, as Windows 11's does. */
+input[role="switch"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--text-2);
+  transform: translateY(-50%);
+  transition:
+    left var(--dur) var(--ease),
+    width var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+input[role="switch"]:active:not(:disabled)::after {
+  width: 18px;
+}
+
+input[role="switch"]:checked::after {
+  left: calc(100% - 17px);
+  background: var(--on-accent);
+}
+
+input[role="switch"]:checked:active:not(:disabled)::after {
+  left: calc(100% - 21px);
+}

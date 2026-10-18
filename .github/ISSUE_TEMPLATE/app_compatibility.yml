@@ -1,0 +1,73 @@
+name: App compatibility report
+description: Tell us how ToneSnap works (or does not) in an app you use.
+title: "[Compatibility] "
+labels: ["app compatibility", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        These reports fill the compatibility table in `docs/PLAN.md`. Reports that everything works are welcome too!
+  - type: input
+    id: app
+    attributes:
+      label: App and version
+      placeholder: Slack desktop 4.41, Word 365, Chrome 141 on docs.google.com…
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of app
+      options:
+        - Native Windows app (Win32, WPF, WinUI)
+        - Electron app (Slack, Teams, VS Code…)
+        - Web page in a browser
+        - Microsoft Office
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: capture
+    attributes:
+      label: Reading the selection
+      options:
+        - Works
+        - Partly works (wrong or missing text, lost line breaks…)
+        - Does not work
+        - Not tested
+    validations:
+      required: true
+  - type: dropdown
+    id: icon
+    attributes:
+      label: Floating icon appears next to the selection
+      options:
+        - Works
+        - Partly works (wrong place, sometimes missing…)
+        - Does not work
+        - Not tested
+    validations:
+      required: true
+  - type: dropdown
+    id: apply
+    attributes:
+      label: Apply replaces the selection
+      options:
+        - Works
+        - Partly works
+        - Does not work
+        - Not tested
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What exactly went wrong, and how to see it. Remove private text from screenshots.
+  - type: input
+    id: version
+    attributes:
+      label: ToneSnap version or commit, Windows version
+      placeholder: 0.1.0, Windows 11 24H2
+    validations:
+      required: true

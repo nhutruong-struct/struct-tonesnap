@@ -1,0 +1,11 @@
+# Rust is formatted by rustfmt; generated, vendored and recorded files are left as they are.
+dist/
+node_modules/
+src-tauri/
+.claude/
+.specify/
+docs/
+pnpm-lock.yaml
+scripts/bench-cases.json
+# Prose and tables are written by hand.
+*.md

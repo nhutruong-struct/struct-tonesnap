@@ -1,0 +1,43 @@
+name: Dependency audit
+
+on:
+  push:
+    branches: [develop]
+    paths: ["src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "src-tauri/deny.toml", "package.json", "pnpm-lock.yaml"]
+  pull_request:
+    paths: ["src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "src-tauri/deny.toml", "package.json", "pnpm-lock.yaml"]
+  # New advisories appear without any change here, so the audit also runs weekly.
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: src-tauri/Cargo.toml
+          command: check
+
+  pnpm-audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: pnpm audit --audit-level moderate

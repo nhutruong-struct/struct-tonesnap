@@ -1,0 +1,18 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea for ToneSnap. You can write in English or Vietnamese.
+        Once the idea is agreed on, a maintainer turns it into an issue.
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would you like ToneSnap to do, and in which situation would you use it?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: What is hard or slow today?
