@@ -33,8 +33,12 @@ const node = process.execPath;
 function digest(output, limit = 25) {
   // Node prints a warning on every start when NODE_EXTRA_CA_CERTS (set by some corporate TLS-inspection tools) cannot be read.
   const lines = output.split(/\r?\n/).filter((l) => l.trim() && !/Ignoring extra certs/.test(l));
-  const important = lines.filter((l) =>
-    /error|warning|FAILED|\bFAIL\b|×|panicked|Diff in|^\s*-->|failures:|test result|TS\d{4}/i.test(l),
+  // rustc's location lines ("  --> src/lib.rs:3:5") are matched without a regex: CodeQL reads a
+  // `-->` in a regex as an HTML comment filter (js/bad-tag-filter).
+  const important = lines.filter(
+    (l) =>
+      /error|warning|FAILED|\bFAIL\b|×|panicked|Diff in|failures:|test result|TS\d{4}/i.test(l) ||
+      l.trimStart().startsWith("--> "),
   );
   return (important.length ? important : lines.slice(-limit)).slice(0, limit);
 }
