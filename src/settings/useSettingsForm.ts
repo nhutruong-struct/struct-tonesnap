@@ -24,6 +24,8 @@ const FIELD_LABELS: Partial<Record<keyof Settings, Key>> = {
   geminiModel: "model.label",
   groqModel: "model.label",
   openrouterModel: "model.label",
+  targetLanguage: "target.label",
+  mode: "mode.label",
   tones: "section.tones",
   explainLanguage: "explain.label",
   contextChars: "contextChars.label",

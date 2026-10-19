@@ -16,7 +16,7 @@ function describeError(t: Translate, ev: RequestEvent) {
   };
 }
 
-export function ErrorPanel({ outcome, t }: { outcome: RequestEvent; t: Translate }) {
+export function ErrorPanel({ outcome, onRetry, t }: { outcome: RequestEvent; onRetry: () => void; t: Translate }) {
   const error = describeError(t, outcome);
   return (
     <section className="error">
@@ -25,7 +25,7 @@ export function ErrorPanel({ outcome, t }: { outcome: RequestEvent; t: Translate
         <strong>{error.title}</strong>
         {error.detail && <p>{error.detail}</p>}
         <div className="actions">
-          <button onClick={() => void api.sendRequest()}>{t("popup.retry")}</button>
+          <button onClick={onRetry}>{t("popup.retry")}</button>
           {error.fixInSettings && <button onClick={() => void api.openSettings()}>{t("popup.openSettings")}</button>}
         </div>
       </div>

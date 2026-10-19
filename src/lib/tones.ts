@@ -2,7 +2,7 @@ import type { ToneId } from "./api";
 import { hasKey, type Translate } from "./i18n";
 
 /** Display order; labels and descriptions live in the i18n dictionaries. */
-export const TONE_IDS: ToneId[] = ["minimal", "concise", "natural", "polite", "formal", "friendly"];
+export const TONE_IDS: ToneId[] = ["concise", "natural", "formal"];
 
 export function toneLabel(t: Translate, id: string | undefined): string {
   const key = `tone.${id}`;

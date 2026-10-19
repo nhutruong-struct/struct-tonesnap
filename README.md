@@ -20,15 +20,16 @@
 
 ToneSnap is a small desktop app for people who write English at work, especially Vietnamese speakers. Select a
 sentence in Slack, Outlook, Teams, a browser or any other app, press `Ctrl+Alt+E` (or click the floating icon next
-to the selection), and a popup suggests several English versions, each in a different tone, with a short
+to the selection), and a popup suggests several versions, each in a different tone, with a short
 explanation of what changed. **Apply** pastes the version you pick back in place of the selection.
 
 ## Features
 
 - **Works in any app.** Reads the selection through UI Automation, falls back to the clipboard, and to on-device
   OCR when neither works. Your clipboard is always restored.
-- **Several tones at once:** minimal (just the fixes), concise, natural, polite, formal and friendly, with
-  explanations in Vietnamese or English.
+- **Translate or rewrite, in Vietnamese, English or Japanese.** Pick the target language (Vietnamese by default)
+  and a mode, **Translate** (close to the original) or **Rewrite** (rephrased freely), right in the popup.
+- **Several tones at once:** concise, natural and formal, with explanations in Vietnamese or English.
 - **Apply in place.** Replaces the selection in the original app when the field is editable; **Copy** otherwise.
 - **Privacy first.** Emails, phone numbers, IDs, card numbers, URLs, API keys and your own terms are redacted
   before anything is sent, and restored for display. Password fields and apps you block are never read.

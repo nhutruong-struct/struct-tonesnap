@@ -54,6 +54,42 @@ html[data-window="popup"] #root {
   user-select: none;
 }
 
+/* Target language and translate / rewrite, as two small segmented controls. */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-3) var(--s-4) 0;
+  user-select: none;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.segmented button {
+  min-height: var(--h-control-sm);
+  padding: 0 var(--s-3);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+  font-size: var(--fs-small);
+}
+
+.segmented button[role="radio"][aria-checked="true"] {
+  border-color: var(--control-border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
 /* ------------------------------------------------------------------ body */
 
 .popup main {
@@ -63,14 +99,6 @@ html[data-window="popup"] #root {
   gap: var(--s-3);
   padding: var(--s-3) var(--s-4) var(--s-4);
   overflow-y: auto;
-}
-
-.hint {
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-md);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-size: var(--fs-small);
 }
 
 /* -------------------------------------------------------------- variants */

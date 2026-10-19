@@ -48,11 +48,13 @@ Hotkey pressed / floating icon clicked                         trigger.md
 | Selection | The text the user highlighted in another app. |
 | Context | Text just before and after the selection (from UI Automation), or text recognized on screen near it (OCR). Used only to understand the situation; never rewritten. |
 | Session | One use of ToneSnap: the captured selection, its redacted payload and the window to paste back into. Only the latest session exists, in memory. |
-| Payload | Exactly what is sent to the model: app name, redacted context and selection, tones, explanation language. |
+| Payload | Exactly what is sent to the model: app name, redacted context and selection, target language, mode, tones, explanation language. |
 | Request | One call to the model for a session. Pressing R starts a new request for the same session; a new request cancels the running one. |
-| Tone | One style of rewrite: `minimal`, `concise`, `natural`, `polite`, `formal`, `friendly`. |
+| Target language | The language every variant is written in: `vi` (default), `en` or `ja`, whatever language the selection is in. |
+| Mode | `translate` (stays close to the original's meaning and structure, the default) or `rewrite` (rephrases, reorders and fixes freely). |
+| Tone | One style of writing: `concise`, `natural`, `formal`. |
 | Variant | The model's version of the selection in one tone, plus a one-line note. |
-| Issue | A mistake in the original English, with the fix and an explanation. |
+| Issue | A mistake in the original text, with the fix and an explanation. |
 | Notice | A short message the popup shows instead of suggestions (nothing selected, password field, blocked app, Apply failed). |
 | Placeholder | A token such as `[EMAIL_1]` that replaces a sensitive value before sending; restored before display and Apply. |
 | Provider | Which cloud service runs the model: `gemini`, `groq`, `openrouter` (free tiers) or `claude` (Anthropic API, paid). Each has its own API key. |

@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
-import { api, type Notice, type RequestEvent, type Session } from "../lib/api";
+import { api, type Notice, type RequestEvent, type RequestOptions, type Session } from "../lib/api";
 import { translator, useSavedLang, type Translate } from "../lib/i18n";
 import { Icon, Logo } from "../lib/icons";
 import { useWindowKeydown } from "../lib/useWindowKeydown";
 import { ErrorPanel } from "./ErrorPanel";
+import { OptionsBar } from "./OptionsBar";
 import { PreviewPanel } from "./PreviewPanel";
 import { IssueList, VariantList } from "./SuggestionList";
 import { parseSuggestions, toVariants } from "./suggestions";
@@ -15,7 +16,7 @@ function seconds(ms?: number | null) {
 
 export default function Popup() {
   const t = translator(useSavedLang());
-  const { session, notice, phase, raw, outcome } = usePopupState();
+  const { session, notice, phase, raw, outcome, setOptions } = usePopupState();
   const suggestions = useMemo(() => parseSuggestions(raw), [raw]);
 
   // Notices are informational; close them on their own.
@@ -32,6 +33,22 @@ export default function Popup() {
   const copy = (i: number) => {
     if (variants[i]?.ready) void api.copyText(variants[i].text);
   };
+  const options: RequestOptions | null = session && {
+    targetLanguage: session.payload.targetLanguage,
+    mode: session.payload.mode,
+  };
+  // Every request carries the language and mode on screen, so Rust never works from a stale choice.
+  const send = () => {
+    if (options) void api.sendRequest(options);
+  };
+  const choose = (change: Partial<RequestOptions>) => {
+    if (!options) return;
+    const next = { ...options, ...change };
+    if (next.targetLanguage === options.targetLanguage && next.mode === options.mode) return;
+    setOptions(next);
+    // While previewing, nothing is sent until the user says so.
+    if (phase !== "preview") void api.sendRequest(next);
+  };
   const apply = (i: number) => {
     if (!variants[i]?.ready) return;
     void (readOnly ? api.copyText(variants[i].text) : api.applyText(variants[i].text));
@@ -41,9 +58,9 @@ export default function Popup() {
     if (e.key === "Escape") {
       void api.hidePopup();
     } else if (phase === "preview" && e.key === "Enter") {
-      void api.sendRequest();
+      send();
     } else if ((e.key === "r" || e.key === "R") && !e.ctrlKey && session && phase !== "preview") {
-      void api.sendRequest();
+      send();
     } else {
       const digit = /^Digit([1-9])$/.exec(e.code);
       if (!digit) return;
@@ -54,7 +71,7 @@ export default function Popup() {
   });
 
   if (notice) return <NoticeView notice={notice} t={t} />;
-  if (!session) {
+  if (!session || !options) {
     return (
       <div className="popup empty">
         <Logo size={40} />
@@ -68,12 +85,12 @@ export default function Popup() {
     <div className="popup">
       <PopupHeader session={session} t={t} />
       <PopupMeta session={session} readOnly={readOnly} t={t} />
+      <OptionsBar options={options} onChange={choose} t={t} />
       <main>
-        {phase === "preview" && <PreviewPanel payload={session.payload} t={t} />}
-        {phase === "error" && outcome && <ErrorPanel outcome={outcome} t={t} />}
+        {phase === "preview" && <PreviewPanel payload={session.payload} onSend={send} t={t} />}
+        {phase === "error" && outcome && <ErrorPanel outcome={outcome} onRetry={send} t={t} />}
         {writing && (
           <>
-            {session.translated && <p className="hint">{t("popup.translated")}</p>}
             <VariantList variants={variants} readOnly={readOnly} onApply={apply} onCopy={copy} t={t} />
             <IssueList issues={suggestions.issues} redactions={redactions} t={t} />
           </>

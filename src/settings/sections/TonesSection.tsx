@@ -1,6 +1,9 @@
-import type { Settings, ToneId } from "../../lib/api";
+import type { Mode, Settings, TargetLanguage, ToneId } from "../../lib/api";
 import { TONE_IDS, toneDescription, toneLabel } from "../../lib/tones";
 import { CheckField, Card, Field, Section, type SectionProps } from "../fields";
+
+const LANGUAGES: TargetLanguage[] = ["vi", "en", "ja"];
+const MODES: Mode[] = ["translate", "rewrite"];
 
 export function TonesSection({ settings, update, t }: SectionProps) {
   const toggleTone = (id: ToneId) => {
@@ -14,6 +17,29 @@ export function TonesSection({ settings, update, t }: SectionProps) {
 
   return (
     <Section title={t("section.tones")} description={t("section.tones.desc")}>
+      <Card>
+        <Field label={t("target.label")} hint={<small>{t("target.hint")}</small>}>
+          <select
+            value={settings.targetLanguage}
+            onChange={(e) => update("targetLanguage", e.target.value as TargetLanguage)}
+          >
+            {LANGUAGES.map((id) => (
+              <option key={id} value={id}>
+                {t(`target.${id}`)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t("mode.label")} hint={<small>{t(`mode.${settings.mode}.hint`)}</small>}>
+          <select value={settings.mode} onChange={(e) => update("mode", e.target.value as Mode)}>
+            {MODES.map((id) => (
+              <option key={id} value={id}>
+                {t(`mode.${id}`)}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </Card>
       <Card>
         {TONE_IDS.map((id) => (
           <CheckField
