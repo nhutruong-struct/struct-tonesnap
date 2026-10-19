@@ -1,6 +1,6 @@
 // Project rules that compilers cannot see.
 //
-// Per-file rules (language, privacy, code, network, secrets) judge one file at a time, so the
+// Per-file rules (language, privacy, code, network, secrets, whitespace, suppress) judge one file at a time, so the
 // hooks can also run them on a single edit. Cross-file rules (tones, settings, commands,
 // events, capabilities, setup) check the contracts between the Rust core and the React UI.
 // Each rule yields errors (fail the check) and warnings (reported only).
@@ -13,17 +13,19 @@ import { pathToFileURL } from "node:url";
 import {
   ALLOWED_HOSTS,
   CONTENT_IDENTIFIERS,
+  GENERATED,
   INVOKE_FILE,
   MAX_FILE_LINES,
+  RECORDED,
   REQUIRED_PERMISSIONS,
   ROOT,
-  SCANNED,
   SECRET_PATTERNS,
   TEXT_EXTENSIONS,
+  TEXT_NAMES,
   UNSAFE_ALLOWED,
   VIETNAMESE_ALLOWED,
 } from "./config.mjs";
-import { listFiles } from "./state.mjs";
+import { listFiles, repoFiles } from "./state.mjs";
 
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 const camel = (snake) => snake.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
@@ -189,13 +191,73 @@ const FILE_RULES = {
 
   /** No real credentials anywhere in the tree. */
   secrets(file, text) {
-    if (/(Cargo\.lock|pnpm-lock\.yaml)$/.test(file)) return [];
+    if (GENERATED.test(file)) return [];
     return SECRET_PATTERNS.flatMap(({ name, pattern }) => {
       const m = pattern.exec(text);
       return m ? [{ line: lineOf(text, m.index), message: `looks like a real ${name}` }] : [];
     });
   },
+
+  /** The .editorconfig rules for files no formatter touches: LF, no trailing blanks, one final newline, spaces. */
+  whitespace(file, text) {
+    if (GENERATED.test(file) || RECORDED.test(file)) return [];
+    const out = [];
+    const cr = text.indexOf("\r");
+    if (cr >= 0) out.push({ line: lineOf(text, cr), message: "CR in a line ending; the repository uses LF" });
+    const markdown = file.endsWith(".md");
+    const lf = text.replaceAll("\r", "");
+    const lines = lf.split("\n");
+    lines.forEach((line, i) => {
+      // Two trailing spaces are a line break in Markdown, so .editorconfig exempts it.
+      if (!markdown && /[ \t]+$/.test(line)) out.push({ line: i + 1, message: "trailing whitespace" });
+      if (!file.endsWith(".rs") && /^ *\t/.test(line)) {
+        out.push({ line: i + 1, message: "tab indentation; indent with spaces" });
+      }
+    });
+    if (lf.length > 0 && !lf.endsWith("\n")) {
+      out.push({ line: lines.length, message: "no newline at the end of the file" });
+    } else if (lf.endsWith("\n\n")) {
+      out.push({ line: lines.length - 1, message: "more than one newline at the end of the file" });
+    }
+    return out;
+  },
+
+  /** A lint or format suppression hides a problem from the gates, so it must say why or not exist. */
+  suppress(file, text) {
+    const out = [];
+    const script = /\.(ts|tsx|js|mjs)$/.test(file);
+    if (file.endsWith(".rs")) {
+      for (const m of text.matchAll(/#!?\[rustfmt::skip/g)) {
+        out.push({ line: lineOf(text, m.index), message: "rustfmt::skip is not allowed; let rustfmt format the code" });
+      }
+    }
+    if (script) {
+      text.split("\n").forEach((line, i) => {
+        if (/(?:\/\/|\/\*)\s*eslint-disable/.test(line) && !/\s--\s+\S/.test(line)) {
+          out.push({ line: i + 1, message: "eslint-disable needs a reason after ` -- `; better, fix the code" });
+        }
+        if (/\/\*\s*eslint\s+[\w@/-]+\s*:/.test(line)) {
+          out.push({ line: i + 1, message: "inline ESLint rule settings are not allowed; change eslint.config.js" });
+        }
+      });
+    }
+    if (script || /\.(css|html|ya?ml|json|toml)$/.test(file)) {
+      for (const m of text.matchAll(/(?:\/\/|\/\*|<!--|#)\s*prettier-ignore/g)) {
+        out.push({ line: lineOf(text, m.index), message: "prettier-ignore is not allowed; let Prettier format it" });
+      }
+    }
+    return out;
+  },
 };
+
+/** The text with CRLF turned into LF, trailing blanks removed (except in Markdown) and one final newline. */
+export function fixWhitespace(file, text) {
+  if (GENERATED.test(file) || RECORDED.test(file)) return text;
+  let fixed = text.replace(/\r\n?/g, "\n");
+  if (!file.endsWith(".md")) fixed = fixed.replace(/[ \t]+$/gm, "");
+  fixed = fixed.replace(/\n+$/, "");
+  return fixed.length > 0 ? `${fixed}\n` : fixed;
+}
 
 /** Violations of the per-file rules in one file, each tagged with its rule and source line. */
 export function fileViolations(file, text, ruleNames = Object.keys(FILE_RULES)) {
@@ -211,8 +273,9 @@ export function fileViolations(file, text, ruleNames = Object.keys(FILE_RULES)) 
   );
 }
 
+/** Every text file git would commit; the per-file rules apply to all of them, wherever they live. */
 export function scannedFiles() {
-  return listFiles(SCANNED).filter((f) => TEXT_EXTENSIONS.test(f));
+  return repoFiles().filter((f) => TEXT_EXTENSIONS.test(f) || TEXT_NAMES.test(f));
 }
 
 // ---------------------------------------------------------------------------------------------

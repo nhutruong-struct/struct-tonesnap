@@ -16,3 +16,16 @@
 /src-tauri/tauri.conf.json   @nhutruong-struct
 /src-tauri/capabilities/     @nhutruong-struct
 /dev.ps1                     @nhutruong-struct
+
+# Style and lint configuration: the gates read these from the pull request itself, so a change that
+# loosens a rule must be a deliberate, reviewed decision.
+/.editorconfig               @nhutruong-struct
+/.gitattributes              @nhutruong-struct
+/.githooks/                  @nhutruong-struct
+/.prettierrc.json            @nhutruong-struct
+/.prettierignore             @nhutruong-struct
+/eslint.config.js            @nhutruong-struct
+/tsconfig.json               @nhutruong-struct
+/tsconfig.node.json          @nhutruong-struct
+/vitest.config.ts            @nhutruong-struct
+/src-tauri/clippy.toml       @nhutruong-struct

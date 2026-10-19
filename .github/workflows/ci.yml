@@ -3,7 +3,9 @@ name: CI
 on:
   push:
     branches: [develop, master]
+  # `edited` re-runs the job when the title changes, because the title becomes the squashed commit message.
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 # Pull requests from forks run with a read-only token and no secrets.
@@ -34,6 +36,14 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Cheap, so it comes first. The title is passed through the environment, never interpolated into the script.
+      - name: Check the pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: node scripts/harness/check.mjs --only=pr-title
+
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
@@ -50,7 +60,8 @@ jobs:
       - name: Build the frontend
         run: node node_modules/vite/bin/vite.js build
 
-      # Invariants, rustfmt, Prettier, tsc, ESLint, clippy, Rust unit tests, vitest. The Win32 integration
-      # tests (check.mjs --full) need an interactive desktop and run locally before a PR.
+      # Invariants (project rules, whitespace, suppressions, secrets), rustfmt, Prettier, tsc, ESLint, clippy,
+      # Rust unit tests, vitest and the harness's own tests. The Win32 integration tests (check.mjs --full)
+      # need an interactive desktop and run locally before a PR.
       - name: Run the quality gates
         run: node scripts/harness/check.mjs

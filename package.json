@@ -12,6 +12,8 @@
     "test": "vitest run",
     "check": "node scripts/harness/check.mjs",
     "check:full": "node scripts/harness/check.mjs --full",
+    "fix": "node scripts/harness/check.mjs --fix --only=invariants,rustfmt,prettier,eslint",
+    "hooks:install": "git config core.hooksPath .githooks",
     "check:input": "node scripts/harness/check.mjs --only=input"
   },
   "dependencies": {

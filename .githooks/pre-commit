@@ -1,0 +1,6 @@
+#!/bin/sh
+# Optional, enabled with: pnpm run hooks:install (git config core.hooksPath .githooks).
+# Runs the quick style gates (a few seconds): project rules, rustfmt and Prettier. CI runs all gates.
+# To fix what it reports: node scripts/harness/check.mjs --fix. To skip once: git commit --no-verify.
+command -v node >/dev/null 2>&1 || { echo "pre-commit: node not found, skipping the style checks"; exit 0; }
+exec node scripts/harness/check.mjs --only=invariants,rustfmt,prettier
