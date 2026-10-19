@@ -39,10 +39,15 @@ explanation of what changed. **Apply** pastes the version you pick back in place
 
 ## Status
 
-ToneSnap is in early development (Phase 0 of the [plan](docs/PLAN.md)). It runs on **Windows 10/11**; macOS
-support is planned. There are no prebuilt installers yet, so build it from source as described below.
+ToneSnap runs on **Windows 10/11**; macOS support is planned. Download the installer from the
+[latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest), or build it from source
+as described below. The installers are not code-signed yet, so Windows SmartScreen asks for confirmation the
+first time (**More info → Run anyway**). See the [changelog](CHANGELOG.md) for what is in each version.
 
 ## Getting started
+
+To just use ToneSnap, run the installer from the [latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest)
+and go to [Choose an AI provider](#choose-an-ai-provider). The rest of this section is for building from source.
 
 ### Requirements
 
