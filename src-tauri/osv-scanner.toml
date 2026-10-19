@@ -1,0 +1,57 @@
+# Advisories that OSV-Scanner (and so the OpenSSF Scorecard "Vulnerabilities" check) reports from
+# Cargo.lock but that do not reach the shipped build. The lockfile lists crates for every platform
+# and for optional features, while ToneSnap ships for x86_64-pc-windows-msvc only (see deny.toml,
+# whose `cargo deny check` gate covers the crates that are actually compiled).
+#
+# Re-check each entry before it expires: `cargo tree -i <crate> --target all -e all`. Entries for the
+# Linux GTK stack must be revisited when a Linux or macOS build is added.
+
+# Linux only: Tauri's GTK / webkit2gtk stack (glib 0.18 through gtk 0.18). Fixed in glib 0.20,
+# which arrives when Tauri moves to a newer gtk-rs.
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0429"
+ignoreUntil = 2027-04-19
+reason = "glib: Linux-only dependency of Tauri (gtk/webkit2gtk); not compiled for the Windows target"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0370"
+ignoreUntil = 2027-04-19
+reason = "proc-macro-error (unmaintained): used by glib-macros/gtk3-macros, Linux only; not compiled for the Windows target"
+
+# Linux only: D-Bus (zbus) behind Tauri's `dbus` feature.
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0370"
+ignoreUntil = 2027-04-19
+reason = "zvariant (unmaintained): zbus/D-Bus dependency, Linux only; not compiled for the Windows target"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0371"
+ignoreUntil = 2027-04-19
+reason = "zbus_names (unmaintained): zbus/D-Bus dependency, Linux only; not compiled for the Windows target"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0372"
+ignoreUntil = 2027-04-19
+reason = "zvariant_derive (unmaintained): zbus/D-Bus dependency, Linux only; not compiled for the Windows target"
+
+# rustls is an optional dependency of the reqwest 0.13 that Tauri uses, with its rustls feature off,
+# so it is in the lockfile but never built. ToneSnap uses the OS TLS stack (CLAUDE.md invariant 6).
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0346"
+ignoreUntil = 2027-04-19
+reason = "rustls: optional dependency not enabled on any target; the app uses the OS TLS stack"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0347"
+ignoreUntil = 2027-04-19
+reason = "rustls: optional dependency not enabled on any target; the app uses the OS TLS stack"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0348"
+ignoreUntil = 2027-04-19
+reason = "rustls: optional dependency not enabled on any target; the app uses the OS TLS stack"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0349"
+ignoreUntil = 2027-04-19
+reason = "rustls: optional dependency not enabled on any target; the app uses the OS TLS stack"

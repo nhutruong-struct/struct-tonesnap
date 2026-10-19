@@ -1,2 +1,31 @@
-# Reviewers requested automatically for every pull request.
+# Reviewers requested automatically for every pull request. The branch rulesets require a code owner's
+# approval, so nothing merges without one.
 * @nhutruong-struct
+
+# Build, release and supply-chain paths: what runs in CI, at install time or at build time. A change
+# here can ship code to every user, so review it line by line (docs/MAINTAINING.md → Security review).
+/.github/                    @nhutruong-struct
+/scripts/                    @nhutruong-struct
+/.claude/                    @nhutruong-struct
+/package.json                @nhutruong-struct
+/pnpm-lock.yaml              @nhutruong-struct
+/src-tauri/Cargo.toml        @nhutruong-struct
+/src-tauri/Cargo.lock        @nhutruong-struct
+/src-tauri/build.rs          @nhutruong-struct
+/src-tauri/deny.toml         @nhutruong-struct
+/src-tauri/tauri.conf.json   @nhutruong-struct
+/src-tauri/capabilities/     @nhutruong-struct
+/dev.ps1                     @nhutruong-struct
+
+# Style and lint configuration: the gates read these from the pull request itself, so a change that
+# loosens a rule must be a deliberate, reviewed decision.
+/.editorconfig               @nhutruong-struct
+/.gitattributes              @nhutruong-struct
+/.githooks/                  @nhutruong-struct
+/.prettierrc.json            @nhutruong-struct
+/.prettierignore             @nhutruong-struct
+/eslint.config.js            @nhutruong-struct
+/tsconfig.json               @nhutruong-struct
+/tsconfig.node.json          @nhutruong-struct
+/vitest.config.ts            @nhutruong-struct
+/src-tauri/clippy.toml       @nhutruong-struct

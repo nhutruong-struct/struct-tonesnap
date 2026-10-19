@@ -1,0 +1,6 @@
+#!/bin/sh
+# Optional, enabled with: pnpm run hooks:install (git config core.hooksPath .githooks).
+# Runs the same gates as the CI check job (a few minutes on a warm build), so a push that CI would reject
+# is stopped here. To fix style problems: node scripts/harness/check.mjs --fix. To skip once: git push --no-verify.
+command -v node >/dev/null 2>&1 || { echo "pre-push: node not found, skipping the checks"; exit 0; }
+exec node scripts/harness/check.mjs

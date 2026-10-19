@@ -87,7 +87,7 @@ goes through a pull request that passes CI and gets a review.
    node scripts/harness/check.mjs --full
    ```
 
-   `node scripts/harness/check.mjs --fix` formats the code (rustfmt, ESLint, Prettier) first.
+   `pnpm run fix` formats the code and repairs whitespace first; see [Style and formatting](#style-and-formatting).
 
 6. **Push** your branch to your fork and open a **pull request against `develop`**. Fill in the template,
    link the issue (`Closes #123`) and keep the PR as a draft until it is ready for review.
@@ -106,7 +106,7 @@ Keep your branch up to date with `develop` by merging or rebasing on `upstream/d
 
 - English, imperative mood, a summary line under ~72 characters: `Restore the clipboard after OCR fallback`,
   not `restored clipboard` or `fix bug`.
-- The PR title is used as the squashed commit message, so make it describe the whole change.
+- The PR title is used as the squashed commit message, so make it describe the whole change. CI checks its form.
 - Explain *why* in the body when it is not obvious.
 
 ## Project rules
@@ -130,6 +130,49 @@ alike). The ones that matter most:
 
 `node scripts/harness/check.mjs` enforces most of these automatically.
 
+## Style and formatting
+
+You do not have to learn the style by heart: a pull request cannot be merged until the `check` job passes, and
+that job runs exactly what you can run on your own machine. It enforces:
+
+- **Formatting.** rustfmt for Rust; Prettier (120 columns) for TypeScript, CSS, HTML, JSON, YAML and the scripts.
+  Markdown is written by hand and is not reformatted.
+- **Lint.** Clippy with `-D warnings` and the lints in `src-tauri/Cargo.toml`; ESLint for `src/` and `scripts/`
+  with no warnings allowed; the TypeScript compiler.
+- **Whitespace** in every text file: LF line endings, no trailing spaces (Markdown excepted), one newline at the
+  end, spaces rather than tabs.
+- **No hidden problems.** `eslint-disable` needs a reason after ` -- `; `prettier-ignore` and `rustfmt::skip` are
+  not allowed; `#[allow(…)]` needs a `reason`. Fix the code instead of silencing the tool.
+- **The project rules** from the list above, in every file, including the English-only rule and the check for
+  real keys.
+- **The pull request title**, which becomes the commit message: English, imperative, a capital letter, under 72
+  characters, no `feat:` prefix, no full stop at the end.
+
+Before you push, fix the formatting automatically and then run the checks:
+
+```bash
+pnpm run fix
+```
+
+```bash
+node scripts/harness/check.mjs
+```
+
+`pnpm run fix` is `node scripts/harness/check.mjs --fix --only=invariants,rustfmt,prettier,eslint`: it formats
+everything, applies ESLint's automatic fixes and repairs whitespace, then reports what is left. Project-rule,
+clippy and type errors need a code change; every failure prints a hint, and in a pull request the problems also
+appear as annotations on the lines concerned.
+
+To have git run the checks for you, enable the optional hooks once per clone (they live in `.githooks/`):
+
+```bash
+pnpm run hooks:install
+```
+
+`pre-commit` runs the quick style gates (a few seconds) and `pre-push` runs the same gates as CI. Skip them once
+with `--no-verify`; CI runs them regardless. Your editor picks up `.editorconfig` by itself (VS Code needs the
+EditorConfig extension).
+
 ## Tests
 
 Test automatically whatever can be, at the lowest layer that shows the behavior:
@@ -140,6 +183,8 @@ Test automatically whatever can be, at the lowest layer that shows the behavior:
 - Win32 code: against windows the test owns (`platform/win/test_window.rs`), in `mod integration_tests`, run by
   `check.mjs --full`.
 - UI behavior: a vitest test next to the component, with the backend faked by `src/test/backend.ts`.
+- Redaction (`redact.rs`): also fuzzed by `src-tauri/fuzz/` in CI; a change to how placeholders are made or
+  restored updates the fuzz target too.
 
 Only behavior that depends on other apps, the global hotkey or the mouse hook is tested by hand; describe the
 manual steps you followed in the pull request.

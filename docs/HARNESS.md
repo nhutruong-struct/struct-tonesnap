@@ -19,9 +19,38 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | Project rules | `scripts/harness/invariants.mjs` | Rules compilers cannot see (below) |
 | Configuration | `scripts/harness/config.mjs` | Protected paths, secret patterns, risky commands, permission map, allowed hosts, language allowlist |
 | Hooks | `scripts/harness/hooks.mjs` + `.claude/settings.json` | Wire the harness into Claude Code's loop |
+| Git hooks | `.githooks/pre-commit`, `.githooks/pre-push` | Optional: run the gates before a commit or push (see Enforcement layers) |
+| PR title rules | `scripts/harness/pr-title.mjs` | The pull request title becomes the commit message; CI checks its form |
 | Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test` |
 | Review | `.claude/agents/tonesnap-reviewer.md` | Read-only agent that reviews against the invariants and code rules |
 | State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed) |
+
+## Enforcement layers
+
+The same checks run in four places, from the quickest feedback to the one that cannot be skipped:
+
+| Layer | When | What | Can be skipped? |
+|---|---|---|---|
+| Editor | While typing | `.editorconfig` (LF, spaces, final newline), the recommended VS Code extensions | Yes |
+| Claude Code hooks | Around each edit and turn (`.claude/settings.json`) | Formats edited files, reports project-rule violations, blocks bad edits, and re-runs the gates before a turn may end | Only for people not using Claude Code |
+| Git hooks (optional) | `git commit` and `git push` (`.githooks/`, enabled with `pnpm run hooks:install`) | `pre-commit`: project rules, rustfmt, Prettier. `pre-push`: every fast gate | Yes (`--no-verify`) |
+| CI | Every pull request, forks included | The `check` job: PR title, then `check.mjs` (below). It is a required status check in both rulesets | **No** |
+
+CI is the real gate. The first three layers exist so that a contributor meets the failure at their desk, with the
+fix at hand (`pnpm run fix`), rather than in a red pull request. What the `check` job runs:
+
+- the PR title rules (`pr-title.mjs`; the title becomes the squashed commit message), on `pull_request` events,
+  skipped for Dependabot whose titles are generated;
+- the frontend build (`vite build`), because `tauri-build` embeds `dist/`;
+- `check.mjs`, the fast gates below, with every failure printed with a hint, as a line annotation on the pull
+  request (`::error file=…,line=…`) and in the job summary.
+
+The gates run the code of the pull request itself, so a pull request could weaken them. `.github/CODEOWNERS`
+makes the owner review every change under `scripts/`, `.github/`, `.githooks/` and the lint and format
+configuration (`eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `.editorconfig`, `tsconfig*.json`,
+`src-tauri/clippy.toml`, `src-tauri/Cargo.toml`), and workflows from outside contributors need approval before
+they run. Not in CI: the Win32 integration tests (they need an interactive desktop), the key-press tests, and
+`check.mjs --full`'s `deps` gate, which `audit.yml` runs when dependency files change.
 
 ## How one Claude turn passes through the harness
 
@@ -52,15 +81,17 @@ A turn that only answers a question changes nothing, so the Stop hook exits imme
 | `invariants` | always | < 0.2 s |
 | `rustfmt` | rust | ~0.1 s |
 | `prettier` (`--check`) | web, harness | ~0.7 s |
+| `harness` (`node --test scripts/harness`: tests of the rules below) | harness | < 0.5 s |
 | `clippy` (`-D warnings` + the lints in `Cargo.toml`) | rust | ~3–8 s |
 | `test` (`cargo test --lib`) | rust | ~3 s |
 | `tsc` | web | ~1 s |
-| `eslint` (type-aware, React hooks, `--max-warnings 0`) | web | ~3 s |
+| `eslint` (type-aware, React hooks, `--max-warnings 0`; `scripts/` and `eslint.config.js` get the recommended Node rules) | web, harness | ~3 s |
 | `vitest` | web | ~2 s |
 | `build` (vite) | only with `--full` | ~0.5 s |
 | `win32` | only with `--full` | ~0.5 s |
 | `deps` (`cargo deny check`, `pnpm audit`; needs network) | only with `--full` | ~10 s |
 | `input` | only with `--only=input` | ~3 s |
+| `pr-title` (`PR_TITLE="…"`; CI sets it) | only with `--only=pr-title` | instant |
 
 The first run after `target/` is deleted takes a few minutes because everything rebuilds.
 
@@ -83,16 +114,16 @@ Test automatically whatever can be; test by hand only what cannot.
 | Tool | Config | Covers |
 |---|---|---|
 | Clippy lints | `[lints.clippy]` in `src-tauri/Cargo.toml`, `src-tauri/clippy.toml` | `// SAFETY:` comment on every `unsafe` block; no `dbg!`, `println!`, `todo!`, `unimplemented!`, `panic!` (tests may panic); `#[allow]` needs a `reason` |
-| ESLint | `eslint.config.js` | Type-aware TypeScript rules, React hooks (dependencies, no setState in effect bodies), promises that are neither awaited nor marked `void`, exhaustive `switch`, no `console` |
-| Prettier | `.prettierrc.json`, `.prettierignore` | Formatting of TS, CSS, JSON, HTML and the harness scripts. Markdown, `docs/` and `src-tauri/` are left alone (rustfmt formats Rust) |
+| ESLint | `eslint.config.js` | `src/`: type-aware TypeScript rules, React hooks (dependencies, no setState in effect bodies), promises that are neither awaited nor marked `void`, exhaustive `switch`, no `console`. `scripts/` and `eslint.config.js`: ESLint's recommended rules |
+| Prettier | `.prettierrc.json`, `.prettierignore` | Formatting of TS, CSS, HTML, JSON, YAML (workflows, templates), the website and the harness scripts. Markdown, `docs/`, `.claude/` and `src-tauri/` are left alone (rustfmt formats Rust; prose and tables are hand-aligned) |
 | cargo-deny | `src-tauri/deny.toml` | RustSec advisories, permissive licenses only, crates.io as the only source, yanked or unmaintained direct dependencies |
 | Line endings | `.gitattributes`, `.editorconfig` | LF everywhere; editors follow the formatters' indentation |
 
-The PostToolUse hook runs rustfmt or Prettier on every edited file, so formatting never needs a separate step. `check.mjs --fix` runs `cargo fmt`, `eslint --fix` and `prettier --write` over everything.
+The PostToolUse hook runs rustfmt or Prettier on every edited file, so formatting never needs a separate step. `check.mjs --fix` runs `cargo fmt`, `eslint --fix`, the whitespace repairs and `prettier --write` over everything; `pnpm run fix` does that and re-runs the quick gates.
 
 ## Project rules
 
-**Per-file rules.** They judge one file at a time, so the hooks can also run them on a single edit.
+**Per-file rules.** They judge one file at a time, so the hooks can also run them on a single edit. They apply to every text file git would commit (tracked, or untracked and not ignored), wherever it lives: `.github/`, `site/`, the root Markdown files and the dot-files included. Lockfiles are exempt from the whitespace and secret rules, and `docs/bench/` (recorded model output) from the whitespace rule.
 
 | Rule | Catches |
 |---|---|
@@ -101,6 +132,8 @@ The PostToolUse hook runs rustfmt or Prettier on every edited file, so formattin
 | `code` | `unsafe` outside `platform/`; `.unwrap()` outside a mutex lock; `todo!`/`unimplemented!`/`panic!`; `#[allow]` without a reason; TypeScript `any`, `@ts-ignore`, an undescribed `@ts-expect-error`; `invoke` or `listen` outside `api.ts`; a warning for files over 800 lines |
 | `network` | URLs to hosts other than `api.anthropic.com` and localhost |
 | `secrets` | Real API keys or tokens anywhere in the tree |
+| `whitespace` | What `.editorconfig` asks of files no formatter touches (Markdown, TOML, prompts, `src-tauri/` JSON, PowerShell…): CR line endings, trailing spaces (Markdown excepted), a missing or doubled final newline, tab indentation (Rust excepted). `--fix` repairs all but tabs |
+| `suppress` | `eslint-disable` without a reason after ` -- `, inline ESLint rule settings, `prettier-ignore`, `rustfmt::skip`: ways to hide a problem from the gates |
 
 **Cross-file rules.** They check the contracts between the Rust core and the React UI.
 
@@ -137,7 +170,15 @@ node scripts/harness/check.mjs --fix
 npm run check:input
 ```
 
-The first command is the fast check and the second the full one, to run before calling work done. The third runs selected gates only, and the fourth runs `cargo fmt` before checking. The last one runs the key-press tests: start it yourself while you are not using the PC (Claude asks before running it).
+```bash
+pnpm run fix
+```
+
+```bash
+pnpm run hooks:install
+```
+
+The first command is the fast check and the second the full one, to run before calling work done. The third runs selected gates only, and the fourth runs `cargo fmt` before checking. The key-press tests (`check:input`) take focus: start them yourself while you are not using the PC (Claude asks before running them). `pnpm run fix` formats everything and repairs whitespace, then re-runs the quick style gates; `pnpm run hooks:install` enables the optional git hooks.
 
 In Claude Code:
 
@@ -151,7 +192,7 @@ In Claude Code:
 - **A per-file rule**: add a function to `FILE_RULES` in `invariants.mjs`, returning `[{ line, message, severity? }]`.
 - **A cross-file rule**: add a function to `CROSS_RULES`, returning `{ errors, warnings }`.
 - **A gate**: add it to `GATES` in `check.mjs` and map it to a source group in `GATES_FOR_GROUP` (`config.mjs`).
-- Test every new rule by planting a violation in a copy of the repository.
+- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the cross-file rules by planting a violation in a copy of the repository.
 
 ## Troubleshooting
 

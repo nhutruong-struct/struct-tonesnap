@@ -11,11 +11,25 @@ updates:
       # Must stay on the version Tauri itself uses (CLAUDE.md, invariant 5); updated together with Tauri.
       - dependency-name: windows
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # reqwest 0.13 defaults to rustls; ToneSnap must keep the OS TLS stack (CLAUDE.md, invariant 6).
+      # Upgrade by hand, keeping native TLS.
+      - dependency-name: reqwest
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       tauri:
         patterns: ["tauri", "tauri-*"]
       rust-minor-and-patch:
         update-types: ["minor", "patch"]
+
+  - package-ecosystem: cargo
+    directory: /src-tauri/fuzz
+    target-branch: develop
+    schedule:
+      interval: monthly
+    labels: ["dependencies", "rust"]
+    groups:
+      fuzz:
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /

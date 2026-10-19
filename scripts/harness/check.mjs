@@ -5,14 +5,18 @@
 //   node scripts/harness/check.mjs --only=input    key-press tests; only while nobody uses the PC
 //   node scripts/harness/check.mjs --changed       only gates for groups changed since the last pass
 //   node scripts/harness/check.mjs --only=tsc,test pick gates by id
-//   --fix                                          run cargo fmt, eslint --fix and prettier --write first
+//   --fix                                          run cargo fmt, eslint --fix, prettier --write and the whitespace
+//                                                  fixes first (what most style failures need)
+//   PR_TITLE="…" node scripts/harness/check.mjs --only=pr-title    check a pull request title (CI does this)
 //
 // Results are recorded in .claude/.state/harness.json for the hooks.
 
 import { spawnSync } from "node:child_process";
+import { appendFileSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { GATES_FOR_GROUP, MANIFEST, ROOT, toolEnv } from "./config.mjs";
-import { runInvariants } from "./invariants.mjs";
+import { fixWhitespace, runInvariants, scannedFiles } from "./invariants.mjs";
+import { titleProblems } from "./pr-title.mjs";
 import { changedGroups, fingerprints, readState, writeState } from "./state.mjs";
 
 const PRETTIER = join(ROOT, "node_modules/prettier/bin/prettier.cjs");
@@ -33,8 +37,12 @@ const node = process.execPath;
 function digest(output, limit = 25) {
   // Node prints a warning on every start when NODE_EXTRA_CA_CERTS (set by some corporate TLS-inspection tools) cannot be read.
   const lines = output.split(/\r?\n/).filter((l) => l.trim() && !/Ignoring extra certs/.test(l));
-  const important = lines.filter((l) =>
-    /error|warning|FAILED|\bFAIL\b|×|panicked|Diff in|^\s*-->|failures:|test result|TS\d{4}/i.test(l),
+  // rustc's location lines ("  --> src/lib.rs:3:5") are matched without a regex: CodeQL reads a
+  // `-->` in a regex as an HTML comment filter (js/bad-tag-filter).
+  const important = lines.filter(
+    (l) =>
+      /error|warning|\[warn\]|FAILED|\bFAIL\b|×|✖|panicked|Diff in|failures:|test result|TS\d{4}/i.test(l) ||
+      l.trimStart().startsWith("--> "),
   );
   return (important.length ? important : lines.slice(-limit)).slice(0, limit);
 }
@@ -62,10 +70,22 @@ function tool(command, commandArgs, { requireTests = false } = {}) {
   };
 }
 
+const ESLINT_TARGETS = ["src", "scripts", "eslint.config.js"];
+
+/** The harness's own tests, listed one by one because `node --test` does not expand globs on every Node version. */
+function harnessTests() {
+  const dir = join(ROOT, "scripts", "harness");
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".test.mjs"))
+    .map((f) => join(dir, f));
+}
+
 const GATES = [
   {
     id: "invariants",
-    title: "project rules (contracts, code rules, language, privacy, secrets)",
+    title: "project rules (contracts, code rules, language, privacy, secrets, whitespace)",
+    hint: "Each line is file:line and the rule that failed; CLAUDE.md → Invariants explains why. Whitespace problems fix themselves with --fix; the rest need a code change.",
+    fixable: true,
     run: () => {
       const results = runInvariants();
       const errors = results.flatMap((r) => r.errors.map((e) => `[${r.name}] ${e}`));
@@ -76,26 +96,34 @@ const GATES = [
   {
     id: "rustfmt",
     title: "cargo fmt --check",
+    hint: "Run node scripts/harness/check.mjs --fix, then commit the formatted files.",
+    fixable: true,
     run: tool("cargo", ["fmt", "--manifest-path", MANIFEST, "--check"]),
   },
   {
     id: "prettier",
-    title: "prettier --check (TS, CSS, JSON, scripts)",
+    title: "prettier --check (TS, CSS, JSON, YAML, HTML, scripts)",
+    hint: "Run node scripts/harness/check.mjs --fix, then commit the formatted files.",
+    fixable: true,
     run: tool(node, [PRETTIER, "--check", "--log-level", "warn", "."]),
   },
   {
     id: "tsc",
     title: "TypeScript (tsc)",
+    hint: "A type error: fix the code (no any, @ts-ignore or casts that hide it).",
     run: tool(node, [join(ROOT, "node_modules/typescript/bin/tsc"), "-p", ROOT]),
   },
   {
     id: "eslint",
-    title: "ESLint (type-aware, React hooks)",
-    run: tool(node, [ESLINT, "--max-warnings", "0", "src"]),
+    title: "ESLint (type-aware, React hooks; Node rules for scripts/)",
+    hint: "node scripts/harness/check.mjs --fix applies the automatic fixes; the rest need a code change. The rule name is at the end of each line.",
+    fixable: true,
+    run: tool(node, [ESLINT, "--max-warnings", "0", ...ESLINT_TARGETS]),
   },
   {
     id: "clippy",
     title: "cargo clippy -D warnings",
+    hint: "Read the lint's help text; cargo clippy --fix can apply some suggestions. Do not silence a lint without a reason (CLAUDE.md → Code rules).",
     run: tool("cargo", [
       "clippy",
       "--manifest-path",
@@ -111,12 +139,34 @@ const GATES = [
   {
     id: "test",
     title: "cargo test --lib",
+    hint: "A Rust test fails: run cargo test --lib <name> in src-tauri for the full output.",
     run: tool("cargo", ["test", "--manifest-path", MANIFEST, "--lib"], { requireTests: true }),
   },
   {
     id: "vitest",
     title: "frontend tests (vitest)",
+    hint: "A UI test fails: pnpm test <file> shows the full output.",
     run: tool(node, [join(ROOT, "node_modules/vitest/vitest.mjs"), "run"]),
+  },
+  {
+    id: "harness",
+    title: "harness tests (project rules, PR title rules)",
+    hint: "A test of scripts/harness/ fails: node --test scripts/harness shows the full output.",
+    run: tool(node, ["--test", ...harnessTests()]),
+  },
+  {
+    // Needs the title from the pull request event, so it runs only when asked for by name (CI does).
+    id: "pr-title",
+    title: "pull request title (becomes the squashed commit message)",
+    hint: 'Edit the title on GitHub: English, imperative, under 72 characters, e.g. "Restore the clipboard after the OCR fallback".',
+    explicit: true,
+    run: () => {
+      const title = process.env.PR_TITLE;
+      // Dependabot titles are generated ("Bump x from 1 to 2 in /src-tauri") and often longer.
+      if (title === undefined || process.env.PR_AUTHOR === "dependabot[bot]") return { ok: true };
+      const problems = titleProblems(title);
+      return { ok: problems.length === 0, details: problems.map((p) => `"${title}": ${p}`) };
+    },
   },
   {
     id: "build",
@@ -178,18 +228,64 @@ function selectGates() {
   return GATES.filter((g) => !g.explicit && (!g.full || args.has("--full")));
 }
 
-export function check() {
-  if (args.has("--fix")) {
-    const quiet = { cwd: ROOT, env, stdio: "ignore" };
-    spawnSync("cargo", ["fmt", "--manifest-path", MANIFEST], quiet);
-    spawnSync(node, [ESLINT, "--fix", "src"], quiet);
-    spawnSync(node, [PRETTIER, "--write", "--log-level", "warn", "."], quiet);
+/** Rewrites what can be fixed mechanically: Rust formatting, ESLint autofixes, Prettier, whitespace. */
+function fix() {
+  const quiet = { cwd: ROOT, env, stdio: "ignore" };
+  const cargo = spawnSync("cargo", ["fmt", "--manifest-path", MANIFEST], quiet);
+  if (cargo.error) console.log("  (cargo not found: skipped cargo fmt; install Rust from https://rustup.rs)");
+  spawnSync(node, [ESLINT, "--fix", ...ESLINT_TARGETS], quiet);
+  let whitespace = 0;
+  for (const file of scannedFiles()) {
+    const path = join(ROOT, file);
+    const text = readFileSync(path, "utf8");
+    const fixed = fixWhitespace(file, text);
+    if (fixed !== text) {
+      writeFileSync(path, fixed);
+      whitespace++;
+    }
   }
+  spawnSync(node, [PRETTIER, "--write", "--log-level", "warn", "."], quiet);
+  console.log(`Fixed formatting (rustfmt, ESLint, Prettier) and whitespace in ${whitespace} file(s).\n`);
+}
+
+/** GitHub Actions turns `::error` lines into annotations on the pull request, so a newcomer sees them in place. */
+function annotate(gate, details) {
+  if (process.env.GITHUB_ACTIONS !== "true") return;
+  const encode = (text) => text.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
+  let located = 0;
+  for (const line of details) {
+    const m = /^\[(\w+)\] (\S+?):(\d+) (.*)$/.exec(line);
+    if (!m) continue;
+    located++;
+    console.log(`::error file=${m[2]},line=${m[3]},title=${encode(`Project rule: ${m[1]}`)}::${encode(m[4])}`);
+  }
+  if (located < details.length || details.length === 0) {
+    console.log(`::error title=${encode(`${gate.id} failed`)}::${encode(gate.hint ?? gate.title)}`);
+  }
+}
+
+/** The closing advice, also written to the job summary on GitHub. */
+function advice(failedGates) {
+  const lines = failedGates.map((g) => `- **${g.id}**: ${g.hint ?? g.title}`);
+  const closing = [];
+  if (failedGates.some((g) => g.fixable)) {
+    closing.push("Most style failures fix themselves: node scripts/harness/check.mjs --fix, then commit.");
+  }
+  closing.push("See CONTRIBUTING.md → Style and formatting.");
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Checks failed\n\n${[...lines, "", ...closing].join("\n")}\n`);
+  }
+  return closing;
+}
+
+export function check() {
+  if (args.has("--fix")) fix();
 
   const gates = selectGates();
   const mode = only ? `only ${only}` : args.has("--changed") ? "changed" : args.has("--full") ? "full" : "fast";
   console.log(`ToneSnap check (${mode})`);
   const failed = [];
+  const failedGates = [];
   const before = fingerprints();
   for (const gate of gates) {
     const started = Date.now();
@@ -198,9 +294,15 @@ export function check() {
     console.log(`  ${ok ? "PASS" : "FAIL"} ${gate.id.padEnd(11)}${secs}s  ${gate.title}`);
     for (const line of details) console.log(`         ${line}`);
     for (const line of warnings) console.log(`         (warning) ${line}`);
-    if (!ok) failed.push(gate.id);
+    if (!ok) {
+      if (gate.hint) console.log(`         → ${gate.hint}`);
+      annotate(gate, details);
+      failed.push(gate.id);
+      failedGates.push(gate);
+    }
   }
   console.log(failed.length ? `\nFAILED: ${failed.join(", ")}` : "\nAll gates passed.");
+  for (const line of failed.length ? advice(failedGates) : []) console.log(line);
 
   // A pass covers the code as it was when the check started; anything edited meanwhile stays
   // dirty. `--only` runs a subset, so it never clears dirty groups.

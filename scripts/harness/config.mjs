@@ -49,7 +49,7 @@ export const GROUPS = {
 export const GATES_FOR_GROUP = {
   rust: ["rustfmt", "clippy", "test"],
   web: ["prettier", "tsc", "eslint", "vitest"],
-  harness: ["prettier"],
+  harness: ["prettier", "eslint", "harness"],
 };
 
 /** Paths the agent must not edit by hand (generated, vendored or owned by a package manager). */
@@ -105,25 +105,20 @@ export const REQUIRED_PERMISSIONS = [
   { pattern: /@tauri-apps\/plugin-opener/, permission: "opener:default" },
 ];
 
-/** Text files the per-file rules scan (relative to ROOT). */
-export const SCANNED = [
-  "src",
-  "src-tauri/src",
-  "src-tauri/prompts",
-  "src-tauri/capabilities",
-  "src-tauri/tauri.conf.json",
-  "src-tauri/Cargo.toml",
-  "scripts",
-  "docs",
-  ".claude",
-  "README.md",
-  "CLAUDE.md",
-  "index.html",
-  "dev.ps1",
-  "package.json",
-  "vite.config.ts",
-];
+/**
+ * Text files the per-file rules scan: every file in the repository (tracked, or untracked and not
+ * ignored) with one of these extensions or names. Generated lockfiles are skipped by the rules
+ * that cannot apply to them.
+ */
 export const TEXT_EXTENSIONS = /\.(rs|ts|tsx|mjs|js|json|md|toml|html|css|ps1|txt|ya?ml)$/;
+export const TEXT_NAMES =
+  /(^|\/)(\.editorconfig|\.gitattributes|\.gitignore|\.prettierignore|CODEOWNERS|LICENSE|pre-commit|pre-push)$/;
+
+/** Generated files nobody edits by hand; they are exempt from the whitespace and secret rules. */
+export const GENERATED = /(^|\/)(Cargo\.lock|pnpm-lock\.yaml)$/;
+
+/** Recorded model output: kept exactly as the model wrote it. */
+export const RECORDED = /^docs\/bench\//;
 
 /**
  * The repository is written in English. Vietnamese belongs only in the interface dictionaries,

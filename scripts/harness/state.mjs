@@ -1,5 +1,6 @@
 // Fingerprints of the source groups and the small JSON file the hooks share between calls.
 
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -25,6 +26,24 @@ export function listFiles(entries) {
   };
   for (const entry of entries) walk(join(ROOT, entry));
   return out.sort();
+}
+
+/**
+ * Every file git would commit (tracked, or untracked and not ignored), as forward-slash paths. This is
+ * what a contributor pushes, so the rules judge it and nothing else. Outside a git checkout it falls back
+ * to walking the whole tree.
+ */
+export function repoFiles() {
+  const git = spawnSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  const files =
+    git.status === 0
+      ? [...new Set(git.stdout.split("\0").filter(Boolean))].filter((f) => existsSync(join(ROOT, f)))
+      : listFiles(["."]);
+  return files.filter((f) => !f.split("/").some((part) => IGNORED_DIRS.has(part))).sort();
 }
 
 /** Hash of path, size and mtime for every file in each group. Cheap enough to run per hook. */

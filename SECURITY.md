@@ -31,6 +31,37 @@ Do not include real API keys or other people's data in the report.
   will be kept informed.
 - Credit in the security advisory once the fix is released, unless you prefer to stay anonymous.
 
+## How the code and releases are protected
+
+ToneSnap runs on users' machines with access to what they type, so a malicious change must not be able to
+reach a release unnoticed:
+
+- **No direct pushes.** `develop` and `master` change only through pull requests that a code owner approves;
+  a new push after the approval needs a new approval. Force pushes and branch deletion are blocked.
+- **Automated checks on every pull request:** the build and tests, [CodeQL](https://codeql.github.com/)
+  static analysis of the Rust, TypeScript and workflow code, dependency review (known vulnerabilities and
+  licenses of any new dependency), `cargo deny` (crates.io only, no known advisories) and `pnpm audit`.
+  A pull request that adds a high or critical code-scanning alert cannot be merged.
+- **Secret scanning with push protection** blocks commits that contain API keys or tokens.
+- **Pinned CI.** Every GitHub Action is pinned to a full commit SHA, workflows get a read-only token by
+  default, and workflows from outside contributors run only after a maintainer approves them.
+- **Dependabot** proposes dependency and security updates, which go through the same review.
+- **Release tags** (`v*`) can be created only by maintainers.
+- **[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/nhutruong-struct/struct-tonesnap)**
+  checks these practices weekly.
+
+### Verifying a download
+
+Only download ToneSnap from the
+[Releases page](https://github.com/nhutruong-struct/struct-tonesnap/releases) of this repository. Installers
+will be built by GitHub Actions from a tagged commit on `master`, never on a personal machine, and published
+with a [build provenance attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations).
+Once releases exist, you can check that an installer was built from this repository:
+
+```bash
+gh attestation verify ToneSnap_x.y.z_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
 ## Scope
 
 Examples of problems we want to hear about:
