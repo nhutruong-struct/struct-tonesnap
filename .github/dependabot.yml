@@ -21,6 +21,16 @@ updates:
       rust-minor-and-patch:
         update-types: ["minor", "patch"]
 
+  - package-ecosystem: cargo
+    directory: /src-tauri/fuzz
+    target-branch: develop
+    schedule:
+      interval: monthly
+    labels: ["dependencies", "rust"]
+    groups:
+      fuzz:
+        patterns: ["*"]
+
   - package-ecosystem: npm
     directory: /
     target-branch: develop

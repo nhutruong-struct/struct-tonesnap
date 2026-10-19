@@ -8,17 +8,40 @@ review, merge and release.
 | Setting | Value | Why |
 |---|---|---|
 | Default branch | `develop` | Pull requests target it without anyone having to change the base |
-| `develop` ruleset | Pull request required (1 code-owner approval, stale approvals dismissed, approval of the last push, conversations resolved); `check` and `dependency-review` green; no new high or critical CodeQL alert; squash merge only; no force push, no deletion | One commit per change, every change reviewed, tested and scanned |
+| `develop` ruleset | Pull request required (1 code-owner approval, stale approvals dismissed, approval of the last push, conversations resolved); `check` and `dependency-review` green on a branch that is up to date with `develop`; no new high or critical CodeQL alert; squash merge only; no force push, no deletion | One commit per change, every change reviewed, tested and scanned |
 | `master` ruleset | Same, but merge commits only | Releases keep `develop`'s history, so the next release merges cleanly |
 | Tag ruleset | Only admins create, move or delete `v*` tags | A release cannot be tagged by anyone else |
 | Ruleset bypass | Repository admins, **through pull requests only** | A sole maintainer cannot approve their own PR; the bypass lets them merge it, but never lets anyone push directly |
 | Merge buttons | Squash and merge commit; rebase off; auto-merge on; "Update branch" suggested | Squash for `develop`, merge commit for releases |
 | Head branches | Deleted automatically after the merge | No stale branches; protected branches are never deleted |
 | Actions | `GITHUB_TOKEN` read-only by default; every action pinned to a commit SHA; workflows from all outside contributors need approval | A fork's PR cannot run code with write access, nor run before someone looks at it; a hijacked action tag cannot change what runs |
-| Security | Private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, CodeQL, dependency review, OpenSSF Scorecard | See [SECURITY.md](../SECURITY.md) |
+| Security | Private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, CodeQL, dependency review, OpenSSF Scorecard, weekly fuzzing of the redaction | See [SECURITY.md](../SECURITY.md) and [OpenSSF Scorecard](#openssf-scorecard) |
 | Community | Issues (forms only), Discussions, no wiki | Questions and ideas go to Discussions; issues stay actionable |
 
 Change these in **Settings → Rules → Rulesets** and **Settings → General**; update this table in the same PR.
+
+### OpenSSF Scorecard
+
+Scorecard runs weekly and on every push to `develop`; each check scoring below 10 is an alert under
+**Security → Code scanning**. Where the open checks stand:
+
+| Check | Status | Why |
+|---|---|---|
+| Branch-Protection | Dismissed (won't fix) | The rulesets cover everything else; the rest needs 2 approvals and no admin bypass, which one maintainer cannot meet. Scorecard reads the rulesets with the default token, so no extra token is needed |
+| Code-Review | Dismissed (won't fix) | Counts changes approved by someone other than the author; the maintainer cannot approve their own PRs |
+| SAST | Clears with time | The first commit predates CodeQL; it leaves Scorecard's window of the last 30 commits after about 25 more merges |
+| Maintained | Clears with time | Scores 0 for repositories younger than 90 days (until 2027-01-16), then needs activity most weeks |
+| Fuzzing | Fixed | `src-tauri/fuzz/` with `.github/workflows/fuzz.yml` |
+| CII-Best-Practices | Dismissed after registering | The [OpenSSF Best Practices](https://www.bestpractices.dev) passing badge scores 5; only gold scores 10, and gold needs at least two maintainers |
+
+Revisit the dismissed alerts when a second maintainer joins: a second approver allows 2 required approvals,
+no admin bypass, and reviewed PRs.
+
+To fuzz locally (needs the nightly toolchain and `cargo install cargo-fuzz`), from `src-tauri`:
+
+```bash
+cargo +nightly fuzz run redact -- -max_total_time=60
+```
 
 ## Triage
 
