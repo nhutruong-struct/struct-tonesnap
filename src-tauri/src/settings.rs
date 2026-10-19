@@ -62,7 +62,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             ui_language: "auto".into(),
-            trigger_mode: TriggerMode::Hotkey,
+            trigger_mode: TriggerMode::Icon,
             // Ctrl+Alt+Space belongs to Claude desktop's Quick Entry. Ctrl+Alt+E only shadows
             // Word's euro-sign shortcut, which our users rarely need.
             hotkey: "ctrl+alt+e".into(),
@@ -277,7 +277,7 @@ mod tests {
         let dir = TempDir::new("round-trip");
         let settings = Settings {
             hotkey: "ctrl+alt+r".into(),
-            trigger_mode: TriggerMode::Icon,
+            trigger_mode: TriggerMode::Hotkey,
             tones: vec!["polite".into()],
             ..Settings::default()
         };
@@ -285,7 +285,7 @@ mod tests {
         let (loaded, issue) = load_from(&dir.file());
         assert_eq!(issue, None);
         assert_eq!(loaded.hotkey, "ctrl+alt+r");
-        assert_eq!(loaded.trigger_mode, TriggerMode::Icon);
+        assert_eq!(loaded.trigger_mode, TriggerMode::Hotkey);
         assert_eq!(loaded.tones, ["polite"]);
         assert!(!dir.file().with_extension("json.partial").exists());
     }
@@ -374,7 +374,7 @@ mod tests {
     #[test]
     fn settings_serialize_in_camel_case_with_snake_case_enums() {
         let value = serde_json::to_value(Settings::default()).unwrap();
-        assert_eq!(value["triggerMode"], "hotkey");
+        assert_eq!(value["triggerMode"], "icon");
         assert_eq!(value["provider"], "gemini");
         assert_eq!(value["geminiModel"], "gemini-3.8-flash");
         assert_eq!(value["openrouterModel"], "openai/gpt-oss-20b:free");

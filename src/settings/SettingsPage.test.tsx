@@ -235,6 +235,20 @@ describe("AI providers", () => {
     expect((field("Model") as HTMLInputElement).value).toBe("gemini-3.8-flash");
   });
 
+  test("Get Key opens the page where the selected provider hands out keys", async () => {
+    const backend = await openAi();
+    await click("Get Key");
+    await click("Groq – free tier, very fast");
+    await click("Get Key");
+    await click("Claude API – paid, highest quality");
+    await click("Get Key");
+    expect(backend.callsTo("plugin:opener|open_url").map((a) => a.url)).toEqual([
+      "https://aistudio.google.com/apikey",
+      "https://console.groq.com/keys",
+      "https://console.anthropic.com/settings/keys",
+    ]);
+  });
+
   test("each provider keeps its own key and model", async () => {
     const backend = await openAi();
     await click("Groq – free tier, very fast");
@@ -252,6 +266,25 @@ describe("AI providers", () => {
     expect(settings.provider).toBe("openrouter");
     expect(settings.groqModel).toBe("openai/gpt-oss-120b");
     expect(settings.geminiModel).toBe("gemini-3.8-flash");
+  });
+
+  test("the Model field offers every suggested model and saves the one picked", async () => {
+    const backend = await openAi();
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "Show suggested models" }));
+    });
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+    ]);
+    act(() => {
+      fireEvent.click(screen.getByRole("option", { name: "gemini-2.5-flash" }));
+    });
+    await click("Save Settings");
+    expect(saved(backend)[0].geminiModel).toBe("gemini-2.5-flash");
   });
 
   test("a provider that has a saved key says so", async () => {

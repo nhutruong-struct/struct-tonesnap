@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   ALLOWED_HOSTS,
+  BROWSER_LINK_HOSTS,
   CONTENT_IDENTIFIERS,
   INVOKE_FILE,
   MAX_FILE_LINES,
@@ -177,7 +178,8 @@ const FILE_RULES = {
     const source = isRust(file) ? withoutTests(text) : text;
     const out = [];
     for (const m of source.matchAll(/\b(?:https?|wss?):\/\/([A-Za-z0-9.-]+)/g)) {
-      if (!ALLOWED_HOSTS.includes(m[1].toLowerCase())) {
+      const host = m[1].toLowerCase();
+      if (!ALLOWED_HOSTS.includes(host) && !BROWSER_LINK_HOSTS.includes(host)) {
         out.push({
           line: lineOf(source, m.index),
           message: `${m[1]} is not an allowed host (${ALLOWED_HOSTS.join(", ")}); new endpoints need the user's approval`,

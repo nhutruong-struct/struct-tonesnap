@@ -146,6 +146,12 @@ export const ALLOWED_HOSTS = [
   "localhost",
 ];
 
+/**
+ * Pages the interface opens in the user's own browser (where each provider hands out API keys).
+ * The app sends nothing to them, so they are not endpoints that user text could reach.
+ */
+export const BROWSER_LINK_HOSTS = ["aistudio.google.com", "console.groq.com", "console.anthropic.com"];
+
 /** Only platform glue may use `unsafe`. */
 export const UNSAFE_ALLOWED = /^src-tauri\/src\/platform\//;
 

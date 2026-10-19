@@ -19,6 +19,7 @@ How both windows look and why. The rules here keep new screens consistent: add a
 - **UI-11** Checkbox, radio and switch are drawn in CSS on top of the native inputs (`appearance: none`), so keyboard and screen-reader behavior is the browser's. The state shows in the control itself: fill and a mark that scales in.
 - **UI-12** The focus ring is drawn only for keyboard focus (`:focus-visible`), 2 px outside the control. A mouse click never leaves a ring. Text fields and selects show a 2 px accent line on focus (their border plus 1 px); a transparent outline keeps it visible in Windows high-contrast mode.
 - **UI-13** On/off settings are **switches** (`role="switch"`, a checkbox underneath). A choice among several, or one of many that can be ticked together (tones), is a **radio** or a **checkbox**.
+- **UI-15** A text field with suggestions (the model name) is a **combobox** drawn by the app (`ModelCombobox`), not a `<datalist>`: the native list cannot take the tokens and shows only the suggestions that match the text. The arrow at the right edge opens the list, which always shows every suggestion, marks the current value and floats over the card (a card holding one is not clipped). Arrow keys move, Enter picks, Esc closes; the text can still be any value. Roles: `combobox` on the field, `listbox` and `option` on the list.
 - **UI-14** Motion is 120 ms. With reduced motion requested, transitions and animations are effectively off.
 
 ## Popup
