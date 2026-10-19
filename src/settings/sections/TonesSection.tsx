@@ -1,4 +1,4 @@
-import type { Mode, Settings, TargetLanguage, ToneId } from "../../lib/api";
+import type { Mode, TargetLanguage, ToneId } from "../../lib/api";
 import { TONE_IDS, toneDescription, toneLabel } from "../../lib/tones";
 import { CheckField, Card, Field, Section, type SectionProps } from "../fields";
 
@@ -50,18 +50,6 @@ export function TonesSection({ settings, update, t }: SectionProps) {
             onChange={() => toggleTone(id)}
           />
         ))}
-      </Card>
-      <Card>
-        <Field label={t("explain.label")}>
-          <select
-            value={settings.explainLanguage}
-            onChange={(e) => update("explainLanguage", e.target.value as Settings["explainLanguage"])}
-          >
-            <option value="vi">{t("explain.vi")}</option>
-            <option value="en">{t("explain.en")}</option>
-            <option value="off">{t("explain.off")}</option>
-          </select>
-        </Field>
       </Card>
     </Section>
   );

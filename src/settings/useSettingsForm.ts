@@ -27,7 +27,6 @@ const FIELD_LABELS: Partial<Record<keyof Settings, Key>> = {
   targetLanguage: "target.label",
   mode: "mode.label",
   tones: "section.tones",
-  explainLanguage: "explain.label",
   contextChars: "contextChars.label",
   ocrFallback: "ocr.label",
   redact: "redact.label",

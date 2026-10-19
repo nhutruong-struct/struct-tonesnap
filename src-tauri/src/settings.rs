@@ -93,8 +93,6 @@ pub struct Settings {
     pub mode: Mode,
     /// Tone ids in display order, see `prompt::TONES`.
     pub tones: Vec<String>,
-    /// "vi", "en" or "off".
-    pub explain_language: String,
     /// Characters of surrounding text to send on each side of the selection.
     pub context_chars: u32,
     pub ocr_fallback: bool,
@@ -124,7 +122,6 @@ impl Default for Settings {
             target_language: TargetLanguage::default(),
             mode: Mode::default(),
             tones: prompt::TONES.iter().map(|t| t.to_string()).collect(),
-            explain_language: "vi".into(),
             context_chars: 600,
             ocr_fallback: true,
             redact: true,
@@ -268,10 +265,7 @@ fn parse(text: &str) -> Option<(Settings, Vec<String>)> {
             invalid.push(key);
         }
     }
-    let mut settings: Settings = serde_json::from_value(merged).unwrap_or_default();
-    // Tones that no longer exist (an older version had six) are dropped without a warning; when
-    // none of the saved ones is left, every tone is on.
-    settings.tones = prompt::requested_tones(&settings.tones);
+    let settings = serde_json::from_value(merged).unwrap_or_default();
     Some((settings, invalid))
 }
 
@@ -456,19 +450,6 @@ mod tests {
         assert_eq!(settings.mode, Mode::Rewrite);
         assert_eq!(settings.hotkey, "ctrl+alt+r");
         assert_eq!(invalid, ["targetLanguage"]);
-    }
-
-    #[test]
-    fn tones_from_an_older_version_keep_only_the_ones_that_still_exist() {
-        let (settings, invalid) =
-            parse(r#"{ "tones": ["minimal", "concise", "polite"] }"#).unwrap();
-        assert_eq!(settings.tones, ["concise"]);
-        assert!(invalid.is_empty());
-
-        let (settings, invalid) =
-            parse(r#"{ "tones": ["minimal", "polite", "friendly"] }"#).unwrap();
-        assert_eq!(settings.tones, ["concise", "natural", "formal"]);
-        assert!(invalid.is_empty());
     }
 
     #[test]

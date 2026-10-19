@@ -27,8 +27,8 @@ How both windows look and why. The rules here keep new screens consistent: add a
 - **UI-20** Header: app icon, the app the text came from, then Settings and Close. Every part of it that is not a button is a drag handle.
 - **UI-21** Under the header, chips say where the selection and context came from, how many values were masked and, for a read-only field, that only Copy works (POP-20).
 - **UI-22** *Removed.* The popup does not quote the selection (POP-22).
-- **UI-23** Each tone is a card: a number badge (also the key that applies it), the tone name, *Apply* (primary) and *Copy*, then the text and the note. A card is highlighted when the pointer is over it. A card that is still being written has a dashed border and no fill, and its buttons are off (POP-32).
-- **UI-24** Mistakes in the original show the wrong text struck through on red and the fix on green, with the explanation under it.
+- **UI-23** Each tone is a card: a number badge (also the key that applies it), the tone name, *Apply* (primary) and *Copy*, then the text. A card is highlighted when the pointer is over it. A card that is still being written has a dashed border and no fill, and its buttons are off (POP-32).
+- **UI-24** *Removed.* Mistakes in the original are no longer shown (AI-06..08).
 - **UI-25** The footer shows the keys as key caps with their effect; while previewing it shows only *Esc*. On the right: progress, or timings and the model (POP-23).
 - **UI-26** Errors are a red-tinted card with an icon, a title, a detail and the buttons; notices are one line with an info icon and *Close*.
 

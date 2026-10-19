@@ -118,8 +118,6 @@ fn redacted_payload(settings: &Settings, captured: &Captured) -> (Payload, Vec<(
         target_language: settings.target_language,
         mode: settings.mode,
         tones: prompt::requested_tones(&settings.tones),
-        explanation_language: prompt::explanation_language_name(&settings.explain_language)
-            .to_string(),
     };
     (payload, redactor.entries)
 }
@@ -156,7 +154,6 @@ mod tests {
             redactions,
             vec![("[EMAIL_1]".to_string(), "an@corp.vn".to_string())]
         );
-        assert_eq!(payload.explanation_language, "Vietnamese");
     }
 
     #[test]
@@ -226,7 +223,7 @@ mod tests {
         assert_eq!(value["source"], "clipboard");
         assert_eq!(value["contextSource"], "none");
         assert_eq!(value["payload"]["contextBefore"], "");
-        assert_eq!(value["payload"]["explanationLanguage"], "Vietnamese");
+        assert!(value["payload"].get("explanationLanguage").is_none());
         assert_eq!(value["payload"]["targetLanguage"], "vi");
         assert_eq!(value["payload"]["mode"], "translate");
         assert_eq!(value["payload"]["tones"], serde_json::json!(settings.tones));

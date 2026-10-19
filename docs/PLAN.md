@@ -2,7 +2,7 @@
 
 > Working name. A desktop app (Windows first, macOS later): select text (Vietnamese, English or Japanese) in any
 > app → a popup suggests several versions in the chosen language (Vietnamese by default) and tones (concise,
-> natural, formal), translated or rewritten, with explanations in Vietnamese → Apply replaces the selection in
+> natural, formal), translated or rewritten → Apply replaces the selection in
 > place when the field is editable.
 >
 > How the built parts behave, rule by rule: [specs/](specs/README.md).
@@ -26,7 +26,8 @@
 | Start with Windows (2026-10-08) | Off until the user ticks it in Settings. Windows keeps the choice (the autostart plugin's `Run` registry entry), so it is not in `settings.json`; Settings reads it on open and changes it on Save. The `ANTHROPIC_API_KEY` environment fallback works only in debug builds, so a developer's key is never billed silently |
 | Default trigger (2026-10-18) | `triggerMode` defaults to `icon`: the floating icon shows next to a selection and the hotkey still works. A settings file that already holds a `triggerMode` keeps it; only new installs and fields that fell back to the default change |
 | Get Key button (2026-10-19) | The API key card has a *Get Key* button that opens the selected provider's key page in the default browser through `opener:default`. Those pages (`aistudio.google.com`, `console.groq.com`, `console.anthropic.com`) are listed in `BROWSER_LINK_HOSTS` in the harness config, apart from `ALLOWED_HOSTS`: the app sends nothing to them. |
-| Target language and modes (2026-10-19) | The popup has two quick controls: the **target language** (`vi` default, `en`, `ja`) and the **mode** (`translate` default: faithful to the meaning and structure; `rewrite`: rephrases freely). Every variant is in the target language whatever language the selection is in; Settings holds the defaults, the popup's choice applies to one session. Tones were cut from six to three (`concise`, `natural`, `formal`); a saved tone list keeps the tones that still exist, or turns all three on when none is left. The old "translated from Vietnamese" hint and the Vietnamese letter test went away: the model detects the language |
+| Target language and modes (2026-10-19) | The popup has two quick controls: the **target language** (`vi` default, `en`, `ja`) and the **mode** (`translate` default: faithful to the meaning and structure; `rewrite`: rephrases freely). Every variant is in the target language whatever language the selection is in; Settings holds the defaults, the popup's choice applies to one session. Tones were cut from six to three (`concise`, `natural`, `formal`). The old "translated from Vietnamese" hint and the Vietnamese letter test went away: the model detects the language |
+| Explanations removed (2026-10-19) | The model no longer lists the mistakes in the selection or writes a note per variant, and the `explainLanguage` setting is gone: the explanations made every answer longer and slower. The answer is now only the text of each variant. Nothing was kept for older settings files, because no version with the old shapes was released |
 | Interface design (2026-10-08) | One design system in `src/styles/` (tokens on a 4 px grid, accent taken from the app icon, light and dark), hand-drawn checkbox, radio and switch with a keyboard-only focus ring, a card per tone in the popup, and a Settings window with a sidebar and one section at a time. No new dependency: system font, inline SVG icons. Rules in [specs/ui-design.md](specs/ui-design.md) |
 | Open source (2026-10-19) | Public on GitHub as `nhutruong-struct/struct-tonesnap` under the MIT License, starting from a fresh history. `develop` (default) and `master` are protected by rulesets: pull requests only, CI `check` green, squash into `develop`, merge commits into `master` for releases; head branches are deleted after the merge. Contributor process in `CONTRIBUTING.md`, maintainer process in `docs/MAINTAINING.md`; questions and ideas go to GitHub Discussions |
 | Contributor style enforcement (2026-10-19) | CI `check` is the gate (same name, so the rulesets did not change) and a fork PR runs the same gates. Added to it: ESLint for `scripts/`, the project rules over every text file in the repository (secrets and English-only now cover `.github/`, `site/`, root docs), a `whitespace` rule (the `.editorconfig` rules for files no formatter touches), a `suppress` rule (`eslint-disable` needs a reason; `prettier-ignore` and `rustfmt::skip` banned), a PR-title check (English, imperative, under 72 characters; run from `ci.yml` on `pull_request` with the `edited` trigger) and failure hints with line annotations. For contributors: `pnpm run fix`, optional `.githooks/` (`pnpm run hooks:install`), style configuration under CODEOWNERS. Markdown stays unformatted on purpose (hand-aligned tables); the Win32 integration tests stay local. Details in [HARNESS.md](HARNESS.md#enforcement-layers) |
@@ -40,7 +41,7 @@ Trigger (hotkey / floating icon / automatic popup)
   → Selection + context: UIA → (Word COM / browser extension) → on-device screenshot + OCR → clipboard
   → Safety: skip password fields and blocked apps, redact sensitive data (reversibly)
   → AI call: Gemini | Groq | OpenRouter | Claude API (own key) | enterprise gateway (Phase 4)
-  → Popup: one version per tone + explanations
+  → Popup: one version per tone
   → Apply: refocus the original app → paste through the clipboard → restore the previous clipboard
 ```
 

@@ -28,12 +28,10 @@ function key(init: KeyboardEventInit) {
 }
 
 describe("suggestions", () => {
-  test("shows each tone with redacted values restored, plus the issues", async () => {
+  test("shows each tone with redacted values restored", async () => {
     await answered();
     expect(screen.getByText("Please review my PR, an@corp.vn.")).toBeTruthy();
     expect(screen.getByText("Could you please review my PR, an@corp.vn?")).toBeTruthy();
-    expect(screen.getByText("Fixed the spelling.")).toBeTruthy();
-    expect(screen.getByText("Spell it out in writing.")).toBeTruthy();
     expect(screen.getByText("0.8s / 2.4s · gemini-3.8-flash")).toBeTruthy();
   });
 

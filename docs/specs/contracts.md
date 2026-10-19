@@ -64,7 +64,7 @@ The target window handle stays in Rust and is never serialized.
 
 ### Payload
 
-`app`, `contextBefore`, `selection`, `contextAfter`, `screenText` (all strings, redacted), `targetLanguage` (`vi`, `en` or `ja`), `mode` (`translate` or `rewrite`), `tones` (`ToneId[]`, the requested tones in order), `explanationLanguage` (`"Vietnamese"`, `"English"` or `"none"`).
+`app`, `contextBefore`, `selection`, `contextAfter`, `screenText` (all strings, redacted), `targetLanguage` (`vi`, `en` or `ja`), `mode` (`translate` or `rewrite`), `tones` (`ToneId[]`, the requested tones in order).
 
 ### RequestEvent
 
@@ -76,11 +76,11 @@ The target window handle stays in Rust and is never serialized.
 
 ### Suggestions (model output, parsed in the popup)
 
-`detected_language`, `variants` (keyed by tone id, each `{ text, note }`), `issues` (`{ original, fix, explanation }[]`). While streaming, any part may be missing (AI-20..22).
+`variants` (keyed by tone id, each `{ text }`). While streaming, any part may be missing (AI-20, AI-21).
 
 ### Settings
 
-See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `explainLanguage` `vi|en|off`, `targetLanguage` `vi|en|ja`, `mode` `translate|rewrite`.
+See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `targetLanguage` `vi|en|ja`, `mode` `translate|rewrite`.
 
 ### InstalledModel
 

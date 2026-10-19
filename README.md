@@ -20,8 +20,7 @@
 
 ToneSnap is a small desktop app for people who write English at work, especially Vietnamese speakers. Select a
 sentence in Slack, Outlook, Teams, a browser or any other app, press `Ctrl+Alt+E` (or click the floating icon next
-to the selection), and a popup suggests several versions, each in a different tone, with a short
-explanation of what changed. **Apply** pastes the version you pick back in place of the selection.
+to the selection), and a popup suggests several versions, each in a different tone. **Apply** pastes the version you pick back in place of the selection.
 
 ## Features
 
@@ -29,7 +28,7 @@ explanation of what changed. **Apply** pastes the version you pick back in place
   OCR when neither works. Your clipboard is always restored.
 - **Translate or rewrite, in Vietnamese, English or Japanese.** Pick the target language (Vietnamese by default)
   and a mode, **Translate** (close to the original) or **Rewrite** (rephrased freely), right in the popup.
-- **Several tones at once:** concise, natural and formal, with explanations in Vietnamese or English.
+- **Several tones at once:** concise, natural and formal.
 - **Apply in place.** Replaces the selection in the original app when the field is editable; **Copy** otherwise.
 - **Privacy first.** Emails, phone numbers, IDs, card numbers, URLs, API keys and your own terms are redacted
   before anything is sent, and restored for display. Password fields and apps you block are never read.
@@ -99,7 +98,7 @@ local model: the (redacted) text always goes to the provider you choose.
 2. Press `Ctrl+Alt+E`, or click the ToneSnap icon that appears next to the selection.
 3. Read the suggestions, then click **Apply** on the one you like (or **Copy**).
 
-The hotkey, the trigger mode, the tones, the explanation language and the blocked apps can be changed in
+The hotkey, the trigger mode, the tones, the target language and mode, and the blocked apps can be changed in
 Settings. `Ctrl+Alt+Space` is avoided by default because Claude desktop's Quick Entry uses it.
 
 ## How it works
@@ -109,7 +108,7 @@ Trigger (hotkey / floating icon)
   → Selection + context: UI Automation → clipboard → on-device OCR
   → Safety: skip password fields and blocked apps, redact sensitive data (reversibly)
   → AI call to the provider you chose, streamed
-  → Popup: one version per tone + explanations
+  → Popup: one version per tone
   → Apply: refocus the original app → paste → restore the previous clipboard
 ```
 

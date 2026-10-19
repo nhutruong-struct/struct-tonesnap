@@ -54,7 +54,6 @@ pub struct Payload {
     pub target_language: TargetLanguage,
     pub mode: Mode,
     pub tones: Vec<String>,
-    pub explanation_language: String,
 }
 
 const TAGS: &[&str] = &[
@@ -66,7 +65,6 @@ const TAGS: &[&str] = &[
     "target_language",
     "mode",
     "tones",
-    "explanation_language",
 ];
 
 /// Stop data from closing one of our tags early.
@@ -81,7 +79,7 @@ fn neutralize(text: &str) -> String {
 fn reminder(p: &Payload) -> String {
     let language = p.target_language.name();
     let tones = p.tones.join(", ");
-    let mut parts = vec![match p.mode {
+    match p.mode {
         Mode::Translate => format!(
             "Translate the selection into {language}, one version per tone: {tones}. \
              Stay close to its meaning and structure."
@@ -90,12 +88,7 @@ fn reminder(p: &Payload) -> String {
             "Rewrite the selection in {language}, one version per tone: {tones}. \
              Write every version in {language}, whatever language the selection is in."
         ),
-    }];
-    parts.push(match p.explanation_language.as_str() {
-        "none" => "Leave every note empty and return no issues.".into(),
-        language => format!("Write every note and explanation in {language}."),
-    });
-    parts.join(" ")
+    }
 }
 
 pub fn user_turn(p: &Payload) -> String {
@@ -113,17 +106,8 @@ pub fn user_turn(p: &Payload) -> String {
     tag("target_language", p.target_language.name());
     tag("mode", p.mode.name());
     tag("tones", &p.tones.join(", "));
-    tag("explanation_language", &p.explanation_language);
     out.push_str(&reminder(p));
     out
-}
-
-pub fn explanation_language_name(code: &str) -> &'static str {
-    match code {
-        "vi" => "Vietnamese",
-        "en" => "English",
-        _ => "none",
-    }
 }
 
 #[cfg(test)]
@@ -134,7 +118,6 @@ mod tests {
         Payload {
             selection: selection.into(),
             tones: tones.iter().map(|t| t.to_string()).collect(),
-            explanation_language: "Vietnamese".into(),
             ..Default::default()
         }
     }
@@ -179,8 +162,7 @@ mod tests {
         assert!(turn.contains("<mode>\ntranslate\n</mode>\n"));
         assert!(turn.ends_with(
             "Translate the selection into Japanese, one version per tone: concise, formal. \
-             Stay close to its meaning and structure. \
-             Write every note and explanation in Vietnamese."
+             Stay close to its meaning and structure."
         ));
     }
 
@@ -194,8 +176,7 @@ mod tests {
         assert!(turn.contains("<mode>\nrewrite\n</mode>\n"));
         assert!(turn.ends_with(
             "Rewrite the selection in Vietnamese, one version per tone: natural. \
-             Write every version in Vietnamese, whatever language the selection is in. \
-             Write every note and explanation in Vietnamese."
+             Write every version in Vietnamese, whatever language the selection is in."
         ));
     }
 
@@ -204,26 +185,24 @@ mod tests {
         let turn = user_turn(&Payload {
             app: "Slack".into(),
             context_after: "thanks".into(),
-            explanation_language: "English".into(),
             ..payload("pls review", &["formal"])
         });
         assert!(turn.starts_with("<app>\nSlack\n</app>\n<selection>\npls review\n</selection>\n"));
         assert!(turn.contains("<context_after>\nthanks\n</context_after>\n"));
         assert!(!turn.contains("<context_before>"));
         assert!(!turn.contains("<screen_text>"));
-        assert!(turn.ends_with("Write every note and explanation in English."));
+        assert!(!turn.contains("<explanation_language>"));
+        assert!(turn.contains("<tones>\nformal\n</tones>\n"));
     }
 
     #[test]
-    fn explanations_can_be_turned_off() {
-        assert_eq!(explanation_language_name("vi"), "Vietnamese");
-        assert_eq!(explanation_language_name("en"), "English");
-        assert_eq!(explanation_language_name("off"), "none");
-        let turn = user_turn(&Payload {
-            explanation_language: "none".into(),
-            ..payload("ok", &["concise"])
-        });
-        assert!(turn.ends_with("Leave every note empty and return no issues."));
+    fn the_schema_asks_for_nothing_but_the_text_of_each_variant() {
+        let schema = output_schema(&["concise".to_string()]);
+        let variant = &schema["properties"]["variants"]["properties"]["concise"];
+        assert_eq!(variant["required"], json!(["text"]));
+        assert!(variant["properties"].get("note").is_none());
+        assert!(schema["properties"].get("issues").is_none());
+        assert_eq!(schema["required"], json!(["variants"]));
     }
 
     #[test]

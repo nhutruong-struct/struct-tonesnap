@@ -24,7 +24,6 @@ export interface Payload extends RequestOptions {
   contextAfter: string;
   screenText: string;
   tones: ToneId[];
-  explanationLanguage: string;
 }
 
 export interface Session {
@@ -64,10 +63,8 @@ export interface Notice {
 
 /** Model output, possibly still incomplete while streaming. */
 export interface Suggestions {
-  detected_language?: string;
   /** Keyed by tone id, in the requested order. */
-  variants?: Partial<Record<string, { text?: string; note?: string }>>;
-  issues?: { original?: string; fix?: string; explanation?: string }[];
+  variants?: Partial<Record<string, { text?: string }>>;
 }
 
 export type ProviderId = "claude" | "gemini" | "groq" | "openrouter";
@@ -90,7 +87,6 @@ export interface Settings {
   targetLanguage: TargetLanguage;
   mode: Mode;
   tones: ToneId[];
-  explainLanguage: "vi" | "en" | "off";
   contextChars: number;
   ocrFallback: boolean;
   redact: boolean;

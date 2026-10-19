@@ -10,7 +10,7 @@ describe("parseSuggestions", () => {
   });
 
   test("reads an answer that is still streaming", () => {
-    const partial = ANSWER.slice(0, ANSWER.indexOf("Fixed the"));
+    const partial = ANSWER.slice(0, ANSWER.indexOf('"formal"'));
     const parsed = parseSuggestions(partial);
     expect(parsed.variants?.concise?.text).toBe("Please review my PR, [EMAIL_1].");
     expect(parsed.variants?.formal).toBeUndefined();
@@ -28,21 +28,17 @@ describe("toVariants", () => {
     const [concise, formal] = toVariants(["concise", "formal"], partial, false, redactions);
     expect(concise.ready).toBe(true);
     expect(concise.text).toBe("Please review my PR, an@corp.vn.");
-    expect(concise.note).toBe("Fixed the spelling.");
     expect(formal.ready).toBe(false);
   });
 
-  test("the last variant is ready once the issues start or the request finishes", () => {
-    const withIssues = parseSuggestions(ANSWER.slice(0, ANSWER.indexOf('"issues"') + 12));
-    expect(toVariants(["concise", "formal"], withIssues, false, redactions)[1].ready).toBe(true);
-
-    const noIssues = parseSuggestions(ANSWER.slice(0, ANSWER.indexOf('"issues"') - 1) + "}");
-    expect(toVariants(["concise", "formal"], noIssues, false, redactions)[1].ready).toBe(false);
-    expect(toVariants(["concise", "formal"], noIssues, true, redactions)[1].ready).toBe(true);
+  test("the last variant is ready only once the request has finished", () => {
+    const whole = parseSuggestions(ANSWER);
+    expect(toVariants(["concise", "formal"], whole, false, redactions)[1].ready).toBe(false);
+    expect(toVariants(["concise", "formal"], whole, true, redactions)[1].ready).toBe(true);
   });
 
   test("a variant without text is never ready", () => {
     const [concise] = toVariants(["concise"], {}, true, []);
-    expect(concise).toEqual({ tone: "concise", text: "", note: "", ready: false });
+    expect(concise).toEqual({ tone: "concise", text: "", ready: false });
   });
 });

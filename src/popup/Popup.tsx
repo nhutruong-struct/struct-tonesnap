@@ -6,7 +6,7 @@ import { useWindowKeydown } from "../lib/useWindowKeydown";
 import { ErrorPanel } from "./ErrorPanel";
 import { OptionsBar } from "./OptionsBar";
 import { PreviewPanel } from "./PreviewPanel";
-import { IssueList, VariantList } from "./SuggestionList";
+import { VariantList } from "./SuggestionList";
 import { parseSuggestions, toVariants } from "./suggestions";
 import { usePopupState, type Phase } from "./usePopupState";
 
@@ -89,12 +89,7 @@ export default function Popup() {
       <main>
         {phase === "preview" && <PreviewPanel payload={session.payload} onSend={send} t={t} />}
         {phase === "error" && outcome && <ErrorPanel outcome={outcome} onRetry={send} t={t} />}
-        {writing && (
-          <>
-            <VariantList variants={variants} readOnly={readOnly} onApply={apply} onCopy={copy} t={t} />
-            <IssueList issues={suggestions.issues} redactions={redactions} t={t} />
-          </>
-        )}
+        {writing && <VariantList variants={variants} readOnly={readOnly} onApply={apply} onCopy={copy} t={t} />}
       </main>
       <footer>
         <KeyHints readOnly={readOnly} preview={phase === "preview"} t={t} />

@@ -14,8 +14,12 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ### Changed
 
-- Tones are now **Concise**, **Natural** and **Formal**. A saved tone list keeps the tones that still exist, or
-  turns all three on when none is left.
+- Tones are now **Concise**, **Natural** and **Formal**.
+
+### Removed
+
+- The explanations (a note per version and the list of mistakes in the original) and their setting: they made
+  every answer longer and slower.
 
 ### Fixed
 

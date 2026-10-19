@@ -173,12 +173,6 @@ html[data-window="popup"] #root {
   user-select: text;
 }
 
-.note {
-  margin-top: var(--s-1);
-  color: var(--text-2);
-  font-size: var(--fs-small);
-}
-
 .skeleton {
   height: 14px;
   width: 88%;
@@ -209,9 +203,8 @@ html[data-window="popup"] #root {
   }
 }
 
-/* ---------------------------------------------------------------- issues */
+/* --------------------------------------------------------------- preview */
 
-.issues,
 .preview {
   padding: var(--s-3) var(--s-4);
   border: 1px solid var(--border);
@@ -219,7 +212,6 @@ html[data-window="popup"] #root {
   background: var(--surface);
 }
 
-.issues h3,
 .preview h3 {
   margin-bottom: var(--s-2);
   color: var(--text-2);
@@ -228,46 +220,6 @@ html[data-window="popup"] #root {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-
-.issues ul {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.issues .from,
-.issues .to {
-  padding: 1px var(--s-1);
-  border-radius: var(--s-1);
-}
-
-.issues .from {
-  background: var(--bad-bg);
-  color: var(--bad);
-  text-decoration: line-through;
-}
-
-.issues .arrow {
-  margin: 0 var(--s-2);
-  color: var(--text-3);
-}
-
-.issues .to {
-  background: var(--safe-bg);
-  color: var(--safe);
-  font-weight: 600;
-}
-
-.issues p {
-  margin-top: var(--s-1);
-  color: var(--text-2);
-  font-size: var(--fs-small);
-}
-
-/* --------------------------------------------------------------- preview */
 
 .preview dl {
   display: grid;

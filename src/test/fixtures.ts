@@ -17,7 +17,6 @@ export function settings(overrides: Partial<Settings> = {}): Settings {
     targetLanguage: "vi",
     mode: "translate",
     tones: ["concise", "natural", "formal"],
-    explainLanguage: "vi",
     contextChars: 600,
     ocrFallback: true,
     redact: true,
@@ -45,7 +44,6 @@ export function session(overrides: Partial<Session> = {}): Session {
       targetLanguage: "vi",
       mode: "translate",
       tones: ["concise", "formal"],
-      explanationLanguage: "English",
     },
     redactions: [["[EMAIL_1]", "an@corp.vn"]],
     preview: false,
@@ -60,10 +58,8 @@ export function requestEvent(overrides: Partial<RequestEvent> = {}): RequestEven
 
 /** A complete model answer for the tones in `session()`. */
 export const ANSWER = JSON.stringify({
-  detected_language: "en",
   variants: {
-    concise: { text: "Please review my PR, [EMAIL_1].", note: "Fixed the spelling." },
-    formal: { text: "Could you please review my PR, [EMAIL_1]?", note: "" },
+    concise: { text: "Please review my PR, [EMAIL_1]." },
+    formal: { text: "Could you please review my PR, [EMAIL_1]?" },
   },
-  issues: [{ original: "pls", fix: "please", explanation: "Spell it out in writing." }],
 });

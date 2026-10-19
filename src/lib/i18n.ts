@@ -86,8 +86,7 @@ const vi = {
   "autoDelay.label": "Độ trễ trước khi tự bật (ms)",
 
   "section.tones": "Ngôn ngữ và văn phong",
-  "section.tones.desc":
-    "Ngôn ngữ đích và chế độ popup mở ra với, các văn phong sẽ hiện cho mỗi đoạn chọn, và ngôn ngữ giải thích lỗi.",
+  "section.tones.desc": "Ngôn ngữ đích và chế độ mặc định của popup, cùng các văn phong hiển thị cho mỗi đoạn chọn.",
   "target.label": "Ngôn ngữ đích mặc định",
   "target.hint": "Mọi phiên bản đều viết bằng ngôn ngữ này, dù đoạn chọn là tiếng gì. Đổi nhanh được trong popup.",
   "target.vi": "Tiếng Việt",
@@ -98,10 +97,6 @@ const vi = {
   "mode.rewrite": "Viết lại",
   "mode.translate.hint": "Dịch sát nghĩa, giữ cấu trúc câu, chỉ chỉnh giọng theo văn phong.",
   "mode.rewrite.hint": "Diễn đạt lại tự do như người bản xứ viết: đổi cách nói, sắp xếp lại ý, sửa lỗi.",
-  "explain.label": "Giải thích lỗi bằng",
-  "explain.vi": "Tiếng Việt",
-  "explain.en": "Tiếng Anh",
-  "explain.off": "Không giải thích (nhanh hơn)",
 
   "section.context": "Ngữ cảnh",
   "section.context.desc": "Văn bản xung quanh đoạn chọn giúp AI hiểu tình huống.",
@@ -144,7 +139,6 @@ const vi = {
   "popup.readOnly": "Chỉ đọc – dùng Copy",
   "popup.options.language": "Ngôn ngữ đích",
   "popup.options.mode": "Chế độ",
-  "popup.issues": "Lỗi trong câu gốc",
   "popup.apply": "Apply",
   "popup.copy": "Copy",
   "popup.writing": "Đang viết…",
@@ -262,8 +256,7 @@ const en: Record<Key, string> = {
   "autoDelay.label": "Delay before opening (ms)",
 
   "section.tones": "Language and tones",
-  "section.tones.desc":
-    "The target language and mode the popup opens with, the tones shown for each selection, and the language of the explanations.",
+  "section.tones.desc": "The popup's default target language and mode, and the tones shown for each selection.",
   "target.label": "Default target language",
   "target.hint":
     "Every version is written in this language, whatever language the selection is in. Change it quickly in the popup.",
@@ -275,10 +268,6 @@ const en: Record<Key, string> = {
   "mode.rewrite": "Rewrite",
   "mode.translate.hint": "Stays close to the meaning and sentence structure; only the tone is adjusted.",
   "mode.rewrite.hint": "Rephrases freely the way a native writer would: new wording, reordered ideas, fixed mistakes.",
-  "explain.label": "Explain mistakes in",
-  "explain.vi": "Vietnamese",
-  "explain.en": "English",
-  "explain.off": "No explanations (faster)",
 
   "section.context": "Context",
   "section.context.desc": "Text around the selection helps the AI understand the situation.",
@@ -323,7 +312,6 @@ const en: Record<Key, string> = {
   "popup.readOnly": "Read-only – use Copy",
   "popup.options.language": "Target language",
   "popup.options.mode": "Mode",
-  "popup.issues": "Mistakes in the original",
   "popup.apply": "Apply",
   "popup.copy": "Copy",
   "popup.writing": "Writing…",
