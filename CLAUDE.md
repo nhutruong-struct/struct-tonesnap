@@ -16,7 +16,8 @@ A Tauri 2 desktop app (Rust core, React/TS interface), Windows first, macOS late
 | Frontend tests only | `pnpm test` |
 | Key-press tests (Ctrl+C/Ctrl+V into a test window) | `node scripts/harness/check.mjs --only=input`; ask the user first, it takes focus |
 | Project rules only | `node scripts/harness/invariants.mjs` |
-| Format and auto-fix (rustfmt, ESLint, Prettier) | `node scripts/harness/check.mjs --fix` |
+| Format and auto-fix (rustfmt, ESLint, Prettier, whitespace) | `node scripts/harness/check.mjs --fix` (or `pnpm run fix`, which re-runs the quick gates) |
+| Git hooks for contributors (optional) | `pnpm run hooks:install` (pre-commit: quick style gates; pre-push: the CI gates) |
 | Dependency audit (cargo deny, pnpm audit; needs network) | `node scripts/harness/check.mjs --only=deps` |
 
 `cargo` lives in `~/.cargo/bin` and may be missing from a terminal's PATH; the harness scripts and `dev.ps1` add it.
@@ -63,7 +64,7 @@ Items marked ★ are checked by `scripts/harness/invariants.mjs`; the Stop hook 
 
 ## Code rules
 
-Rules marked ★ are enforced by the `code`, `network` and `language` rules in `invariants.mjs`; rules marked (clippy) or (ESLint) by the lints in `src-tauri/Cargo.toml` and `eslint.config.js`. The PostToolUse hook reports violations right after an edit and formats the file (rustfmt, Prettier); the Stop hook blocks the turn until the gates pass.
+Rules marked ★ are enforced by the `code`, `network`, `language`, `whitespace` and `suppress` rules in `invariants.mjs`; rules marked (clippy) or (ESLint) by the lints in `src-tauri/Cargo.toml` and `eslint.config.js`. The PostToolUse hook reports violations right after an edit and formats the file (rustfmt, Prettier); the Stop hook blocks the turn until the gates pass.
 
 **Rust**
 - ★ `unsafe` only in `src-tauri/src/platform/`. Release every handle on every path.
@@ -83,12 +84,13 @@ Rules marked ★ are enforced by the `code`, `network` and `language` rules in `
 **TypeScript / React**
 - ★ No `any`, `@ts-ignore` or `@ts-nocheck`. `@ts-expect-error` needs a description.
 - (ESLint) A command or promise that is deliberately not awaited is marked `void api.x()`; no `setState` directly in an effect body; hook dependencies are complete; a `switch` over a union lists every case instead of `default`; no `console`.
-- Formatting is Prettier's (`.prettierrc.json`, 120 columns); never format by hand.
+- Formatting is Prettier's (`.prettierrc.json`, 120 columns); never format by hand. ESLint also covers `scripts/` and `eslint.config.js`.
 - ★ `invoke` and `listen` only in `src/lib/api.ts`; components call its typed wrappers and `events` subscriptions. Keep each event name a literal in its `listen` call so the `events` check can see it.
 - State shared between windows goes through Rust events, not through browser storage.
 
 **Everywhere**
 - ★ Network calls only to the provider hosts in `scripts/harness/config.mjs` (`api.anthropic.com`, `generativelanguage.googleapis.com`, `api.groq.com`, `openrouter.ai`) and localhost (tests). A new endpoint is a privacy decision: ask the user first.
+- ★ Text files use LF, no trailing spaces (Markdown excepted), one final newline and spaces for indentation (`whitespace`); lint and format suppressions are not allowed: `eslint-disable` needs a reason after ` -- `, and `prettier-ignore` and `rustfmt::skip` are banned (`suppress`).
 - ★ **The repository is written in English**: code, comments, docs, skills, commit messages. Vietnamese is allowed only in `src/lib/i18n.ts`, `src-tauri/src/i18n.rs`, Vietnamese test inputs (`#[cfg(test)]` modules, `scripts/bench-cases.json`) and recorded model output in `docs/bench/` (history of the removed local-model benchmarks). The PreToolUse hook denies edits that add Vietnamese anywhere else.
 - Dependencies: ask before adding or removing one. The hooks ask the user on edits to `Cargo.toml`/`package.json` and on `cargo add`, `pnpm add`, `npm install <pkg>`. Prefer the standard library and crates already in use. A new dependency must pass `deny.toml` (permissive licenses, crates.io only, no known vulnerabilities) and `pnpm audit`.
 - Files over 800 lines get a warning; split them by responsibility.
