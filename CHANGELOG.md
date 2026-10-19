@@ -14,6 +14,7 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ### Changed
 
+- The tray menu items have icons.
 - Tones are now **Concise**, **Natural** and **Formal**.
 
 ### Removed

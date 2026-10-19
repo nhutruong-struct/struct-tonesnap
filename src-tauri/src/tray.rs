@@ -1,6 +1,7 @@
 //! The tray icon and its menu.
 
-use tauri::menu::{Menu, MenuItem};
+use tauri::image::Image;
+use tauri::menu::{IconMenuItem, Menu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, AppHandle, Manager, Wry};
 
@@ -9,14 +10,34 @@ use crate::{i18n, window};
 
 /// The menu items whose labels follow the interface language.
 struct TrayMenu {
-    settings: MenuItem<Wry>,
-    quit: MenuItem<Wry>,
+    settings: IconMenuItem<Wry>,
+    quit: IconMenuItem<Wry>,
+}
+
+// Drawn by `scripts/make-tray-icons.mjs`.
+const SETTINGS_ICON: &[u8] = include_bytes!("../icons/tray/settings.png");
+const QUIT_ICON: &[u8] = include_bytes!("../icons/tray/quit.png");
+
+fn menu_item(
+    app: &App,
+    id: &str,
+    label: &str,
+    icon: &'static [u8],
+) -> tauri::Result<IconMenuItem<Wry>> {
+    IconMenuItem::with_id(
+        app,
+        id,
+        label,
+        true,
+        Some(Image::from_bytes(icon)?),
+        None::<&str>,
+    )
 }
 
 pub fn build(app: &App, settings: &Settings) -> tauri::Result<()> {
     let labels = i18n::tray_labels(settings);
-    let open = MenuItem::with_id(app, "settings", labels.settings, true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", labels.quit, true, None::<&str>)?;
+    let open = menu_item(app, "settings", labels.settings, SETTINGS_ICON)?;
+    let quit = menu_item(app, "quit", labels.quit, QUIT_ICON)?;
     let menu = Menu::with_items(app, &[&open, &quit])?;
     let mut tray = TrayIconBuilder::with_id("main")
         .tooltip("ToneSnap")
@@ -53,5 +74,18 @@ pub fn update_labels(app: &AppHandle, settings: &Settings) {
         let labels = i18n::tray_labels(settings);
         let _ = menu.settings.set_text(labels.settings);
         let _ = menu.quit.set_text(labels.quit);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_menu_icons_are_valid_images_of_the_same_size() {
+        let settings = Image::from_bytes(SETTINGS_ICON).unwrap();
+        let quit = Image::from_bytes(QUIT_ICON).unwrap();
+        assert_eq!((settings.width(), settings.height()), (20, 20));
+        assert_eq!((quit.width(), quit.height()), (20, 20));
     }
 }
