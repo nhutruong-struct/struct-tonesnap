@@ -96,10 +96,13 @@ App compatibility reports also go into the compatibility table of [PLAN.md](PLAN
 There are no hotfix branches yet: fixes land in `develop` and ship with the next release.
 
 1. On a `chore/release-x.y.z` branch, bump the version in `package.json`, `src-tauri/Cargo.toml` and
-   `src-tauri/tauri.conf.json`, update `docs/PLAN.md`, and merge it into `develop` as usual.
+   `src-tauri/tauri.conf.json` (let cargo update `Cargo.lock`), move the `Unreleased` entries of
+   `CHANGELOG.md` into a section for the new version, update `docs/PLAN.md`, and merge it into `develop` as usual.
 2. Open a pull request from `develop` into `master` titled `Release vX.Y.Z`, wait for CI, and merge it with
    **Create a merge commit**.
-3. Tag the merge commit on `master` and publish the release:
+3. Tag the merge commit on `master`. The tag starts `.github/workflows/release.yml`, which checks that the tag
+   matches the app version and is on `master`, builds the installers, attests their provenance and publishes
+   the release with the `CHANGELOG.md` section as notes:
 
    ```bash
    git fetch origin
@@ -113,12 +116,10 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    git push origin vX.Y.Z
    ```
 
-   ```bash
-   gh release create vX.Y.Z --generate-notes --verify-tag
-   ```
-
-4. Installers are built by the release workflow from the tag, with a build provenance attestation ([issue 24](https://github.com/nhutruong-struct/struct-tonesnap/issues/24));
-   never attach an installer built on a personal machine. Announce the release in Discussions → Announcements.
+4. Watch the **Release** workflow. Never attach an installer built on a personal machine; if the workflow
+   fails, fix it through a PR and push the tag again only if no release was published (releases are immutable).
+   Merging `master` back into `develop` is not needed: the release PR's merge commit is the only commit `master`
+   has that `develop` lacks, and it changes no files. Announce the release in Discussions → Announcements.
 
 ## Security reports
 
