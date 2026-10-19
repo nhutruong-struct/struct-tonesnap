@@ -47,6 +47,7 @@ const vi = {
   "apiKey.get.groq": "Lấy key miễn phí tại console.groq.com/keys",
   "apiKey.get.openrouter": "Lấy key tại openrouter.ai/keys",
   "apiKey.placeholderSaved": "Đã lưu (nhập key mới để thay)",
+  "apiKey.getKey": "Lấy Key",
   "apiKey.save": "Lưu Key",
   "apiKey.remove": "Xoá",
   "apiKey.help":
@@ -55,6 +56,7 @@ const vi = {
   "apiKey.removed": "Đã xoá API key.",
   "model.label": "Model",
   "model.custom": "Chọn từ gợi ý hoặc nhập tên model khác.",
+  "model.suggestions": "Hiện các model gợi ý",
   "model.opus": "Chất lượng cao nhất",
   "model.sonnet": "Cân bằng tốc độ và chất lượng",
   "model.haiku": "Nhanh và rẻ nhất",
@@ -212,6 +214,7 @@ const en: Record<Key, string> = {
   "apiKey.get.groq": "Get a free key at console.groq.com/keys",
   "apiKey.get.openrouter": "Get a key at openrouter.ai/keys",
   "apiKey.placeholderSaved": "Saved (enter a new key to replace it)",
+  "apiKey.getKey": "Get Key",
   "apiKey.save": "Save Key",
   "apiKey.remove": "Remove",
   "apiKey.help":
@@ -220,6 +223,7 @@ const en: Record<Key, string> = {
   "apiKey.removed": "API key removed.",
   "model.label": "Model",
   "model.custom": "Pick a suggestion or type another model name.",
+  "model.suggestions": "Show suggested models",
   "model.opus": "Highest quality",
   "model.sonnet": "Balanced speed and quality",
   "model.haiku": "Fastest and cheapest",

@@ -4,7 +4,7 @@ import type { RequestEvent, Session, Settings } from "../lib/api";
 export function settings(overrides: Partial<Settings> = {}): Settings {
   return {
     uiLanguage: "en",
-    triggerMode: "hotkey",
+    triggerMode: "icon",
     hotkey: "ctrl+alt+e",
     autoDelayMs: 400,
     autoMinChars: 8,

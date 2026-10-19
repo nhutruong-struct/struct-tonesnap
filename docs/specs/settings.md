@@ -11,7 +11,7 @@ The same `Settings` object exists in Rust and TypeScript, serialized in camelCas
 | Field | Default | Settings control | Effect |
 |---|---|---|---|
 | `uiLanguage` | `auto` | Interface → language (`auto`, `vi`, `en`) | APP-30 |
-| `triggerMode` | `hotkey` | Trigger → four options; `auto` disabled ("Coming soon") | [trigger.md](trigger.md) |
+| `triggerMode` | `icon` | Trigger → four options; `auto` disabled ("Coming soon") | [trigger.md](trigger.md) |
 | `hotkey` | `ctrl+alt+e` | Trigger → press a combination | TRG-10..17 |
 | `autoDelayMs` | `400` | Trigger → number 100–3000, step 50, enabled only in Auto mode | Reserved for Auto mode |
 | `autoMinChars` | `8` | none | Reserved for Auto mode |
@@ -37,7 +37,7 @@ Two choices are **not** in this file: the API keys (one per provider) live in th
 - **SET-01** Edits stay in the form until *Save Settings*; nothing applies earlier, except the interface language preview (APP-32) and the API key (SET-50).
 - **SET-02** Tones are saved in the canonical order whatever order they were ticked in, so the popup is predictable.
 - **SET-03** The two list fields are edited as one entry per line; on save, lines are trimmed and empty ones dropped, and blocked app names are lower-cased.
-- **SET-04** Choosing a provider shows that provider's key field (with where to get a key) and its model. Gemini, Groq and OpenRouter take any model name, with a few suggestions; Claude offers a fixed list and the effort. For the free providers the form warns that a free tier may let the provider use the content. Switching provider starts from that provider's own key state; a key being typed is not carried over.
+- **SET-04** Choosing a provider shows that provider's key field (with where to get a key) and its model. Gemini, Groq and OpenRouter take any model name, with a few suggestions in a combobox (UI-15); Claude offers a fixed list and the effort. For the free providers the form warns that a free tier may let the provider use the content. Switching provider starts from that provider's own key state; a key being typed is not carried over. The *Get Key* button next to the key field opens that provider's key page in the default browser (`opener:default` permission, http/https only).
 - **SET-05** The hotkey field flags a known conflict ([trigger.md](trigger.md) TRG-13) and a registration error.
 - **SET-06** The window shows one section at a time, chosen in a sidebar: Interface, AI connection, Popup trigger, Tones to show, Context, Privacy. Every section stays mounted, so edits and drafts in a section that is not open are kept and saved with the rest ([ui-design.md](ui-design.md) UI-31).
 

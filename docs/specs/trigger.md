@@ -11,8 +11,8 @@ The `triggerMode` setting decides which triggers are active.
 
 | Mode | Hotkey | Floating icon | Status |
 |---|---|---|---|
-| `hotkey` (default) | on | off | implemented |
-| `icon` | on | shown after a selection | implemented |
+| `hotkey` | on | off | implemented |
+| `icon` (default) | on | shown after a selection | implemented |
 | `auto` | on | off | **not implemented**: the option is disabled in Settings ("Coming soon") |
 | `off` | off | off | implemented: ToneSnap is paused |
 

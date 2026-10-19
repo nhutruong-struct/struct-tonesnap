@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 export type ToneId = "minimal" | "concise" | "natural" | "polite" | "formal" | "friendly";
 
@@ -113,6 +114,8 @@ export const api = {
   /** Whether Windows starts ToneSnap at sign-in. Windows keeps this choice, not settings.json. */
   launchAtLogin: () => isEnabled(),
   setLaunchAtLogin: (on: boolean) => (on ? enable() : disable()),
+  /** Opens a web page in the default browser. */
+  openUrl: (url: string) => openUrl(url),
 };
 
 type Listener<T> = (payload: T) => void;
