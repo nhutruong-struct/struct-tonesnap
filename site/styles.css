@@ -252,6 +252,10 @@ h1 {
   margin: 24px 0 0;
 }
 
+.source-title {
+  margin-top: 32px;
+}
+
 /* Popup illustration */
 
 .demo {
@@ -292,81 +296,126 @@ mark {
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow);
-  padding: 12px;
-  display: grid;
-  gap: 8px;
+  overflow: hidden;
 }
 
 .popup-head {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   font-weight: 700;
   font-size: 14px;
-  padding: 2px 4px 4px;
 }
 
-.popup-keys {
+.popup-icons {
   margin-left: auto;
-  font: 12px var(--mono);
   color: var(--text-2);
+  font-weight: 400;
+  letter-spacing: 0.4em;
+}
+
+.popup-body {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+.chips,
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.chip {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+/* The language and mode choices, drawn like the app's segmented controls. */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.seg span {
+  padding: 1px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.seg .on {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 12px 10px;
 }
 
 .card-active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .card-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .tone {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--accent-text);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.key {
-  font: 12px var(--mono);
-  color: var(--text-2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 0 6px;
 }
 
 .card .text {
-  margin: 4px 0 2px;
+  margin: 4px 0 0;
   font-size: 15px;
-}
-
-.card .why {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-2);
 }
 
 .card-actions {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-left: auto;
 }
 
 .mini {
   font-size: 12px;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 1px 10px;
   border-radius: 6px;
   border: 1px solid var(--border);
 }
@@ -375,6 +424,35 @@ mark {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+.popup-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.popup-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.popup-keys > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.popup-keys kbd {
+  font-size: 11px;
+  padding: 0 4px;
 }
 
 /* Sections */
@@ -527,6 +605,14 @@ mark {
   color: var(--text-2);
   margin: 0;
   font-size: 15px;
+}
+
+code {
+  font: 0.9em var(--mono);
+}
+
+pre code {
+  font: inherit;
 }
 
 pre {
