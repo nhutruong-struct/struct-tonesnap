@@ -19,6 +19,7 @@
     <meta name="theme-color" content="#4f5fe8" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="download.js" defer></script>
   </head>
   <body>
     <header class="nav">
@@ -63,7 +64,10 @@
               in Vietnamese, English or Japanese. Click <strong>Apply</strong> and it replaces your text in place.
             </p>
             <div class="cta">
-              <a class="btn btn-primary" href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest"
+              <a
+                class="btn btn-primary"
+                href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest"
+                data-download
                 >Download for Windows</a
               >
               <a class="btn" href="#start">Get started</a>
@@ -244,9 +248,14 @@
             <li>
               <h3>Install</h3>
               <p>
-                Run the <code>x64-setup.exe</code> installer from the
-                <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest">latest release</a>. The
-                installer is not code-signed yet, so SmartScreen asks first: choose <em>More info → Run anyway</em>.
+                <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest" data-download
+                  >Download the installer</a
+                >
+                (<code>x64-setup.exe</code>) and run it. It is not code-signed yet, so your browser and SmartScreen ask
+                first: keep the file (<em>… → Keep → Show more → Keep anyway</em>), then choose
+                <em>More info → Run anyway</em>. The other files on the
+                <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest">releases page</a> are for
+                updates, checksums and managed deployment.
               </p>
             </li>
             <li>
