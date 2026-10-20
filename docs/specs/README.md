@@ -11,7 +11,7 @@ These pages describe what the app **does today**: its behavior, business rules a
 
 | Page | Covers | Prefix |
 |---|---|---|
-| [app-shell.md](app-shell.md) | Startup, tray, single instance, windows, quitting, interface language | `APP` |
+| [app-shell.md](app-shell.md) | Startup, tray, single instance, windows, quitting, interface language, uninstalling | `APP` |
 | [trigger.md](trigger.md) | What opens the popup: the hotkey, the floating icon, trigger modes | `TRG` |
 | [capture.md](capture.md) | Reading the selection and its context: UI Automation, clipboard, OCR; refusals | `CAP` |
 | [privacy.md](privacy.md) | What leaves the machine, redaction, preview, clipboard hygiene, secrets | `PRV` |
