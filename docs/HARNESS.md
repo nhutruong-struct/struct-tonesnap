@@ -14,7 +14,9 @@ It works the same whether you write the code yourself or let Claude Code do it.
 
 | Component | File | Role |
 |---|---|---|
-| Context | `CLAUDE.md` | Architecture, commands, invariants, code rules, workflow, definition of done. Claude reads it at the start of every session |
+| Context | `AGENTS.md` | Commands, invariants, rules for every file, workflow, definition of done. Claude Code (v2.1.277 or later) and other coding agents read it at the start of every session; kept short because it is sent with every request |
+| Code rules by language | `.claude/rules/rust.md`, `.claude/rules/typescript.md` | Rust and TypeScript rules and test conventions. Their `paths:` frontmatter makes Claude load each one only when it opens a matching file |
+| Code map | This page, [Code map](#code-map) | Where each part of the app lives |
 | Gates | `scripts/harness/check.mjs` | Runs the gates: project rules, rustfmt, tsc, clippy, unit tests, vite build |
 | Project rules | `scripts/harness/invariants.mjs` | Rules compilers cannot see (below) |
 | Configuration | `scripts/harness/config.mjs` | Protected paths, secret patterns, risky commands, permission map, allowed hosts, language allowlist |
@@ -24,6 +26,29 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test` |
 | Review | `.claude/agents/tonesnap-reviewer.md` | Read-only agent that reviews against the invariants and code rules |
 | State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed); each worktree keeps its own |
+
+## Code map
+
+| Path | Role |
+|---|---|
+| `src-tauri/src/lib.rs` | App setup only: plugins, managed state, window events, the command list |
+| `src-tauri/src/session.rs`, `request.rs` | Trigger → capture → redacted `Session` → popup; streaming a request into `request-*` events |
+| `src-tauri/src/window.rs`, `tray.rs`, `trigger.rs` | Popup/Settings windows and placement; tray menu; hotkey and floating icon |
+| `src-tauri/src/commands.rs`, `state.rs` | Every `#[tauri::command]` and `CommandError`; `AppState` (settings, session, request cancellation) |
+| `src-tauri/src/capture.rs` | Selection and context: UIA → clipboard → OCR |
+| `src-tauri/src/platform/` | `mod.rs` is the platform-neutral facade (non-Windows stubs in `stub.rs`); `win/` holds all Win32/COM: `uia`, `clipboard`, `input`, `ocr`, `window`, `com` (MTA threads), `selection_icon` (floating icon + mouse hook) |
+| `src-tauri/src/geometry.rs` | `Rect` in physical pixels, shared by capture, placement and the platform layer |
+| `src-tauri/src/redact.rs` | Reversible redaction of sensitive data |
+| `src-tauri/src/prompt.rs` + `src-tauri/prompts/` | System prompt, output JSON schema, user turn |
+| `src-tauri/src/llm/` | AI providers: `claude.rs` (paid) and `openai_compat.rs` (Gemini, Groq, OpenRouter; free tiers) |
+| `src-tauri/src/update.rs` | Updates from the GitHub releases (Tauri updater plugin): schedule, update mode, install when idle |
+| `src-tauri/src/settings.rs`, `secrets.rs` | Settings (JSON in the app config dir), API key (Credential Manager) |
+| `src-tauri/src/i18n.rs` | Strings rendered by Rust (tray menu) |
+| `src/popup/`, `src/settings/` | The two windows: a state hook (`usePopupState`, `useSettingsForm`) plus small components (`settings/sections/`) |
+| `src/lib/api.ts` | Types, typed `invoke` wrappers for every command and typed `events` subscriptions |
+| `src/lib/i18n.ts` | Every interface string, in Vietnamese and English |
+| `src/test/` | Frontend test helpers: a fake backend on Tauri's `mockIPC`, fixtures matching the Rust defaults |
+| `scripts/harness/` | Checks and hooks (this page) |
 
 ## Enforcement layers
 

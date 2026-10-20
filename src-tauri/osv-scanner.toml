@@ -35,7 +35,7 @@ ignoreUntil = 2027-04-19
 reason = "zvariant_derive (unmaintained): zbus/D-Bus dependency, Linux only; not compiled for the Windows target"
 
 # rustls is an optional dependency of the reqwest 0.13 that Tauri uses, with its rustls feature off,
-# so it is in the lockfile but never built. ToneSnap uses the OS TLS stack (CLAUDE.md invariant 6).
+# so it is in the lockfile but never built. ToneSnap uses the OS TLS stack (AGENTS.md invariant 6).
 [[IgnoredVulns]]
 id = "RUSTSEC-2026-0346"
 ignoreUntil = 2027-04-19

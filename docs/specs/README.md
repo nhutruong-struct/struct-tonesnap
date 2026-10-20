@@ -69,6 +69,6 @@ Hotkey pressed / floating icon clicked                         trigger.md
 
 ## Keeping the specs current
 
-- A change that alters behavior updates the matching spec in the same change, like the contracts in `CLAUDE.md`.
+- A change that alters behavior updates the matching spec in the same change, like the contracts in `AGENTS.md`.
 - A finished `docs/PLAN.md` item is described here before it is ticked.
-- Specs describe behavior and reasons, not code structure; the code map lives in `CLAUDE.md`.
+- Specs describe behavior and reasons, not code structure; the code map lives in [HARNESS.md](../HARNESS.md#code-map).

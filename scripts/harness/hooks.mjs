@@ -111,7 +111,7 @@ function sessionStart(input) {
     lines.push("- No check has run yet: `node scripts/harness/check.mjs`.");
   }
   lines.push(
-    "- The Stop hook re-runs the gates for code you change and blocks the turn while they fail. Follow CLAUDE.md (workflow, definition of done).",
+    "- The Stop hook re-runs the gates for code you change and blocks the turn while they fail. Follow AGENTS.md (workflow, definition of done).",
   );
   reply({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: lines.join("\n") } });
 }
@@ -213,7 +213,7 @@ function postTool(input) {
       const found = fileViolations(path, readIfExists(file.abs));
       if (found.length) {
         notes.push(
-          `Project rules flagged in ${path} (errors block the end of the turn; see CLAUDE.md "Code rules"):\n` +
+          `Project rules flagged in ${path} (errors block the end of the turn; see .claude/rules/):\n` +
             found
               .map((v) => `  [${v.rule}${v.severity === "warning" ? ", warning" : ""}] line ${v.line}: ${v.message}`)
               .join("\n"),
