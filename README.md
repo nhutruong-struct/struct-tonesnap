@@ -101,6 +101,28 @@ local model: the (redacted) text always goes to the provider you choose.
 The hotkey, the trigger mode, the tones, the target language and mode, and the blocked apps can be changed in
 Settings. `Ctrl+Alt+Space` is avoided by default because Claude desktop's Quick Entry uses it.
 
+## Uninstall
+
+1. Quit ToneSnap: right-click the tray icon and choose **Quit ToneSnap**.
+2. Open **Settings → Apps → Installed apps** (or **Control Panel → Programs and Features**), find **ToneSnap**
+   and choose **Uninstall**.
+3. The `.exe` installer's uninstaller has a **Delete the application data** checkbox. Tick it to remove
+   everything ToneSnap stored; leave it unticked to keep your settings and API keys for a later reinstall.
+
+What stays on the machine depends on the installer you used:
+
+| Data | Uninstalled with the `.exe` (NSIS) | Uninstalled with the `.msi` |
+|---|---|---|
+| Settings in `%APPDATA%\com.tonesnap.app` | Removed when the box is ticked | Stays |
+| WebView data in `%LOCALAPPDATA%\com.tonesnap.app` | Removed when the box is ticked | Stays |
+| API keys in Windows Credential Manager | Removed when the box is ticked | Stays |
+| The "Start with Windows" entry (`ToneSnap` under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`) | Always removed | Stays |
+
+To clean up by hand (for example after the `.msi`): turn off **Start ToneSnap when I sign in to Windows** in
+Settings before uninstalling, delete the two folders above, and in **Control Panel → Credential Manager →
+Windows Credentials**, remove the generic credentials whose names end in `.ToneSnap` (`gemini_api_key.ToneSnap`,
+`groq_api_key.ToneSnap`, `openrouter_api_key.ToneSnap`, `anthropic_api_key.ToneSnap`).
+
 ## How it works
 
 ```

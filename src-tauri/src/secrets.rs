@@ -85,4 +85,24 @@ mod tests {
         assert_eq!(accounts.len(), ALL.len());
         assert_eq!(variables.len(), ALL.len());
     }
+
+    /// The NSIS uninstaller deletes the keys by their Credential Manager target name, which
+    /// must match what the keyring crate files them under.
+    #[cfg(windows)]
+    #[test]
+    fn the_uninstaller_deletes_every_key() {
+        let hooks = include_str!("../windows/hooks.nsh");
+        for provider in ALL {
+            let entry = entry(provider).expect("the account and service are valid");
+            let credential = entry
+                .get_credential()
+                .downcast_ref::<keyring::windows::WinCredential>()
+                .expect("windows-native is the credential store on Windows");
+            let target = &credential.target_name;
+            assert!(
+                hooks.contains(&format!("\"{target}\"")),
+                "hooks.nsh does not delete {target}"
+            );
+        }
+    }
 }
