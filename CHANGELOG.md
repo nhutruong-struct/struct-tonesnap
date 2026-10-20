@@ -6,10 +6,32 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-20
+
+### Install
+
+Download `ToneSnap_1.1.1_x64-setup.exe` (installer) or `ToneSnap_1.1.1_x64_en-US.msi` (for managed deployment)
+below. If you use 1.1.0, you do not need to: ToneSnap installs this version by itself (or asks first, if you chose
+**Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update itself.
+The installers are still **not code-signed**, so Windows SmartScreen shows "Windows protected your PC" the first
+time. Choose **More info → Run anyway** if the file came from this page. You can check that a file was built by
+this repository's GitHub Actions from this tag:
+
+```
+gh attestation verify ToneSnap_1.1.1_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
+and compare its SHA-256 with `SHA256SUMS.txt`.
+
 ### Changed
 
 - A few interface texts that still described rewriting only now say "translate or rewrite".
 - The tray menu's *Update to {version} & Restart* item has an icon, like the other items.
+
+### Fixed
+
+- A settings file edited by hand that lists a tone twice no longer makes the provider reject the request: each
+  tone is requested once, in the usual order.
 
 ## [1.1.0] - 2026-10-20
 
@@ -105,6 +127,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   [app compatibility report](https://github.com/nhutruong-struct/struct-tonesnap/issues/new?template=app_compatibility.yml).
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
-[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...develop
+[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...develop
+[1.1.1]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/v1.0.0
