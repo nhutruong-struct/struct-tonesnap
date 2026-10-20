@@ -6,12 +6,12 @@
     <title>ToneSnap: say it in the right tone, in any app</title>
     <meta
       name="description"
-      content="Select text in any Windows app, press a hotkey, and get versions in several tones, translated or rewritten.  Apply one in place. Free and open source."
+      content="Select text in any Windows app, click the floating icon or press a hotkey, and get versions in several tones, translated or rewritten. Apply one in place. Free and open source."
     />
     <meta property="og:title" content="ToneSnap" />
     <meta
       property="og:description"
-      content="Select text in any app, press a hotkey, and get it back in the tone you need."
+      content="Select text in any app, click the icon or press a hotkey, and get it back in the tone you need."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://nhutruong-struct.github.io/struct-tonesnap/" />
@@ -57,9 +57,9 @@
             <p class="eyebrow">Free and open source · Windows 10/11</p>
             <h1>Say it in the right tone, <span class="grad">in any app.</span></h1>
             <p class="lead">
-              Select a sentence in Slack, Outlook, Teams or your browser, press
-              <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>, and ToneSnap suggests versions in several tones, in
-              Vietnamese, English or Japanese. Click <strong>Apply</strong> and it replaces your text in place.
+              Select a sentence in Slack, Outlook, Teams or your browser, click the small icon that appears next to it
+              (or press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>), and ToneSnap suggests versions in several tones,
+              in Vietnamese, English or Japanese. Click <strong>Apply</strong> and it replaces your text in place.
             </p>
             <div class="cta">
               <a class="btn btn-primary" href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest"
@@ -79,27 +79,54 @@
             <div class="popup">
               <div class="popup-head">
                 <img src="icon.svg" alt="" width="18" height="18" />
-                <span>ToneSnap</span>
-                <span class="popup-keys">1–3 · Esc</span>
+                <span>Slack</span>
+                <span class="popup-icons" aria-hidden="true">⚙ ✕</span>
               </div>
-              <article class="card">
-                <div class="card-top"><span class="tone">Minimal</span><span class="key">1</span></div>
-                <p class="text">Please check my PR, it's urgent.</p>
-                <p class="why">Spelled out "please" and added the missing "is".</p>
-              </article>
-              <article class="card card-active">
-                <div class="card-top"><span class="tone">Polite</span><span class="key">2</span></div>
-                <p class="text">Could you take a look at my PR when you have a moment? It's fairly urgent.</p>
-                <p class="why">A question and "when you have a moment" soften the request.</p>
-                <div class="card-actions">
-                  <span class="mini mini-primary">Apply</span><span class="mini">Copy</span>
+              <div class="popup-body">
+                <div class="chips">
+                  <span class="chip">Read directly</span><span class="chip">Context: surrounding text</span>
                 </div>
-              </article>
-              <article class="card">
-                <div class="card-top"><span class="tone">Concise</span><span class="key">3</span></div>
-                <p class="text">Urgent: please review my PR.</p>
-                <p class="why">Leads with the priority, drops filler.</p>
-              </article>
+                <div class="options">
+                  <span class="seg"><span>Vietnamese</span><span class="on">English</span><span>Japanese</span></span>
+                  <span class="seg"><span>Translate</span><span class="on">Rewrite</span></span>
+                </div>
+                <article class="card">
+                  <div class="card-top">
+                    <span class="badge">1</span><span class="tone">Concise</span>
+                    <span class="card-actions"
+                      ><span class="mini mini-primary">Apply</span><span class="mini">Copy</span></span
+                    >
+                  </div>
+                  <p class="text">Please review my PR, it's urgent.</p>
+                </article>
+                <article class="card card-active">
+                  <div class="card-top">
+                    <span class="badge">2</span><span class="tone">Natural</span>
+                    <span class="card-actions"
+                      ><span class="mini mini-primary">Apply</span><span class="mini">Copy</span></span
+                    >
+                  </div>
+                  <p class="text">Could you take a look at my PR when you get a chance? It's a bit urgent.</p>
+                </article>
+                <article class="card">
+                  <div class="card-top">
+                    <span class="badge">3</span><span class="tone">Formal</span>
+                    <span class="card-actions"
+                      ><span class="mini mini-primary">Apply</span><span class="mini">Copy</span></span
+                    >
+                  </div>
+                  <p class="text">
+                    Could you please review my pull request at your earliest convenience? It is time-sensitive.
+                  </p>
+                </article>
+              </div>
+              <div class="popup-foot">
+                <span class="popup-keys">
+                  <span><kbd>1–9</kbd>Apply</span><span><kbd>Shift+1–9</kbd>Copy</span
+                  ><span><kbd>R</kbd>Regenerate</span><span><kbd>Esc</kbd>Close</span>
+                </span>
+                <span class="timing">0.8s / 2.4s · gemini-3.8-flash</span>
+              </div>
             </div>
           </div>
         </div>
@@ -135,14 +162,22 @@
               <div class="ficon" aria-hidden="true">✦</div>
               <h3>Hotkey or floating icon</h3>
               <p>
-                Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>, or click the small icon that appears next to your
-                selection.
+                Click the small icon that appears next to your selection, or press
+                <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>. Prefer the hotkey alone? Switch in Settings.
               </p>
             </div>
             <div class="feature">
               <div class="ficon" aria-hidden="true">🌐</div>
               <h3>Bilingual interface</h3>
               <p>Vietnamese and English, light and dark, follows Windows. Lives quietly in the tray.</p>
+            </div>
+            <div class="feature">
+              <div class="ficon" aria-hidden="true">⟳</div>
+              <h3>Updates itself</h3>
+              <p>
+                New versions download in the background and install while you are not using ToneSnap, or choose
+                <em>Ask before updating</em>. Every update is signed and verified first.
+              </p>
             </div>
           </div>
         </div>
@@ -167,6 +202,10 @@
             <li><strong>Screenshots never leave the device</strong>: OCR runs locally with Windows' own engine.</li>
             <li><strong>Your API key stays in Windows Credential Manager</strong>, never in a file.</li>
             <li><strong>Preview mode</strong> shows exactly what will be sent before anything is sent.</li>
+            <li>
+              <strong>The only other request is the update check</strong>, to GitHub, and it sends nothing but the app
+              version and platform.
+            </li>
           </ul>
         </div>
       </section>
@@ -179,30 +218,41 @@
           </p>
           <ol class="steps">
             <li>
-              <h3>Install the tools</h3>
+              <h3>Install</h3>
               <p>
-                <a href="https://rustup.rs/">Rust</a> (MSVC) with Visual Studio Build Tools,
-                <a href="https://nodejs.org/">Node.js</a> 20+ and <a href="https://pnpm.io/">pnpm</a>.
+                Run the <code>x64-setup.exe</code> installer from the
+                <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest">latest release</a>. The
+                installer is not code-signed yet, so SmartScreen asks first: choose <em>More info → Run anyway</em>.
               </p>
-            </li>
-            <li>
-              <h3>Clone and run</h3>
-              <pre><code>git clone https://github.com/nhutruong-struct/struct-tonesnap.git
-cd struct-tonesnap
-pnpm install
-pwsh -File dev.ps1</code></pre>
             </li>
             <li>
               <h3>Add an API key</h3>
               <p>
-                Open Settings from the tray and pick a provider. Google Gemini and Groq have free tiers; OpenRouter has
-                free models; the Claude API is paid.
+                Open Settings from the tray and pick a provider; <em>Get Key</em> opens its key page. Google Gemini and
+                Groq have free tiers; OpenRouter has free models; the Claude API is paid.
+              </p>
+            </li>
+            <li>
+              <h3>Select and snap</h3>
+              <p>
+                Select text in any app and click the ToneSnap icon (or press
+                <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>). Pick the language and Translate or Rewrite right in the
+                popup.
               </p>
             </li>
           </ol>
           <div class="providers">
             <span>Google Gemini</span><span>Groq</span><span>OpenRouter</span><span>Claude API</span>
           </div>
+          <h3 class="source-title">Build from source</h3>
+          <p class="note">
+            Needs <a href="https://rustup.rs/">Rust</a> (MSVC) with Visual Studio Build Tools,
+            <a href="https://nodejs.org/">Node.js</a> 20+ and <a href="https://pnpm.io/">pnpm</a>.
+          </p>
+          <pre><code>git clone https://github.com/nhutruong-struct/struct-tonesnap.git
+cd struct-tonesnap
+pnpm install
+pwsh -File dev.ps1</code></pre>
           <p class="note uninstall-note">
             To uninstall, quit ToneSnap from the tray, then remove it in Settings → Apps → Installed apps. Tick “Delete
             the application data” to also remove your settings and API keys.

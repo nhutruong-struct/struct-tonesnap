@@ -29,11 +29,55 @@ describe("dictionaries", () => {
       ...["no_selection", "password_field", "blocked_app", "apply_failed"].map((n) => `notice.${n}`),
       ...["uia", "clipboard"].map((s) => `popup.source.${s}`),
       ...["uia", "ocr", "none"].map((s) => `popup.context.${s}`),
+      ...["no_api_key", "authentication_error", "permission_error", "not_found_error", "rate_limit_error"].map(
+        (e) => `error.${e}`,
+      ),
+      ...["overloaded_error", "refusal", "max_tokens", "network"].map((e) => `error.${e}`),
+      "error.generic",
+      ...["gemini", "groq", "openrouter", "claude"].flatMap((p) => [
+        `provider.${p}`,
+        `provider.${p}.hint`,
+        `apiKey.get.${p}`,
+      ]),
+      ...["auto", "manual"].flatMap((m) => [`updateMode.${m}`, `updateMode.${m}.hint`, `updates.status.ready.${m}`]),
+      ...["idle", "checking", "up_to_date", "available", "downloading", "installing"].map((s) => `updates.status.${s}`),
+      ...["check", "download", "install"].map((s) => `updates.status.failed.${s}`),
       "settings.issue.invalid_fields",
       "settings.issue.broken",
       "settings.issue.unreadable",
     ];
     for (const key of required) expect(hasKey(key), key).toBe(true);
+  });
+
+  test("button labels are in title case", () => {
+    const buttons = [
+      "settings.save",
+      "apiKey.getKey",
+      "apiKey.save",
+      "apiKey.remove",
+      "popup.close",
+      "popup.retry",
+      "popup.openSettings",
+      "preview.send",
+      "preview.cancel",
+      "updates.check",
+      "updates.install",
+    ] as const;
+    // Joining words stay lower case: "for", "and", "&" and the short ones of other languages.
+    const small = ["for", "and"];
+    for (const [name, t] of [
+      ["vi", vi],
+      ["en", en],
+    ] as const) {
+      for (const key of buttons) {
+        const words = t(key)
+          .split(" ")
+          .filter((w) => !w.startsWith("(") && w.length > 2 && !small.includes(w));
+        for (const word of words) {
+          expect(word[0], `${name} ${key}: "${t(key)}"`).toBe(word[0].toUpperCase());
+        }
+      }
+    }
   });
 });
 

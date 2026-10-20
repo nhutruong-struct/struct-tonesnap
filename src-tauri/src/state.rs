@@ -150,6 +150,81 @@ mod tests {
     }
 
     #[test]
+    fn a_new_request_supersedes_the_running_one() {
+        let state = AppState::new(Settings::default(), None);
+        let first = state.begin_request();
+        assert!(state.is_current_request(first));
+        let second = state.begin_request();
+        assert!(!state.is_current_request(first));
+        assert!(state.is_current_request(second));
+    }
+
+    #[test]
+    fn cancelling_stops_the_running_request_without_starting_another() {
+        let state = AppState::new(Settings::default(), None);
+        let running = state.begin_request();
+        state.cancel_request();
+        assert!(!state.is_current_request(running));
+        // The next request is still told apart from the cancelled one.
+        assert!(state.is_current_request(state.begin_request()));
+    }
+
+    #[test]
+    fn only_one_capture_runs_at_a_time() {
+        let state = AppState::new(Settings::default(), None);
+        assert!(!state.is_capturing());
+        assert!(state.try_begin_capture());
+        assert!(state.is_capturing());
+        assert!(!state.try_begin_capture());
+        state.end_capture();
+        assert!(!state.is_capturing());
+        assert!(state.try_begin_capture());
+    }
+
+    #[test]
+    fn session_ids_count_up_from_one() {
+        let state = AppState::new(Settings::default(), None);
+        assert_eq!(state.next_session_id(), 1);
+        assert_eq!(state.next_session_id(), 2);
+    }
+
+    #[test]
+    fn saving_settings_settles_the_loading_issue() {
+        let state = AppState::new(Settings::default(), Some(SettingsIssue::Unreadable));
+        assert_eq!(state.settings_issue(), Some(SettingsIssue::Unreadable));
+        let saved = Settings {
+            hotkey: "ctrl+alt+r".into(),
+            ..Settings::default()
+        };
+        state.set_saved_settings(saved);
+        assert_eq!(state.settings().hotkey, "ctrl+alt+r");
+        assert_eq!(state.settings_issue(), None);
+    }
+
+    #[test]
+    fn the_popup_counts_as_recent_only_for_a_while() {
+        let state = AppState::new(Settings::default(), None);
+        state.mark_popup_shown();
+        assert!(state.popup_shown_within(Duration::from_secs(60)));
+        std::thread::sleep(Duration::from_millis(20));
+        assert!(!state.popup_shown_within(Duration::from_millis(1)));
+    }
+
+    #[test]
+    fn the_hotkey_error_is_kept_until_it_is_cleared() {
+        let state = AppState::new(Settings::default(), None);
+        assert!(state.hotkey_error().is_none());
+        state.set_hotkey_error(Some(CommandError::hotkey(
+            "hotkey_taken",
+            "ctrl+alt+e",
+            "in use".into(),
+        )));
+        assert_eq!(state.hotkey_error().unwrap().hotkey, "ctrl+alt+e");
+        state.set_hotkey_error(None);
+        assert!(state.hotkey_error().is_none());
+    }
+
+    #[test]
     fn the_popup_can_change_the_language_and_mode_of_the_current_session() {
         let state = AppState::new(Settings::default(), None);
         assert!(state

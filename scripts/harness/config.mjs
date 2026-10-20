@@ -81,7 +81,7 @@ export const GROUPS = {
     ".prettierrc.json",
     ".prettierignore",
   ],
-  harness: ["scripts", ".claude", "CLAUDE.md"],
+  harness: ["scripts", ".claude", "AGENTS.md"],
 };
 
 /** Gates each group needs. `invariants` always runs because it is instant. */

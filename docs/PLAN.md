@@ -16,7 +16,8 @@
 | Order | Phase 0 → 1 → 2 → 3 (macOS) → 4 (enterprise) → 5 (release) |
 | AI (2026-10-18) | Cloud providers only, chosen in Settings with one API key each (Credential Manager): **Gemini** (free tier, default), **Groq** (free tier), **OpenRouter** (free models) and **Claude API** (paid). They share one prompt and one JSON schema; Gemini, Groq and OpenRouter use one OpenAI-compatible client (`llm/openai_compat.rs`). The local Ollama provider was removed (it needed a GPU and a multi-GB model); its benchmark script and the `/prompt-bench` skill were removed too; the reports stay in `bench/` as history. Free tiers may let the provider train on the content: Settings warns about it |
 | Claude model | `claude-opus-5-5` at effort `low`; switchable to Sonnet 5.5 / Haiku 4.5 |
-| Development process | Harness: `CLAUDE.md`, `scripts/harness/` (quality gates, Rust ⇄ TS contracts, code rules), Claude Code hooks and the `/check` `/feature` `/smoke-test` skills ([details](HARNESS.md)) |
+| Development process | Harness: `AGENTS.md`, `.claude/rules/`, `scripts/harness/` (quality gates, Rust ⇄ TS contracts, code rules), Claude Code hooks and the `/check` `/feature` `/smoke-test` skills ([details](HARNESS.md)) |
+| Agent guide (2026-10-20) | `AGENTS.md` replaces `CLAUDE.md`: Claude Code (v2.1.277 or later) reads it when there is no `CLAUDE.md`, and so do other coding agents. Older Claude Code versions, or a personal `CLAUDE.local.md`, load no project instructions. It is sent with every request, so it holds only what applies everywhere; the Rust and TypeScript rules are path-scoped `.claude/rules/` files that load when a matching file is opened, and the code map is in [HARNESS.md](HARNESS.md#code-map) |
 | Repository language | Everything is written in English. Vietnamese appears only in the interface dictionaries (`src/lib/i18n.ts`, `src-tauri/src/i18n.rs`), in Vietnamese test inputs and in recorded model output |
 | Code structure (2026-10-07 refactor) | Rust: one module per concern (`session`, `request`, `window`, `trigger`, `tray`, `commands`, `state`); OS calls go through the `platform` facade so macOS (Phase 3) only adds an implementation; provider errors are a typed `llm::Error`. Commands that wait on I/O are async. React: each window is a state hook plus small components; Rust events are subscribed through typed wrappers in `api.ts` |
 | Testing (2026-10-08) | Automate everything that can be; test by hand only what depends on other apps, the global hotkey or the mouse hook. Layers: Rust unit and contract tests, provider tests against a local HTTP server, Win32 integration tests on windows the test owns (`--full`), key-press tests on request (`--only=input`), vitest + Testing Library with Tauri's `mockIPC` for the UI. Windows tests are written on Windows, macOS tests on a Mac |
@@ -71,7 +72,7 @@ Trigger (hotkey / floating icon / automatic popup)
 | Phase | Scope | Done when |
 |---|---|---|
 | 0. Technical spike (Windows) | Hotkey → read text (UIA + clipboard) → OCR → popup → stream → Apply. App compatibility table | The app × capability table is filled. First version appears in ≤ 2 s |
-| 1. Windows MVP | Tray icon, complete Settings, icon / automatic popup modes (mouse hook), Vietnamese → English, redaction, a 100-sentence evaluation set | Usable every day in ≥ 80% of the listed apps |
+| 1. Windows MVP | Tray icon, complete Settings, icon / automatic popup modes (mouse hook), target language and translate / rewrite modes, redaction, a 100-sentence evaluation set | Usable every day in ≥ 80% of the listed apps |
 | 2. Richer context | Word COM, browser extension, per-app tones, glossary, encrypted history, image input | Replacing text in Word keeps formatting. Gmail / Google Docs work |
 | 3. macOS | AX, NSPanel, Vision OCR, ScreenCaptureKit, permission onboarding, notarization | Parity with Windows |
 | 4. Enterprise | Gateway (Docker), SSO, policies, GPO/MDM, security documentation | Internal pilot with 5–10 people |
@@ -85,8 +86,8 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] On-device OCR (Windows.Media.Ocr) for context when UIA cannot read the app
 - [x] Reversible redaction of sensitive data + unit tests
 - [x] Claude call: streaming, JSON output schema, `fallbacks: "default"` for refusals
-- [x] Popup: one version per tone, explanations, Apply/Copy, keys 1–9 / R / Esc, preview-before-send mode
-- [x] Settings: API key (Credential Manager), model, effort, popup trigger, tones, context, privacy
+- [x] Popup: one version per tone, Apply/Copy, keys 1–9 / R / Esc, preview-before-send mode
+- [x] Settings: API key (Credential Manager), model, effort, popup trigger, target language and mode, tones, context, privacy, updates
 - [x] Bilingual interface, Vietnamese / English (follows Windows by default), including the tray menu
 - [x] Use the Windows TLS stack so the app works behind corporate TLS inspection (Netskope, Zscaler…)
 - [ ] Fill in the compatibility table below by testing on a real machine
@@ -111,10 +112,12 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] Target language (Vietnamese, English, Japanese) and mode (translate, rewrite) in the popup, defaults in Settings; tones reduced to concise, natural, formal (see Decisions)
 - [x] Fix: Apply was offered for selected text on web pages that cannot be edited. A Chromium page or rich-text field has no Value pattern, so editability stayed unknown; the selected text's read-only attribute now tells them apart (CAP-07). Only a probe on Edge's accessibility tree was run; a real selection in Chrome and Slack is still to be checked by hand
 - [x] Fixes from the specs review: default tones are the three the local model was benchmarked on; a failed settings write puts the old hotkey back; every way of closing the popup stops its request (Copy and Open Settings used to let it run); the unused `current_session` command is gone
+- [x] Settings: the model is a combobox with suggestions (any model name can be typed), and *Get Key* opens the selected provider's key page in the browser (see Decisions; UI-15, SET-04)
 
 ## Phase 5 progress
 
 - [x] Auto-update from the GitHub releases: signed updater artifacts and `latest.json` in `release.yml`, `updateMode` auto (install when idle) or manual (announce, install on request), tray item and Settings section (see Decisions)
+- [x] The `.exe` uninstaller deletes the API keys when *Delete the application data* is ticked (see Decisions; APP-41)
 
 ## Compatibility table (filled during Phase 0)
 

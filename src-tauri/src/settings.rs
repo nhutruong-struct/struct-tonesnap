@@ -502,6 +502,92 @@ mod tests {
     }
 
     #[test]
+    fn a_file_from_before_the_newer_fields_keeps_its_values_and_loads_without_a_warning() {
+        // Version 1.0.0 knew neither the target language, the mode nor the update mode.
+        let (settings, invalid) = parse(
+            r#"{ "hotkey": "ctrl+alt+r", "triggerMode": "hotkey", "provider": "claude",
+                 "tones": ["concise", "formal"], "explainLanguage": "vi" }"#,
+        )
+        .unwrap();
+        assert!(invalid.is_empty());
+        assert_eq!(settings.hotkey, "ctrl+alt+r");
+        assert_eq!(settings.trigger_mode, TriggerMode::Hotkey);
+        assert_eq!(settings.provider, ProviderKind::Claude);
+        assert_eq!(settings.tones, ["concise", "formal"]);
+        assert_eq!(settings.target_language, TargetLanguage::Vi);
+        assert_eq!(settings.mode, Mode::Translate);
+        assert_eq!(settings.update_mode, UpdateMode::Auto);
+    }
+
+    #[test]
+    fn enum_values_are_spelled_like_the_typescript_types() {
+        fn spelled<T: Serialize, const N: usize>(values: [T; N]) -> Vec<String> {
+            values
+                .iter()
+                .map(|v| {
+                    serde_json::to_value(v)
+                        .unwrap()
+                        .as_str()
+                        .unwrap()
+                        .to_string()
+                })
+                .collect()
+        }
+        let modes = [
+            TriggerMode::Hotkey,
+            TriggerMode::Icon,
+            TriggerMode::Auto,
+            TriggerMode::Off,
+        ];
+        assert_eq!(spelled(modes), ["hotkey", "icon", "auto", "off"]);
+        let providers = [
+            ProviderKind::Claude,
+            ProviderKind::Gemini,
+            ProviderKind::Groq,
+            ProviderKind::Openrouter,
+        ];
+        assert_eq!(
+            spelled(providers),
+            ["claude", "gemini", "groq", "openrouter"]
+        );
+        let languages = [TargetLanguage::Vi, TargetLanguage::En, TargetLanguage::Ja];
+        assert_eq!(spelled(languages), ["vi", "en", "ja"]);
+        assert_eq!(
+            spelled([Mode::Translate, Mode::Rewrite]),
+            ["translate", "rewrite"]
+        );
+        assert_eq!(
+            spelled([UpdateMode::Auto, UpdateMode::Manual]),
+            ["auto", "manual"]
+        );
+    }
+
+    #[test]
+    fn the_prompt_names_every_language_and_mode() {
+        let languages = [TargetLanguage::Vi, TargetLanguage::En, TargetLanguage::Ja];
+        assert_eq!(
+            languages.map(TargetLanguage::name),
+            ["Vietnamese", "English", "Japanese"]
+        );
+        assert_eq!(
+            [Mode::Translate, Mode::Rewrite].map(Mode::name),
+            ["translate", "rewrite"]
+        );
+    }
+
+    #[test]
+    fn an_explicit_interface_language_is_used_as_chosen() {
+        let chosen = |code: &str| {
+            ui_language(&Settings {
+                ui_language: code.into(),
+                ..Settings::default()
+            })
+        };
+        assert_eq!(chosen("vi"), "vi");
+        assert_eq!(chosen("en"), "en");
+    }
+
+    #[test]
     fn a_saved_ollama_provider_falls_back_to_the_default() {
         let (settings, invalid) = parse(r#"{ "provider": "ollama", "ollamaModel": "x" }"#).unwrap();
         assert_eq!(settings.provider, ProviderKind::Gemini);

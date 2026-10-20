@@ -11,16 +11,16 @@ Task: $ARGUMENTS
 ## 1. Scope
 - Without a task: list the unticked items of the current phase in `docs/PLAN.md` and ask the user which one to do.
 - Find the item in `docs/PLAN.md`. If the work is new, ask whether to add it to the plan, and put it in the right phase.
-- Name the contracts the change touches (`CLAUDE.md` → Invariants): `Settings`, tones, commands, events, capabilities, i18n, prompt.
+- Name the contracts the change touches (`AGENTS.md` → Invariants): `Settings`, tones, commands, events, capabilities, i18n, prompt.
 
 ## 2. Plan
-- Read the relevant page in `docs/specs/` and the relevant code (the code map is in `CLAUDE.md`).
+- Read the relevant page in `docs/specs/` and the relevant code (the code map is in `docs/HARNESS.md`).
 - Write a plan of 3–7 bullets listing the files to change.
 - For large work (new dependency, new permission, UX change, prompt change, more than ~200 lines): present the plan and **wait for the user's approval** before editing.
 
 ## 3. Implement
 - Change in small steps. After each meaningful step, run `node scripts/harness/check.mjs`.
-- Follow `CLAUDE.md` → Code rules. The PostToolUse hook reports violations right after each edit; fix them immediately.
+- Follow `AGENTS.md` and `.claude/rules/`. The PostToolUse hook reports violations right after each edit; fix them immediately.
 - New interface text: add it to `src/lib/i18n.ts` (or `src-tauri/src/i18n.rs`) in both `vi` and `en`. Everything else is written in English.
 - New setting: add it to `settings.rs` (including `Default`), `api.ts` and the Settings UI.
 - New command or event: register it on both sides. New window or plugin API in the frontend: add its permission to the capabilities.

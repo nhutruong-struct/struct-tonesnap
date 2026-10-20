@@ -111,7 +111,7 @@ Keep your branch up to date with `develop` by merging or rebasing on `upstream/d
 
 ## Project rules
 
-The full list, with the reasons behind it, is in [CLAUDE.md](CLAUDE.md) (it guides human and AI contributors
+The full list, with the reasons behind it, is in [AGENTS.md](AGENTS.md) and [.claude/rules/](.claude/rules/) (they guide human and AI contributors
 alike). The ones that matter most:
 
 - **Privacy.** Never log, store or send user text anywhere except the AI request, and only through the redacted
@@ -119,7 +119,8 @@ alike). The ones that matter most:
 - **Secrets.** API keys live only in the OS credential store (`secrets.rs`). Never commit a real key, not even
   in a test. If you commit one by mistake, revoke it at the provider immediately: deleting the commit is not
   enough.
-- **Network.** Only the provider hosts listed in `scripts/harness/config.mjs` and localhost (tests).
+- **Network.** Only the hosts listed in `scripts/harness/config.mjs`: the AI providers, GitHub (to check for
+  updates) and localhost (tests).
 - **Rust ⇄ TypeScript contracts.** Settings, tones, commands, events and capabilities must match on both sides
   in the same change.
 - **Interface text** lives in `src/lib/i18n.ts` (or `src-tauri/src/i18n.rs`) in both Vietnamese and English.
@@ -194,7 +195,7 @@ manual steps you followed in the pull request.
 
 ## Using an AI coding assistant
 
-The repository ships a [Claude Code](https://claude.com/claude-code) setup (`CLAUDE.md`, `.claude/`,
+The repository ships a [Claude Code](https://claude.com/claude-code) setup (`AGENTS.md`, `.claude/`,
 `scripts/harness/`) with hooks that run the checks and skills such as `/check` and `/feature`. You are welcome
 to use it or any other assistant, but you are responsible for every line you submit: read and understand it,
 and make sure it follows the rules above.

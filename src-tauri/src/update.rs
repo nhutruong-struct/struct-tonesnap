@@ -1,5 +1,5 @@
 //! New versions from the GitHub releases, through the Tauri updater plugin. ToneSnap checks a
-//! minute after it starts and then every few hours. In auto mode a new version is downloaded in
+//! minute after it starts and then every six hours. In auto mode a new version is downloaded in
 //! the background and installed once ToneSnap is idle, so the user is never interrupted; in
 //! manual mode ToneSnap only says that it exists (tray and Settings) until the user installs it.
 //! Installing runs the signed installer, which closes ToneSnap and starts the new version.

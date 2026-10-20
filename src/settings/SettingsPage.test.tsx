@@ -367,3 +367,93 @@ test("the interface language preview follows the unsaved choice", async () => {
   await settle();
   expect(screen.getByText(translator("vi")("settings.save"))).toBeTruthy();
 });
+
+describe("popup trigger", () => {
+  async function openTrigger() {
+    const backend = await open();
+    await openSection(/Popup trigger/);
+    return backend;
+  }
+
+  test("starts with the floating icon, and another mode is saved", async () => {
+    const backend = await openTrigger();
+    expect(screen.getByLabelText<HTMLInputElement>(/Show a small icon next to the selection/).checked).toBe(true);
+    await click("Only when I press the hotkey");
+    await click("Save Settings");
+    expect(saved(backend)[0].triggerMode).toBe("hotkey");
+  });
+
+  test("Off pauses ToneSnap", async () => {
+    const backend = await openTrigger();
+    await click("Off");
+    await click("Save Settings");
+    expect(saved(backend)[0].triggerMode).toBe("off");
+  });
+
+  test("opening the popup automatically is not available yet, so its delay stays off", async () => {
+    await openTrigger();
+    expect(screen.getByLabelText<HTMLInputElement>(/Open the popup automatically on selection/).disabled).toBe(true);
+    expect(screen.getByText("Coming soon")).toBeTruthy();
+    expect((field("Delay before opening (ms)") as HTMLInputElement).disabled).toBe(true);
+  });
+});
+
+describe("tones", () => {
+  test("a tone can be left out, and the rest are saved in order", async () => {
+    const backend = await open();
+    await openSection(/Language and tones/);
+    await click("Natural");
+    await click("Save Settings");
+    expect(saved(backend)[0].tones).toEqual(["concise", "formal"]);
+  });
+});
+
+describe("context", () => {
+  test("the amount of context and the screen fallback are saved", async () => {
+    const backend = await open();
+    await openSection(/Context/);
+    fireEvent.change(field("Characters of context on each side"), { target: { value: "900" } });
+    const ocr = field("Screenshot + OCR when an app hides its text") as HTMLInputElement;
+    expect(ocr.checked).toBe(true);
+    fireEvent.click(ocr);
+    await click("Save Settings");
+    expect(saved(backend)[0]).toMatchObject({ contextChars: 900, ocrFallback: false });
+  });
+});
+
+describe("privacy", () => {
+  test("masking and the preview before sending can be switched", async () => {
+    const backend = await open();
+    await openSection(/Privacy/);
+    const redact = field("Mask sensitive data before sending") as HTMLInputElement;
+    const preview = field("Preview data before sending") as HTMLInputElement;
+    expect([redact.checked, preview.checked]).toEqual([true, false]);
+    fireEvent.click(redact);
+    fireEvent.click(preview);
+    await click("Save Settings");
+    expect(saved(backend)[0]).toMatchObject({ redact: false, previewBeforeSend: true });
+  });
+});
+
+describe("Claude model", () => {
+  test("the model and the effort are saved", async () => {
+    const backend = await open({ settings: { provider: "claude" } });
+    await openSection(/AI connection/);
+    expect((field("Model") as HTMLSelectElement).value).toBe("claude-opus-5-5");
+    fireEvent.change(field("Model"), { target: { value: "claude-sonnet-5-5" } });
+    expect((field("Reasoning effort") as HTMLSelectElement).disabled).toBe(false);
+    fireEvent.change(field("Reasoning effort"), { target: { value: "high" } });
+    await click("Save Settings");
+    expect(saved(backend)[0]).toMatchObject({ model: "claude-sonnet-5-5", effort: "high" });
+  });
+});
+
+describe("interface language", () => {
+  test("the chosen language is saved", async () => {
+    const backend = await open();
+    fireEvent.change(field("Interface language"), { target: { value: "vi" } });
+    await settle();
+    await click(translator("vi")("settings.save"));
+    expect(saved(backend)[0].uiLanguage).toBe("vi");
+  });
+});

@@ -3,7 +3,7 @@
 > **Status:** implemented (Phase 0). Claude latency per model is not measured yet (needs an API key).
 > **Source:** `src-tauri/src/prompt.rs`, `src-tauri/prompts/system.md`, `src-tauri/prompts/output_schema.json`, `request.rs`, `llm/mod.rs`, `llm/openai_compat.rs`, `llm/claude.rs`, `secrets.rs`.
 
-Every provider receives the same system prompt, the same user turn and the same JSON output schema, and stream their answer to the popup.
+Every provider receives the same system prompt, the same user turn and the same JSON output schema, and each streams its answer to the popup.
 
 ## What the model is asked to do
 
@@ -29,7 +29,7 @@ Every provider receives the same system prompt, the same user turn and the same 
 ## User turn
 
 - **AI-10** The user turn is a sequence of tags, in this order, each present only when it has text: `<app>`, `<context_before>`, `<selection>`, `<context_after>`, `<screen_text>`, `<target_language>` (`Vietnamese`, `English` or `Japanese`), `<mode>` (`translate` or `rewrite`), `<tones>` (comma-separated). A closing tag that appears inside the data (e.g. `</selection>`) is escaped to `<\/selection>`, so data cannot close a tag early.
-- **AI-11** A one-line **reminder** follows the tags, because small local models follow a reminder next to the input far more reliably than rules at the top of a long prompt:
+- **AI-11** A one-line **reminder** follows the tags, because small models follow a reminder next to the input far more reliably than rules at the top of a long prompt:
   - `translate`: "Translate the selection into {language}, one version per tone: {tones}. Stay close to its meaning and structure."
   - `rewrite`: "Rewrite the selection in {language}, one version per tone: {tones}. Write every version in {language}, whatever language the selection is in."
 - **AI-12** *Removed.* ToneSnap does not guess the selection's language (the model handles any of the three); the popup shows the target language and mode instead of a "translated" hint.
@@ -68,7 +68,7 @@ All three speak the OpenAI Chat Completions dialect, so one client (`llm/openai_
 - **AI-54** Starting a request supersedes the running one: each request gets a new id and the old stream stops at its next chunk, without an error. Closing the popup in any way (Esc, ✕, Apply, Copy, *Open Settings*, losing focus to another app, the hotkey while the popup is in front) also cancels the running request: a hidden popup never shows that session again, so the rest of the answer would only use up the request quota or bill the API.
 - **AI-55** Network chunks are split into frames on bytes, so a multi-byte character split across chunks is never decoded half-way.
 
-**Verified by:** `prompt.rs` tests (schema holds exactly the requested tones, unknown tones dropped, every tone when none is left, closing tags neutralized, the reminder for translating and for rewriting, the language and mode tags, only non-empty tags, the schema asks for nothing but each variant's text, the template is valid for every tone, the payload's JSON shape), `llm/mod.rs` tests (frames, only complete answers succeed, error codes), `llm/openai_compat.rs` and `llm/claude.rs` tests against a local HTTP server (streaming split across chunks, headers and body for both JSON modes, Haiku without effort or fallbacks, CRLF lines and comment lines, error codes by HTTP status, in-stream errors, cancellation, unreachable servers), `secrets.rs` tests (one account and variable per provider), `request.rs` tests (event field names, error fields, provider choice). Model quality is checked by hand with `scripts/bench-cases.json` (the old local-model reports in `docs/bench/` are history).
+**Verified by:** `prompt.rs` tests (schema holds exactly the requested tones, unknown tones dropped, tones once each in the canonical order, every tone when none is left, closing tags neutralized, the reminder for translating and for rewriting, the language and mode tags, only non-empty tags, the schema asks for nothing but each variant's text, the template is valid for every tone, the payload's JSON shape), `llm/mod.rs` tests (frames, only complete answers succeed, error codes), `llm/openai_compat.rs` and `llm/claude.rs` tests against a local HTTP server (streaming split across chunks, headers and body for both JSON modes, Haiku without effort or fallbacks, which models get the default fallbacks, the token headroom, CRLF lines and comment lines, error codes by HTTP status, in-stream errors, cancellation, unreachable servers), `secrets.rs` tests (one account and variable per provider), `request.rs` tests (event field names, error fields, provider choice), `state.rs` tests (a new request supersedes the running one, cancelling stops it), `session.rs` tests (the payload asks for the configured tones the model knows). Model quality is checked by hand with `scripts/bench-cases.json` (the old local-model reports in `docs/bench/` are history).
 
 ## Not implemented
 

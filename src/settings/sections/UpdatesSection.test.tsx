@@ -78,7 +78,7 @@ describe("updates", () => {
 
   test("a downloaded version says when it will be installed, following the chosen mode", async () => {
     await openUpdates({ kind: "ready", version: "1.1.0" });
-    expect(screen.getByRole("status").textContent).toMatch(/installs it while you are not using it/);
+    expect(screen.getByRole("status").textContent).toMatch(/installs it when you are not using the app/);
     await click("Ask before updating");
     expect(screen.getByRole("status").textContent).toBe("Version 1.1.0 is downloaded and ready to install.");
     expect(screen.getByText("Update & Restart")).toBeTruthy();

@@ -18,7 +18,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Tray
 
-- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, without an icon ([updates.md](updates.md) UPD-40).
+- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, with a download arrow ([updates.md](updates.md) UPD-40).
 - **APP-11** Menu labels follow the interface language and are updated as soon as settings are saved.
 - **APP-12** *Quit ToneSnap* exits at once.
 
@@ -37,7 +37,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 - **APP-32** The Settings window follows the language currently picked in its form, before saving, so the user sees what they are choosing.
 - **APP-33** Every interface string exists in both languages (`src/lib/i18n.ts`, `src-tauri/src/i18n.rs`); a missing translation is a TypeScript error. Strings may contain `{name}` placeholders, filled the same way in both languages.
 
-**Verified by:** `tray.rs` test (the menu icons decode and share one size), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone/trigger/notice has a label, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
+**Verified by:** `tray.rs` test (the menu icons decode and share one size), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
 ## Uninstalling
 

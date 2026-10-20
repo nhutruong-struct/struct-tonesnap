@@ -89,7 +89,7 @@ const GATES = [
   {
     id: "invariants",
     title: "project rules (contracts, code rules, language, privacy, secrets, whitespace)",
-    hint: "Each line is file:line and the rule that failed; CLAUDE.md → Invariants explains why. Whitespace problems fix themselves with --fix; the rest need a code change.",
+    hint: "Each line is file:line and the rule that failed; AGENTS.md → Invariants explains why. Whitespace problems fix themselves with --fix; the rest need a code change.",
     fixable: true,
     run: () => {
       const results = runInvariants();
@@ -128,7 +128,7 @@ const GATES = [
   {
     id: "clippy",
     title: "cargo clippy -D warnings",
-    hint: "Read the lint's help text; cargo clippy --fix can apply some suggestions. Do not silence a lint without a reason (CLAUDE.md → Code rules).",
+    hint: "Read the lint's help text; cargo clippy --fix can apply some suggestions. Do not silence a lint without a reason (.claude/rules/rust.md).",
     run: tool("cargo", [
       "clippy",
       "--manifest-path",

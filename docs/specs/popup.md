@@ -27,7 +27,7 @@ The popup is driven entirely by events from Rust. Each session resets it.
 
 - **POP-10** A notice replaces whatever the popup shows; the next session clears it.
 - **POP-11** Events of a request the popup is not showing are ignored: `request-started` must belong to the current session, and every later event must belong to the current request. A replaced or cancelled request therefore cannot mix its text into the new one.
-- **POP-12** `request-started` clears the previous text, outcome and loading hint, so *Retry* and R start from a clean slate.
+- **POP-12** `request-started` clears the previous text and outcome, so *Retry* and R start from a clean slate.
 
 ## Header and footer
 
@@ -66,7 +66,7 @@ Number keys are matched by the physical top-row digit key, so they work with Shi
 
 | Notice | Message (English) |
 |---|---|
-| `no_selection` | Nothing is selected. Select the text you want to rewrite, then press the hotkey. |
+| `no_selection` | Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey. |
 | `password_field` | ToneSnap never reads password fields. |
 | `blocked_app` | ToneSnap is turned off in {app} (blocked apps in Settings). |
 | `apply_failed` | Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste. |
@@ -95,4 +95,4 @@ Number keys are matched by the physical top-row digit key, so they work with Shi
 - **POP-71** It also closes once the user has really moved to another app. Focus changes in the first 400 ms after showing are ignored (the popup is still settling), and a blur is checked again 200 ms later, because dragging or clicking inside the popup briefly moves focus between the web view and its frame. It stays open while the popup or the Settings window is in front.
 - **POP-72** Every way of closing cancels the running request ([ai-request.md](ai-request.md) AI-54).
 
-**Verified by:** `window.rs` tests (below the selection, above near the bottom, inside the work area, at 2× DPI; notice JSON), `session.rs` test (session JSON), `src/popup/suggestions.test.ts` (streaming parse, broken output, readiness rules), `src/popup/Popup.test.tsx` (the key hints in the footer, restored text, number keys, Apply button, read-only offers Copy only, a half-written variant cannot be applied, events of a replaced request ignored, the language and mode bar: starting values, a new language or mode asks again with both values, the same value sends nothing, a choice while previewing is sent with the data, R repeats what is on screen, a new session starts from its own values, slow model load hint, Esc and R, preview sends on Enter, known and unknown errors, notices replace suggestions and close by themselves, a new session clears a notice). Focus behavior against real apps is manual.
+**Verified by:** `window.rs` tests (below the selection, above near the bottom, inside the work area, at 2× DPI; notice JSON), `session.rs` test (session JSON), `src/popup/suggestions.test.ts` (streaming parse, broken output, readiness rules), `src/popup/Popup.test.tsx` (the key hints in the footer, restored text, number keys, Apply button, read-only offers Copy only, a half-written variant cannot be applied, events of a replaced request ignored, the language and mode bar: starting values, a new language or mode asks again with both values, the same value sends nothing, a choice while previewing is sent with the data, R repeats what is on screen, a new session starts from its own values, Esc and R, preview sends on Enter, known and unknown errors, notices replace suggestions, close by themselves or with *Close*, and a new session clears one; the header chips and its Settings and Close buttons; the empty state; a rate limit offers only Retry, a missing key points to Settings, a connection error shows its message, a cut-off answer is explained, and retrying clears the error; a missing timing shows a dash and the model comes from the session; the preview lists its rows, hides empty context and Cancel sends nothing; a number key beyond the tones does nothing). Focus behavior against real apps is manual.
