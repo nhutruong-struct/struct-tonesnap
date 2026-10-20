@@ -307,6 +307,15 @@ mod tests {
     }
 
     #[test]
+    fn every_provider_streams_with_room_for_a_reasoning_model() {
+        for endpoint in [&GEMINI, &GROQ, &OPENROUTER] {
+            let body = body(endpoint, "m-1", &prompt());
+            assert_eq!(body["stream"], true, "{}", endpoint.url);
+            assert_eq!(body["max_tokens"], 4000, "{}", endpoint.url);
+        }
+    }
+
+    #[test]
     fn crlf_line_endings_are_understood() {
         let crlf = sse(&[delta("ok"), finish("stop")]).replace('\n', "\r\n");
         let server = TestServer::start(vec![Reply::stream("text/event-stream", &crlf)]);
