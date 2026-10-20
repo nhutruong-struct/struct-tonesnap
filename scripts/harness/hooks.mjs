@@ -9,10 +9,14 @@
 //   stop           re-run the gates for changed groups; block the stop while they fail
 //
 // Reads the hook payload as JSON on stdin and answers with JSON on stdout.
+//
+// Claude Code starts the hooks from the main checkout also for a session in a git worktree
+// (.claude/worktrees/<name>/), so each hook works on the session's own checkout, found from the
+// payload's `cwd`, and judges an edited file by its path inside the checkout that holds it.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   BLOCKED_COMMANDS,
   MANIFESTS,
@@ -20,6 +24,7 @@ import {
   ROOT,
   SECRET_PATTERNS,
   TEXT_EXTENSIONS,
+  locate,
   toolEnv,
 } from "./config.mjs";
 import { fileViolations } from "./invariants.mjs";
@@ -38,26 +43,11 @@ function readInput() {
 
 const reply = (obj) => process.stdout.write(JSON.stringify(obj));
 
-/**
- * Absolute path with Windows 8.3 short names (C:\Users\ABC~1) expanded, so paths from
- * different sources compare equal. Works for files that do not exist yet.
- */
-function canonical(path) {
-  try {
-    return realpathSync.native(path);
-  } catch {
-    const parent = dirname(path);
-    return parent === path ? path : join(canonical(parent), basename(path));
-  }
-}
+/** The checkout the session works in: the worktree holding its `cwd`, else the one these scripts live in. */
+const sessionRoot = (input) => locate(input.cwd)?.root ?? ROOT;
 
-/** Project-relative forward-slash path, or null when the file is outside the project. */
-function projectPath(file) {
-  if (!file) return null;
-  const abs = canonical(isAbsolute(file) ? file : join(ROOT, file));
-  const rel = relative(canonical(ROOT), abs).replaceAll("\\", "/");
-  return rel.startsWith("..") || isAbsolute(rel) ? null : rel;
-}
+/** The edited file, located in its checkout (see `locate`), or null outside the project. */
+const editedFile = (input) => locate(input.tool_input?.file_path ?? input.tool_input?.notebook_path, input.cwd ?? ROOT);
 
 /** Text an edit tool is about to write. */
 function newContent(input) {
@@ -67,7 +57,7 @@ function newContent(input) {
     .join("\n");
 }
 
-const readProjectFile = (path) => (existsSync(join(ROOT, path)) ? readFileSync(join(ROOT, path), "utf8") : "");
+const readIfExists = (abs) => (existsSync(abs) ? readFileSync(abs, "utf8") : "");
 
 /** The whole file as it will be after the edit, so rules see the edit in context. */
 function contentAfterEdit(input, before) {
@@ -89,17 +79,18 @@ function introducedViolations(path, before, after, rules) {
 
 // ---------------------------------------------------------------------------------------------
 
-function sessionStart() {
-  const state = readState();
+function sessionStart(input) {
+  const root = sessionRoot(input);
+  const state = readState(root);
   // Changes made before this session are not the agent's to fix unprompted.
-  state.snapshot = fingerprints();
+  state.snapshot = fingerprints(root);
   state.dirty = [];
   state.stopBlocks = 0;
-  writeState(state);
+  writeState(state, root);
 
   const lines = ["ToneSnap harness: project status (from scripts/harness/hooks.mjs)."];
   try {
-    const plan = readFileSync(join(ROOT, "docs/PLAN.md"), "utf8");
+    const plan = readFileSync(join(root, "docs/PLAN.md"), "utf8");
     const section = /## ([^\n]*progress[^\n]*)\n([\s\S]*?)(?=\n## |$)/i.exec(plan);
     if (section) {
       const done = (section[2].match(/- \[x\]/gi) ?? []).length;
@@ -133,7 +124,8 @@ function preTool(input) {
     });
 
   if (EDIT_TOOLS.has(name)) {
-    const path = projectPath(input.tool_input?.file_path ?? input.tool_input?.notebook_path);
+    const file = editedFile(input);
+    const path = file?.path;
     if (path) {
       const rule = PROTECTED_PATHS.find((p) => p.pattern.test(path));
       if (rule) return deny(`Harness: ${path} is protected (${rule.reason}).`);
@@ -146,7 +138,7 @@ function preTool(input) {
       );
     }
     if (path && TEXT_EXTENSIONS.test(path)) {
-      const before = readProjectFile(path);
+      const before = readIfExists(file.abs);
       const added = introducedViolations(path, before, contentAfterEdit(input, before), ["language"]);
       if (added.length) {
         return deny(
@@ -186,9 +178,10 @@ function preTool(input) {
 function postTool(input) {
   const notes = [];
   if (EDIT_TOOLS.has(input.tool_name)) {
-    const path = projectPath(input.tool_input?.file_path);
+    const file = editedFile(input);
+    const path = file?.path;
     if (path?.startsWith("src-tauri/") && path.endsWith(".rs")) {
-      const r = spawnSync("rustfmt", ["--edition", "2021", join(ROOT, path)], { env: toolEnv(), encoding: "utf8" });
+      const r = spawnSync("rustfmt", ["--edition", "2021", file.abs], { env: toolEnv(), encoding: "utf8" });
       if (r.status !== 0 && !r.error) {
         notes.push(
           `rustfmt could not format ${path}, which usually means a syntax error:\n${(r.stderr ?? "").slice(0, 1500)}`,
@@ -196,13 +189,19 @@ function postTool(input) {
       }
     }
     // Prettier skips what .prettierignore lists (Markdown, docs, src-tauri…).
+    // A worktree without its own node_modules borrows the main checkout's Prettier; the config and
+    // ignore file still come from the worktree (the working directory).
     if (path && /\.(tsx?|jsx?|mjs|css|json|html)$/.test(path)) {
-      const prettier = join(ROOT, "node_modules/prettier/bin/prettier.cjs");
-      const r = spawnSync(
-        process.execPath,
-        [prettier, "--write", "--ignore-unknown", "--log-level", "warn", join(ROOT, path)],
-        { cwd: ROOT, env: toolEnv(), encoding: "utf8" },
-      );
+      const prettier = [file.root, ROOT]
+        .map((root) => join(root, "node_modules/prettier/bin/prettier.cjs"))
+        .find((p) => existsSync(p));
+      const r = prettier
+        ? spawnSync(process.execPath, [prettier, "--write", "--ignore-unknown", "--log-level", "warn", file.abs], {
+            cwd: file.root,
+            env: toolEnv(),
+            encoding: "utf8",
+          })
+        : { status: 0 };
       if (r.status !== 0 && !r.error) {
         notes.push(
           `Prettier could not format ${path}, which usually means a syntax error:\n${(r.stderr ?? "").slice(0, 1500)}`,
@@ -210,8 +209,8 @@ function postTool(input) {
       }
     }
     // Immediate feedback on the code rules, instead of waiting for the Stop hook.
-    if (path && TEXT_EXTENSIONS.test(path) && existsSync(join(ROOT, path))) {
-      const found = fileViolations(path, readProjectFile(path));
+    if (path && TEXT_EXTENSIONS.test(path) && existsSync(file.abs)) {
+      const found = fileViolations(path, readIfExists(file.abs));
       if (found.length) {
         notes.push(
           `Project rules flagged in ${path} (errors block the end of the turn; see CLAUDE.md "Code rules"):\n` +
@@ -223,32 +222,35 @@ function postTool(input) {
     }
   }
 
-  const state = readState();
-  const now = fingerprints();
+  const root = sessionRoot(input);
+  const state = readState(root);
+  const now = fingerprints(root);
   const changed = state.snapshot ? changedGroups(state.snapshot, now) : [];
   state.dirty = [...new Set([...(state.dirty ?? []), ...changed])];
   state.snapshot = now;
-  writeState(state);
+  writeState(state, root);
 
   if (notes.length) {
     reply({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: notes.join("\n\n") } });
   }
 }
 
-function stop() {
-  const state = readState();
+function stop(input) {
+  const root = sessionRoot(input);
+  const state = readState(root);
   if (!state.dirty?.length) return;
 
+  // The checkout's own check.mjs, so it checks that tree and records the result in its state.
   const started = Date.now();
-  const r = spawnSync(process.execPath, [join(ROOT, "scripts/harness/check.mjs"), "--changed"], {
-    cwd: ROOT,
+  const r = spawnSync(process.execPath, [join(root, "scripts/harness/check.mjs"), "--changed"], {
+    cwd: root,
     env: toolEnv(),
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
   const output = `${r.stdout ?? ""}${r.stderr ?? ""}`.trim();
   const secs = Math.round((Date.now() - started) / 1000);
-  const after = readState(); // check.mjs updated dirty/lastCheck
+  const after = readState(root); // check.mjs updated dirty/lastCheck
 
   if (r.status === 0) {
     reply({ systemMessage: `Harness: all gates passed for ${state.dirty.join(" + ")} changes (${secs}s).` });
@@ -258,13 +260,13 @@ function stop() {
   after.stopBlocks = (after.stopBlocks ?? 0) + 1;
   if (after.stopBlocks > MAX_STOP_BLOCKS) {
     after.stopBlocks = 0;
-    writeState(after);
+    writeState(after, root);
     reply({
       systemMessage: `Harness: checks still fail after ${MAX_STOP_BLOCKS} attempts; stopping anyway. Run \`node scripts/harness/check.mjs\` to see them.\n${output.slice(-1500)}`,
     });
     return;
   }
-  writeState(after);
+  writeState(after, root);
   reply({
     decision: "block",
     reason:

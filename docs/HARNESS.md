@@ -23,7 +23,7 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | PR title rules | `scripts/harness/pr-title.mjs` | The pull request title becomes the commit message; CI checks its form |
 | Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test` |
 | Review | `.claude/agents/tonesnap-reviewer.md` | Read-only agent that reviews against the invariants and code rules |
-| State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed) |
+| State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed); each worktree keeps its own |
 
 ## Enforcement layers
 
@@ -73,6 +73,14 @@ Session opens ── SessionStart ──▶ open PLAN.md items and the last chec
 ```
 
 A turn that only answers a question changes nothing, so the Stop hook exits immediately.
+
+### Git worktrees
+
+Parallel Claude sessions each work in a git worktree under `.claude/worktrees/<name>/`. Claude Code starts the hooks from the main checkout (`CLAUDE_PROJECT_DIR`) even then, so the hooks work out the session's own checkout from the `cwd` in the hook payload (`locate` in `config.mjs`):
+
+- An edited file is judged by its path inside the checkout that holds it, so a worktree's `src/lib/i18n.ts` is `src/lib/i18n.ts` for the protected paths, the language allowlist and the manifest rule.
+- SessionStart, PostToolUse and Stop read and write that checkout's `.claude/.state/harness.json`, and Stop runs that checkout's own `check.mjs`, so one session is never blocked by another session's unfinished edits.
+- The gates need `node_modules` in the worktree (`pnpm install` there). PostToolUse borrows the main checkout's Prettier when the worktree has none.
 
 ## Gates
 
@@ -192,12 +200,12 @@ In Claude Code:
 - **A per-file rule**: add a function to `FILE_RULES` in `invariants.mjs`, returning `[{ line, message, severity? }]`.
 - **A cross-file rule**: add a function to `CROSS_RULES`, returning `{ errors, warnings }`.
 - **A gate**: add it to `GATES` in `check.mjs` and map it to a source group in `GATES_FOR_GROUP` (`config.mjs`).
-- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the cross-file rules by planting a violation in a copy of the repository.
+- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs`, the hooks' path handling (worktrees included) in `scripts/harness/hooks.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the cross-file rules by planting a violation in a copy of the repository.
 
 ## Troubleshooting
 
 - **Hooks do not run:**
-  - Open Claude Code in the `tonesnap` folder, where `.claude/settings.json` lives.
+  - Open Claude Code in the `tonesnap` folder, where `.claude/settings.json` lives (a session in one of its worktrees works too).
   - Hooks are read when a session starts; open a new session after changing `settings.json`.
   - Type `/hooks` in a `claude` terminal to list them.
   - Hooks run under Git Bash. Without Git Bash, Claude Code falls back to PowerShell, where `${CLAUDE_PROJECT_DIR}` may not expand.
