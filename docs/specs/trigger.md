@@ -50,7 +50,7 @@ The icon lets mouse users open ToneSnap without the keyboard. Only the mouse is 
 - **TRG-25** The hook callback returns immediately and posts work elsewhere, because Windows removes low-level hooks that stall input.
 - **TRG-26** Saving settings starts or stops the icon to match the mode. The blocked-app list is read at every selection, so changes apply without a restart.
 
-**Verified by:** `src/lib/hotkey.test.ts` (normalizing, display, known conflicts), `src/settings/SettingsPage.test.tsx` (capturing a new hotkey, the conflict warning, a taken hotkey keeps the window open), `selection_icon/gesture.rs` tests (drag, single click, double click within the system limits, presses on the icon), `uia.rs` integration test (a gesture outside the focused element is not judged by it), `selection_icon/paint.rs` tests (resampling). Registering the global hotkey and the mouse hook in other apps are checked by hand (`/smoke-test`).
+**Verified by:** `state.rs` test (only one capture at a time, TRG-03), `src/lib/hotkey.test.ts` (normalizing, display, known conflicts), `src/settings/SettingsPage.test.tsx` (capturing a new hotkey, the conflict warning, a taken hotkey keeps the window open), `selection_icon/gesture.rs` tests (drag, single click, double click within the system limits, presses on the icon), `uia.rs` integration test (a gesture outside the focused element is not judged by it), `selection_icon/paint.rs` tests (resampling). Registering the global hotkey and the mouse hook in other apps are checked by hand (`/smoke-test`).
 
 ## Not implemented
 
