@@ -52,7 +52,6 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | `scripts/harness/` | Checks and hooks (this page) |
 | `scripts/release/` | `updater-manifest.mjs`: builds the updater's `latest.json` for `release.yml` |
 | `site/` | The website (GitHub Pages, `pages.yml`); `site/media/` holds the intro video and its poster |
-| `video/` | Remotion project that renders the intro video; own `package.json` and lockfile, outside the app's gates (see its README) |
 
 ## Enforcement layers
 

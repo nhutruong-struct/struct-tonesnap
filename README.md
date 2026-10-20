@@ -160,7 +160,6 @@ React + TypeScript interface.
 | `src-tauri/src/i18n.rs`, `src/lib/i18n.ts` | Interface strings in Vietnamese and English |
 | `src/popup/`, `src/settings/` | The two windows |
 | `site/` | The website, published to GitHub Pages; `site/media/` holds the intro video and its poster |
-| `video/` | Remotion project that renders the intro video (separate from the app's build; see its README) |
 
 More documentation:
 
