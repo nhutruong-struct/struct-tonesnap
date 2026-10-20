@@ -12,12 +12,13 @@ pub const TONES: &[&str] = &["concise", "natural", "formal"];
 
 pub const SYSTEM_PROMPT: &str = include_str!("../prompts/system.md");
 
-/// The configured tones the model knows, in order; every tone when none is left.
+/// The configured tones the model knows, once each and in the canonical order, whatever order a
+/// hand-edited settings file lists them in; every tone when none is left.
 pub fn requested_tones(configured: &[String]) -> Vec<String> {
-    let tones: Vec<String> = configured
+    let tones: Vec<String> = TONES
         .iter()
-        .filter(|t| TONES.contains(&t.as_str()))
-        .cloned()
+        .filter(|tone| configured.iter().any(|c| c == **tone))
+        .map(|tone| tone.to_string())
         .collect();
     if tones.is_empty() {
         TONES.iter().map(|t| t.to_string()).collect()
@@ -137,6 +138,18 @@ mod tests {
     fn requested_tones_drop_unknown_ids() {
         let configured = vec!["formal".to_string(), "polite".to_string()];
         assert_eq!(requested_tones(&configured), ["formal"]);
+    }
+
+    #[test]
+    fn tones_are_requested_once_each_in_the_canonical_order() {
+        // A hand-edited settings file can list them in any order, or twice; a repeated tone would
+        // make the schema's `required` list invalid.
+        let configured = vec![
+            "formal".to_string(),
+            "concise".to_string(),
+            "formal".to_string(),
+        ];
+        assert_eq!(requested_tones(&configured), ["concise", "formal"]);
     }
 
     #[test]

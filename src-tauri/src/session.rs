@@ -169,6 +169,16 @@ mod tests {
     }
 
     #[test]
+    fn payload_requests_the_configured_tones_the_model_knows() {
+        let settings = Settings {
+            tones: vec!["formal".into(), "pirate".into()],
+            ..Settings::default()
+        };
+        let (payload, _) = redacted_payload(&settings, &captured("pls review", ""));
+        assert_eq!(payload.tones, ["formal"]);
+    }
+
+    #[test]
     fn payload_keeps_the_text_when_redaction_is_off() {
         let settings = Settings {
             redact: false,

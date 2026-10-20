@@ -18,9 +18,10 @@
 
 </div>
 
-ToneSnap is a small desktop app for people who write English at work, especially Vietnamese speakers. Select a
-sentence in Slack, Outlook, Teams, a browser or any other app, press `Ctrl+Alt+E` (or click the floating icon next
-to the selection), and a popup suggests several versions, each in a different tone. **Apply** pastes the version you pick back in place of the selection.
+ToneSnap is a small desktop app for people who work in Vietnamese, English and Japanese, especially Vietnamese
+speakers writing English. Select a sentence in Slack, Outlook, Teams, a browser or any other app, click the
+floating icon next to the selection (or press `Ctrl+Alt+E`), and a popup suggests several versions, each in a
+different tone, in the language you choose. **Apply** pastes the version you pick back in place of the selection.
 
 ## Features
 
@@ -35,6 +36,8 @@ to the selection), and a popup suggests several versions, each in a different to
   Nothing is logged or stored, and there is no telemetry. See [docs/specs/privacy.md](docs/specs/privacy.md).
 - **Bring your own key.** Google Gemini (free tier, default), Groq (free tier), OpenRouter (free models) or the
   Claude API (paid). Keys are kept in Windows Credential Manager.
+- **Updates itself.** New versions come from the GitHub releases: downloaded in the background and installed
+  while you are not using ToneSnap, or only announced if you prefer to ask first.
 - **Vietnamese and English interface**, light and dark themes, start with Windows, tray menu.
 
 ## Status
@@ -95,7 +98,7 @@ local model: the (redacted) text always goes to the provider you choose.
 ## Usage
 
 1. Select some text in any app.
-2. Press `Ctrl+Alt+E`, or click the ToneSnap icon that appears next to the selection.
+2. Click the ToneSnap icon that appears next to the selection, or press `Ctrl+Alt+E`.
 3. Read the suggestions, then click **Apply** on the one you like (or **Copy**).
 
 The hotkey, the trigger mode, the tones, the target language and mode, and the blocked apps can be changed in
@@ -144,7 +147,8 @@ React + TypeScript interface.
 | `src-tauri/src/redact.rs` | Reversible redaction of sensitive data before sending |
 | `src-tauri/src/prompt.rs`, `src-tauri/prompts/` | System prompt and output JSON schema |
 | `src-tauri/src/llm/` | Providers: the Claude Messages API and an OpenAI-compatible client for Gemini, Groq and OpenRouter |
-| `src-tauri/src/lib.rs` | App setup; one module per concern: `session`, `request`, `window`, `trigger`, `tray`, `commands`, `state` |
+| `src-tauri/src/lib.rs` | App setup; one module per concern: `session`, `request`, `window`, `trigger`, `tray`, `commands`, `state`, `update` |
+| `src-tauri/src/update.rs` | Updates from the GitHub releases: schedule, update mode, installing when idle |
 | `src-tauri/src/i18n.rs`, `src/lib/i18n.ts` | Interface strings in Vietnamese and English |
 | `src/popup/`, `src/settings/` | The two windows |
 

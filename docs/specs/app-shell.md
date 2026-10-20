@@ -37,7 +37,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 - **APP-32** The Settings window follows the language currently picked in its form, before saving, so the user sees what they are choosing.
 - **APP-33** Every interface string exists in both languages (`src/lib/i18n.ts`, `src-tauri/src/i18n.rs`); a missing translation is a TypeScript error. Strings may contain `{name}` placeholders, filled the same way in both languages.
 
-**Verified by:** `tray.rs` test (the menu icons decode and share one size), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone/trigger/notice has a label, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
+**Verified by:** `tray.rs` test (the menu icons decode and share one size), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
 ## Uninstalling
 

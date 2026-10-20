@@ -244,6 +244,26 @@ mod tests {
     }
 
     #[test]
+    fn only_the_models_that_accept_it_get_the_default_fallbacks() {
+        for model in ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"] {
+            assert!(supports_default_fallbacks(model), "{model}");
+        }
+        for model in ["claude-haiku-4-5", "claude-sonnet-4-5", "some-other-model"] {
+            assert!(!supports_default_fallbacks(model), "{model}");
+        }
+        assert!(!supports_effort("claude-haiku-4-5"));
+        assert!(supports_effort("claude-sonnet-5-5"));
+    }
+
+    #[test]
+    fn the_request_leaves_room_for_thinking_and_caches_the_system_prompt() {
+        let body = body("claude-sonnet-5-5", "medium", &prompt());
+        assert_eq!(body["max_tokens"], 8000);
+        assert_eq!(body["output_config"]["effort"], "medium");
+        assert_eq!(body["system"][0]["cache_control"]["type"], "ephemeral");
+    }
+
+    #[test]
     fn haiku_gets_neither_effort_nor_fallbacks() {
         let server = TestServer::start(vec![Reply::stream(
             "text/event-stream",

@@ -210,6 +210,40 @@ mod tests {
     use super::*;
 
     #[test]
+    fn well_known_apps_get_a_friendly_name() {
+        let names = [
+            ("winword.exe", "Microsoft Word"),
+            ("outlook.exe", "Outlook"),
+            ("olk.exe", "Outlook"),
+            ("ms-teams.exe", "Microsoft Teams"),
+            ("teams.exe", "Microsoft Teams"),
+            ("slack.exe", "Slack"),
+            ("chrome.exe", "Google Chrome"),
+            ("msedge.exe", "Microsoft Edge"),
+            ("acrord32.exe", "Adobe Acrobat"),
+            ("code.exe", "VS Code"),
+        ];
+        for (process, name) in names {
+            assert_eq!(friendly_app_name(process), name, "{process}");
+        }
+    }
+
+    #[test]
+    fn other_apps_show_their_executable_name_without_the_extension() {
+        assert_eq!(friendly_app_name("mspaint.exe"), "mspaint");
+        assert_eq!(friendly_app_name("tool"), "tool");
+    }
+
+    #[test]
+    fn context_is_cut_by_characters_not_bytes() {
+        let text = "đường Nguyễn Huệ";
+        assert_eq!(first_chars(text, 5), "đường");
+        assert_eq!(last_chars(text, 4), " Huệ");
+        assert_eq!(last_chars("ab", 5), "ab");
+        assert_eq!(first_chars("ab", 5), "ab");
+    }
+
+    #[test]
     fn focuses_on_the_selection() {
         let lines = vec![
             "Alice: are we still on for the demo?".to_string(),

@@ -278,6 +278,53 @@ mod tests {
     }
 
     #[test]
+    fn vietnamese_text_around_a_value_is_untouched() {
+        let mut r = Redactor::new(&[]);
+        assert_eq!(
+            r.apply("Gửi anh an@corp.vn nhé, em đã xong rồi"),
+            "Gửi anh [EMAIL_1] nhé, em đã xong rồi"
+        );
+    }
+
+    #[test]
+    fn custom_terms_match_whole_words_with_diacritics_in_any_case() {
+        let mut r = Redactor::new(&["Công ty Ánh Dương".to_string()]);
+        assert_eq!(
+            r.apply("Hợp đồng với CÔNG TY ÁNH DƯƠNG đã ký"),
+            "Hợp đồng với [TERM_1] đã ký"
+        );
+    }
+
+    #[test]
+    fn every_known_key_format_is_a_secret() {
+        let mut r = Redactor::new(&[]);
+        // Built from pieces so that this file does not trip the harness's own secret scan.
+        let keys = [
+            concat!("AKIA", "IOSFODNN7EXAMPLE"),
+            concat!("AIza", "SyA1234567890abcdefghijklmnopqrstuv"),
+            concat!("github_pat_", "11ABCDEFG0abcdefghijkl_mnopqrstuvwxyz"),
+            concat!("sk-", "proj-abcdefghijklmnopqrstuvwx"),
+        ];
+        for (i, key) in keys.iter().enumerate() {
+            assert_eq!(
+                r.apply(&format!("key {key}")),
+                format!("key [SECRET_{}]", i + 1)
+            );
+        }
+    }
+
+    #[test]
+    fn a_value_is_masked_the_same_way_every_time_it_appears() {
+        let mut r = Redactor::new(&[]);
+        let once = r.apply("an@corp.vn");
+        assert_eq!(
+            r.apply("an@corp.vn and an@corp.vn"),
+            format!("{once} and {once}")
+        );
+        assert_eq!(r.entries.len(), 1);
+    }
+
+    #[test]
     fn blank_custom_terms_are_ignored() {
         let mut r = Redactor::new(&["  ".to_string(), String::new()]);
         assert_eq!(r.apply("nothing to hide"), "nothing to hide");

@@ -1,7 +1,7 @@
 # Rust ⇄ TypeScript contracts
 
 > **Status:** implemented (Phase 0). Checked by the harness (`tones`, `settings`, `commands`, `events`, `capabilities` rules in `scripts/harness/invariants.mjs`) and by JSON-shape tests on the Rust side.
-> **Source:** `src-tauri/src/commands.rs`, `lib.rs` (`generate_handler!`), `session.rs`, `request.rs`, `window.rs`, `settings.rs`, `prompt.rs`, `llm/openai_compat.rs`, `src/lib/api.ts`, `src/lib/tones.ts`.
+> **Source:** `src-tauri/src/commands.rs`, `lib.rs` (`generate_handler!`), `session.rs`, `request.rs`, `window.rs`, `settings.rs`, `prompt.rs`, `update.rs`, `src/lib/api.ts`, `src/lib/tones.ts`.
 
 The two windows talk to the Rust core only through the commands and events below. Components never call `invoke` or `listen` directly: they use the typed wrappers `api.*` and `events.*` in `src/lib/api.ts`.
 
@@ -29,7 +29,7 @@ The two windows talk to the Rust core only through the commands and events below
 | `check_for_updates` | none | nothing; the result arrives as `update-status` | async (network) | Settings |
 | `install_update` | none | nothing; ToneSnap exits once the installer starts | async (network) | Settings |
 
-- **CON-11** The Settings window also calls the autostart plugin's own commands through the wrappers `api.launchAtLogin` and `api.setLaunchAtLogin`: `plugin:autostart|is_enabled`, `plugin:autostart|enable`, `plugin:autostart|disable` (permission `autostart:default`, Settings window only).
+- **CON-11** The Settings window also calls the autostart plugin's own commands through the wrappers `api.launchAtLogin` and `api.setLaunchAtLogin`: `plugin:autostart|is_enabled`, `plugin:autostart|enable`, `plugin:autostart|disable` (permission `autostart:default`, Settings window only). *Get Key* opens a provider's key page through the opener plugin (`api.openUrl`, `plugin:opener|open_url`, permission `opener:default`).
 
 ## Events
 
@@ -85,10 +85,6 @@ The target window handle stays in Rust and is never serialized.
 ### Settings
 
 See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `targetLanguage` `vi|en|ja`, `mode` `translate|rewrite`, `updateMode` `auto|manual`.
-
-### InstalledModel
-
-`name`, `sizeBytes`, `parameterSize` (e.g. `"4.7B"`).
 
 ### CommandError
 

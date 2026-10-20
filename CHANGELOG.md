@@ -8,6 +8,7 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ### Changed
 
+- A few interface texts that still described rewriting only now say "translate or rewrite".
 - The tray menu's *Update to {version} & Restart* item has an icon, like the other items.
 
 ## [1.1.0] - 2026-10-20

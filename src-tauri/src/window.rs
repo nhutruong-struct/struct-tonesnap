@@ -46,7 +46,7 @@ pub fn show_settings(app: &AppHandle) {
 
 /// Hides the popup and stops the request it was waiting for. A hidden popup never shows that
 /// session again (it reopens only for a new session or a notice), so letting the request run
-/// on would only keep the GPU busy or bill the API for text nobody sees.
+/// on would only use up the provider's request quota or bill the API for text nobody sees.
 pub fn dismiss_popup(app: &AppHandle) {
     state(app).cancel_request();
     if let Some(w) = app.get_webview_window(POPUP) {
