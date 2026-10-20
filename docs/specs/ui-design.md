@@ -40,5 +40,6 @@ How both windows look and why. The rules here keep new screens consistent: add a
 - **UI-33** A problem the user must see (a damaged settings file, a hotkey another app holds) is a banner above the section, whichever section is open. A hotkey problem also puts a dot on the *Popup trigger* sidebar item while another section is open.
 - **UI-34** The save bar is fixed under the sections: the last message on the left, *Save Settings* on the right, with the same 12 px of space above, below and beside the button.
 - **UI-35** Below 680 px wide the sidebar shrinks to icons (names in tooltips); the window's minimum width is 560 px.
+- **UI-36** A section name in the sidebar wraps onto a second line when it is too long for the row; it is never cut off.
 
 **Verified by:** `src/settings/SettingsPage.test.tsx` ("sections": one section open at a time and edits kept, the attention dot, reopening starts at the first section; the switch role of the start-at-sign-in option), `src/popup/Popup.test.tsx` ("footer": key hints, read-only, preview). Appearance itself is checked by looking at both windows in light and dark mode, in English and Vietnamese, at 540 × 500 (popup) and 760 × 780 and 560 × 640 (Settings).
