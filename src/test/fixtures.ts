@@ -22,6 +22,7 @@ export function settings(overrides: Partial<Settings> = {}): Settings {
     customSensitiveTerms: [],
     previewBeforeSend: false,
     blockedApps: ["keepass.exe"],
+    updateMode: "auto",
     ...overrides,
   };
 }

@@ -108,6 +108,31 @@ const vi = {
   "terms.placeholder": "Tên khách hàng\nMã dự án",
   "blocked.label": "App bị chặn (tên tiến trình, mỗi dòng một app)",
 
+  "section.updates": "Cập nhật",
+  "section.updates.desc": "Phiên bản mới của ToneSnap trên GitHub và cách cài đặt chúng.",
+  "updates.current": "Phiên bản hiện tại: {version}",
+  "updateMode.auto": "Tự động cập nhật",
+  "updateMode.auto.hint":
+    "Tải ngầm, rồi cài và khởi động lại khi bạn không dùng ToneSnap (không mở popup hay cửa sổ Cài đặt).",
+  "updateMode.manual": "Hỏi trước khi cập nhật",
+  "updateMode.manual.hint":
+    "Chỉ báo khi có phiên bản mới, ở khay hệ thống và tại đây. Bạn bấm Cập Nhật và Khởi Động Lại để cài.",
+  "updates.status.idle": "Chưa kiểm tra phiên bản mới.",
+  "updates.status.checking": "Đang kiểm tra phiên bản mới…",
+  "updates.status.up_to_date": "Bạn đang dùng phiên bản mới nhất.",
+  "updates.status.available": "Đã có phiên bản {version}.",
+  "updates.status.downloading": "Đang tải phiên bản {version}…",
+  "updates.status.ready.auto": "Đã tải phiên bản {version}. ToneSnap sẽ cài nó khi bạn không dùng ToneSnap.",
+  "updates.status.ready.manual": "Đã tải phiên bản {version}, sẵn sàng để cài.",
+  "updates.status.installing": "Đang cài phiên bản {version}. ToneSnap sẽ tự khởi động lại.",
+  "updates.status.failed.check": "Không kiểm tra được phiên bản mới: {detail}",
+  "updates.status.failed.download": "Không tải được phiên bản mới: {detail}",
+  "updates.status.failed.install": "Không cài được phiên bản mới: {detail}",
+  "updates.msiNote":
+    "ToneSnap được cài bằng gói MSI nên mỗi lần cập nhật cần quyền quản trị. ToneSnap luôn hỏi trước khi cài, kể cả khi chọn tự động.",
+  "updates.check": "Kiểm Tra Cập Nhật",
+  "updates.install": "Cập Nhật và Khởi Động Lại",
+
   "tone.minimal": "Sửa lỗi",
   "tone.minimal.desc": "Chỉ sửa ngữ pháp, chính tả, từ dùng sai; giữ nguyên cách viết của bạn",
   "tone.concise": "Ngắn gọn",
@@ -277,6 +302,31 @@ const en: Record<Key, string> = {
   "terms.label": "Extra terms to mask (one per line)",
   "terms.placeholder": "Client name\nProject code",
   "blocked.label": "Blocked apps (process name, one per line)",
+
+  "section.updates": "Updates",
+  "section.updates.desc": "New versions of ToneSnap on GitHub, and how they are installed.",
+  "updates.current": "Current version: {version}",
+  "updateMode.auto": "Update automatically",
+  "updateMode.auto.hint":
+    "Downloads in the background, then installs and restarts while you are not using ToneSnap (no popup or Settings window open).",
+  "updateMode.manual": "Ask before updating",
+  "updateMode.manual.hint":
+    "Only tells you when a new version is out, in the tray and here. Click Update & Restart to install it.",
+  "updates.status.idle": "Not checked for a new version yet.",
+  "updates.status.checking": "Checking for a new version…",
+  "updates.status.up_to_date": "You have the latest version.",
+  "updates.status.available": "Version {version} is available.",
+  "updates.status.downloading": "Downloading version {version}…",
+  "updates.status.ready.auto": "Version {version} is downloaded. ToneSnap installs it while you are not using it.",
+  "updates.status.ready.manual": "Version {version} is downloaded and ready to install.",
+  "updates.status.installing": "Installing version {version}. ToneSnap will restart by itself.",
+  "updates.status.failed.check": "Could not check for a new version: {detail}",
+  "updates.status.failed.download": "Could not download the new version: {detail}",
+  "updates.status.failed.install": "Could not install the new version: {detail}",
+  "updates.msiNote":
+    "ToneSnap was installed with the MSI package, so each update needs administrator rights. It always asks before installing, even in automatic mode.",
+  "updates.check": "Check for Updates",
+  "updates.install": "Update & Restart",
 
   "tone.minimal": "Fix only",
   "tone.minimal.desc": "Only fixes grammar, spelling and word choice; keeps your wording",

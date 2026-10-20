@@ -117,3 +117,17 @@ test("pr title: each rule is reported", () => {
   has("Fixes the popup", /imperative/);
   has(`Th${String.fromCharCode(0xea)}m n${String.fromCharCode(0xfa)}t`, /English/);
 });
+
+test("network: the updater endpoints in the Tauri config are checked too", () => {
+  const config = (url) => JSON.stringify({ plugins: { updater: { endpoints: [url] } } });
+  assert.deepEqual(
+    rules("src-tauri/tauri.conf.json", config("https://github.com/o/r/releases/latest/download/latest.json"), [
+      "network",
+    ]),
+    [],
+  );
+  assert.equal(
+    rules("src-tauri/tauri.conf.json", config("https://updates.example.com/latest.json"), ["network"]).length,
+    1,
+  );
+});

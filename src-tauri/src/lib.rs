@@ -13,6 +13,7 @@ mod settings;
 mod state;
 mod tray;
 mod trigger;
+mod update;
 mod window;
 
 use tauri::{App, Manager, RunEvent, WindowEvent};
@@ -28,6 +29,7 @@ pub fn run() {
             window::show_settings(app)
         }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
@@ -60,6 +62,9 @@ pub fn run() {
             commands::copy_text,
             commands::hide_popup,
             commands::open_settings,
+            commands::update_info,
+            commands::check_for_updates,
+            commands::install_update,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -78,6 +83,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let (settings, issue) = settings::load(&handle);
     let settings_need_attention = issue.is_some();
     app.manage(AppState::new(settings.clone(), issue));
+    app.manage(update::Updates::default());
     tray::build(app, &settings)?;
     trigger::init_icon(&handle)?;
     trigger::apply_icon_mode(&settings);
@@ -89,5 +95,6 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     if settings_need_attention || missing_key {
         window::show_settings(&handle);
     }
+    update::start(&handle);
     Ok(())
 }

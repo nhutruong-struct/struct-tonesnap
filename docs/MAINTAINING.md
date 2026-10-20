@@ -116,10 +116,21 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    git push origin vX.Y.Z
    ```
 
-4. Watch the **Release** workflow. Never attach an installer built on a personal machine; if the workflow
+4. Watch the **Release** workflow. Besides the installers it publishes their `.sig` files and `latest.json`,
+   which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the
+   release is published, the installed apps start installing it within hours. Never attach an installer built on a personal machine; if the workflow
    fails, fix it through a PR and push the tag again only if no release was published (releases are immutable).
    Merging `master` back into `develop` is not needed: the release PR's merge commit is the only commit `master`
    has that `develop` lacks, and it changes no files. Announce the release in Discussions → Announcements.
+
+### Update signing key
+
+The installers are signed for the in-app updater with a minisign key made by `pnpm tauri signer generate`.
+The public key is `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`; the private key and its password
+are the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` secrets of the `release`
+environment, whose deployment rule allows only `v*` tags. Keep an offline copy of the private key: without
+it, no installed ToneSnap accepts another update, and a new key reaches users only through a manual install.
+Never commit it, and never sign on a personal machine.
 
 ## Security reports
 

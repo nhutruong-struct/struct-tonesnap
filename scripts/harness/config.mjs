@@ -137,6 +137,11 @@ export const ALLOWED_HOSTS = [
   "generativelanguage.googleapis.com",
   "api.groq.com",
   "openrouter.ai",
+  // Updates (src-tauri/src/update.rs): the release manifest and installers on GitHub, which
+  // redirects downloads to its asset hosts. The requests carry only the version and platform.
+  "github.com",
+  "objects.githubusercontent.com",
+  "release-assets.githubusercontent.com",
   "127.0.0.1",
   "localhost",
 ];

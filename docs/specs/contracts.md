@@ -25,6 +25,9 @@ The two windows talk to the Rust core only through the commands and events below
 | `copy_text` | `text: string` | nothing | sync; closes the popup and cancels its request; clipboard on its own thread | popup |
 | `hide_popup` | none | nothing | sync; also cancels the request | popup |
 | `open_settings` | none | nothing | sync; closes the popup and cancels its request | popup |
+| `update_info` | none | `UpdateInfo` | sync, memory | Settings |
+| `check_for_updates` | none | nothing; the result arrives as `update-status` | async (network) | Settings |
+| `install_update` | none | nothing; ToneSnap exits once the installer starts | async (network) | Settings |
 
 - **CON-11** The Settings window also calls the autostart plugin's own commands through the wrappers `api.launchAtLogin` and `api.setLaunchAtLogin`: `plugin:autostart|is_enabled`, `plugin:autostart|enable`, `plugin:autostart|disable` (permission `autostart:default`, Settings window only).
 
@@ -42,6 +45,7 @@ The two windows talk to the Rust core only through the commands and events below
 | `request-failed` | popup | `RequestEvent` + `errorKind`, `errorStatus`, `errorMessage`, timings | The request failed. `no_api_key` carries no timings |
 | `settings-opened` | settings | none | The Settings window is being shown |
 | `settings-changed` | every window | `Settings` | Settings were saved |
+| `update-status` | every window | `UpdateInfo` | The update status changed ([updates.md](updates.md)) |
 
 ## Data shapes
 
@@ -81,7 +85,7 @@ The target window handle stays in Rust and is never serialized.
 
 ### Settings
 
-See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `explainLanguage` `vi|en|off`.
+See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `explainLanguage` `vi|en|off`, `updateMode` `auto|manual`.
 
 ### InstalledModel
 
@@ -90,6 +94,10 @@ See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `trigger
 ### CommandError
 
 `{ kind, hotkey, detail }` with `kind` one of `hotkey_invalid`, `hotkey_taken`, `save_failed`. `hotkey` names the hotkey for the hotkey errors (empty otherwise); `detail` is the raw message.
+
+### UpdateInfo
+
+`{ currentVersion, status, msiInstall }`. `status.kind` is `idle`, `checking`, `up_to_date`, `available`, `downloading`, `ready`, `installing` (these four with `version`) or `failed` (with `step`: `check`, `download` or `install`, and `detail`, the raw error). `msiInstall` is true when the app was installed with the MSI (UPD-24).
 
 ### SettingsIssue
 
@@ -104,4 +112,4 @@ See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `trigger
 - **CON-50** `errorKind` values the popup knows how to explain ([popup.md](popup.md) POP-60): `no_api_key`, `authentication_error`, `permission_error`, `not_found_error`, `rate_limit_error`, `overloaded_error`, `refusal`, `max_tokens`, `network`. Any other value (`http_error`, `stream_error`, other API error types) gets the generic "Error {status}" with the raw message.
 - **CON-51** `errorStatus` is the HTTP status, `0` when there was none (an error inside the stream), and `null` for `refusal`, `max_tokens`, `network` and `no_api_key`.
 
-**Verified by:** Rust JSON-shape tests: `session.rs` (Session keys and enum values), `request.rs` (RequestEvent field names, error fields), `window.rs` (Notice), `commands.rs` (CommandError), `settings.rs` (SettingsIssue, Settings casing); the harness cross-file rules; `src/test/fixtures.ts` mirrors the Rust defaults for the UI tests.
+**Verified by:** Rust JSON-shape tests: `session.rs` (Session keys and enum values), `request.rs` (RequestEvent field names, error fields), `window.rs` (Notice), `commands.rs` (CommandError), `settings.rs` (SettingsIssue, Settings casing), `update.rs` (UpdateInfo); the harness cross-file rules; `src/test/fixtures.ts` mirrors the Rust defaults for the UI tests.

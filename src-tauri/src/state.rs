@@ -89,6 +89,10 @@ impl AppState {
         !self.capturing.swap(true, SeqCst)
     }
 
+    pub fn is_capturing(&self) -> bool {
+        self.capturing.load(SeqCst)
+    }
+
     pub fn end_capture(&self) {
         self.capturing.store(false, SeqCst);
     }

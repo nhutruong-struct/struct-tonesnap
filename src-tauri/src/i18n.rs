@@ -21,3 +21,11 @@ pub fn tray_labels(settings: &Settings) -> TrayLabels {
         },
     }
 }
+
+/// The tray item that installs a new version.
+pub fn tray_update_label(settings: &Settings, version: &str) -> String {
+    match settings::ui_language(settings) {
+        "vi" => format!("Cập nhật lên {version} và khởi động lại"),
+        _ => format!("Update to {version} & Restart"),
+    }
+}
