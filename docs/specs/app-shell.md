@@ -18,7 +18,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Tray
 
-- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, without an icon ([updates.md](updates.md) UPD-40).
+- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, with a download arrow ([updates.md](updates.md) UPD-40).
 - **APP-11** Menu labels follow the interface language and are updated as soon as settings are saved.
 - **APP-12** *Quit ToneSnap* exits at once.
 
