@@ -12,6 +12,7 @@ const TRAY: &str = "main";
 
 // Drawn by `scripts/make-tray-icons.mjs`.
 const SETTINGS_ICON: &[u8] = include_bytes!("../icons/tray/settings.png");
+const UPDATE_ICON: &[u8] = include_bytes!("../icons/tray/update.png");
 const QUIT_ICON: &[u8] = include_bytes!("../icons/tray/quit.png");
 
 fn menu_item(
@@ -63,7 +64,7 @@ fn menu(app: &AppHandle, settings: &Settings) -> tauri::Result<Menu<Wry>> {
     match update::offered_version(app) {
         Some(version) => {
             let label = i18n::tray_update_label(settings, &version);
-            let install = menu_item(app, "update", &label, None)?;
+            let install = menu_item(app, "update", &label, Some(UPDATE_ICON))?;
             let separator = PredefinedMenuItem::separator(app)?;
             Menu::with_items(app, &[&install, &separator, &open, &quit])
         }
@@ -98,9 +99,9 @@ mod tests {
 
     #[test]
     fn the_menu_icons_are_valid_images_of_the_same_size() {
-        let settings = Image::from_bytes(SETTINGS_ICON).unwrap();
-        let quit = Image::from_bytes(QUIT_ICON).unwrap();
-        assert_eq!((settings.width(), settings.height()), (20, 20));
-        assert_eq!((quit.width(), quit.height()), (20, 20));
+        for bytes in [SETTINGS_ICON, UPDATE_ICON, QUIT_ICON] {
+            let icon = Image::from_bytes(bytes).unwrap();
+            assert_eq!((icon.width(), icon.height()), (20, 20));
+        }
     }
 }

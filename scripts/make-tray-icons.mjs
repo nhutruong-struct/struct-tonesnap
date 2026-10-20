@@ -1,4 +1,4 @@
-// Draws the icons of the tray menu (a gear and a power symbol) into src-tauri/icons/tray/.
+// Draws the icons of the tray menu (a gear, a download arrow and a power symbol) into src-tauri/icons/tray/.
 // Run with `node scripts/make-tray-icons.mjs` after changing a shape or the size. Windows draws a
 // menu icon at the pixel size of its bitmap and cannot tint it for a dark or light menu, so the
 // strokes use one neutral grey that reads on both.
@@ -72,6 +72,15 @@ function power(point) {
   return Math.min(arc, toSegment(point, [12, 2.5], [12, 11.5]));
 }
 
+/** Distance to the download arrow: a shaft ending in a head, over a base line. */
+const download = (point) =>
+  Math.min(
+    toSegment(point, [12, 3], [12, 15.5]),
+    toSegment(point, [6.5, 10], [12, 15.5]),
+    toSegment(point, [17.5, 10], [12, 15.5]),
+    toSegment(point, [4.5, 20.5], [19.5, 20.5]),
+  );
+
 /** RGBA pixels: the share of each pixel's samples within the stroke becomes its opacity. */
 function render(distance) {
   const pixels = Buffer.alloc(SIZE * SIZE * 4);
@@ -123,4 +132,5 @@ function png(pixels) {
 
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, "settings.png"), png(render(gear)));
+writeFileSync(join(out, "update.png"), png(render(download)));
 writeFileSync(join(out, "quit.png"), png(render(power)));
