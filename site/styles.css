@@ -248,6 +248,10 @@ h1 {
   color: var(--text-2);
 }
 
+.uninstall-note {
+  margin: 24px 0 0;
+}
+
 /* Popup illustration */
 
 .demo {

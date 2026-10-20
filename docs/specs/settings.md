@@ -71,7 +71,7 @@ Settings live in `settings.json` in the app's config directory (on Windows, `%AP
 
 ## Starting with Windows
 
-- **SET-60** *Start ToneSnap when I sign in to Windows* (Interface section) makes Windows launch ToneSnap at sign-in, so it waits in the tray, ready to use. It is off until the user turns it on. Windows keeps the choice (an entry under the user's `Run` registry key, written by the autostart plugin), so `settings.json` does not hold it.
+- **SET-60** *Start ToneSnap when I sign in to Windows* (Interface section) makes Windows launch ToneSnap at sign-in, so it waits in the tray, ready to use. It is off until the user turns it on. Windows keeps the choice (an entry under the user's `Run` registry key, written by the autostart plugin), so `settings.json` does not hold it. The `.exe` uninstaller removes the entry; the `.msi` one does not ([app-shell.md](app-shell.md) APP-40, APP-42).
 - **SET-61** The checkbox shows what Windows reports each time the window opens. A change applies only when *Save Settings* succeeds, and only if it differs from what Windows reported. If Windows refuses the change, the settings are still saved, the save bar says the start-up choice could not be changed, and the window stays open.
 - **SET-62** When Windows cannot report the state, the option is not shown.
 - **SET-63** The entry points to the running executable: enabling it from a development build registers the development binary.

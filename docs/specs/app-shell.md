@@ -39,6 +39,14 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 **Verified by:** `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone/trigger/notice has a label, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
+## Uninstalling
+
+- **APP-40** The `.exe` (NSIS) uninstaller always removes the "Start with Windows" `Run` entry (SET-60), except during an update. Tauri's installer template does this.
+- **APP-41** Its *Delete the application data* checkbox removes the settings (`%APPDATA%\com.tonesnap.app`), the WebView data (`%LOCALAPPDATA%\com.tonesnap.app`) and every provider's API key in Credential Manager ([privacy.md](privacy.md) PRV-43). The folders are Tauri's template; the keys are `src-tauri/windows/hooks.nsh`. Left unticked, a reinstall finds the settings and keys again. An update (`/UPDATE`) and a silent or passive uninstall, which show no checkbox, keep everything.
+- **APP-42** The `.msi` uninstaller removes only the installed files and shortcuts: the settings, WebView data, keys and `Run` entry stay. The README's Uninstall section lists them and how to remove them by hand; there is no WiX custom action for them.
+
+**Verified by:** `secrets.rs` test "the uninstaller deletes every key" (`hooks.nsh` names every provider's Credential Manager target); the uninstall itself by hand (install the `.exe`, save a key, uninstall with the box ticked, check Credential Manager).
+
 ## Not implemented
 
 - macOS (Phase 3): the platform layer returns inert stubs there, and capture always reports "nothing selected".
