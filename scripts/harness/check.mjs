@@ -150,7 +150,7 @@ const GATES = [
   },
   {
     id: "harness",
-    title: "harness tests (project rules, PR title rules)",
+    title: "harness tests (project rules, PR title rules, hook paths)",
     hint: "A test of scripts/harness/ fails: node --test scripts/harness shows the full output.",
     run: tool(node, ["--test", ...harnessTests()]),
   },
