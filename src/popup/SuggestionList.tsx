@@ -1,6 +1,4 @@
-import type { Suggestions } from "../lib/api";
 import type { Translate } from "../lib/i18n";
-import { restore } from "../lib/redaction";
 import { toneLabel } from "../lib/tones";
 import type { Variant } from "./suggestions";
 
@@ -32,35 +30,8 @@ export function VariantList({ variants, readOnly, onApply, onCopy, t }: VariantL
             </button>
           </div>
           {v.text ? <p className="variant-text">{v.text}</p> : <div className="skeleton" />}
-          {v.note && <p className="note">{v.note}</p>}
         </li>
       ))}
     </ol>
-  );
-}
-
-interface IssueListProps {
-  issues: Suggestions["issues"];
-  redactions: [string, string][];
-  t: Translate;
-}
-
-/** Mistakes in the original text, with fixes and explanations. */
-export function IssueList({ issues, redactions, t }: IssueListProps) {
-  if (!issues?.length) return null;
-  return (
-    <section className="issues">
-      <h3>{t("popup.issues")}</h3>
-      <ul>
-        {issues.map((issue, i) => (
-          <li key={i}>
-            <span className="from">{restore(issue.original ?? "", redactions)}</span>
-            <span className="arrow">→</span>
-            <span className="to">{restore(issue.fix ?? "", redactions)}</span>
-            {issue.explanation && <p>{restore(issue.explanation, redactions)}</p>}
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

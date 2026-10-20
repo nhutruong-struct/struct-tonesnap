@@ -1,36 +1,27 @@
 {
   "type": "object",
   "properties": {
-    "detected_language": { "type": "string", "enum": ["en", "vi", "mixed", "other"] },
     "variants": {
       "type": "object",
       "properties": {},
       "required": [],
       "additionalProperties": false
-    },
-    "issues": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "original": { "type": "string" },
-          "fix": { "type": "string" },
-          "explanation": { "type": "string" }
-        },
-        "required": ["original", "fix", "explanation"],
-        "additionalProperties": false
-      }
     }
   },
-  "required": ["detected_language", "variants", "issues"],
+  "required": [
+    "variants"
+  ],
   "additionalProperties": false,
   "$variant": {
     "type": "object",
     "properties": {
-      "text": { "type": "string" },
-      "note": { "type": "string" }
+      "text": {
+        "type": "string"
+      }
     },
-    "required": ["text", "note"],
+    "required": [
+      "text"
+    ],
     "additionalProperties": false
   }
 }

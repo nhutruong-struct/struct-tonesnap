@@ -3,16 +3,27 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-export type ToneId = "minimal" | "concise" | "natural" | "polite" | "formal" | "friendly";
+export type ToneId = "concise" | "natural" | "formal";
 
-export interface Payload {
+/** The language every version is written in. */
+export type TargetLanguage = "vi" | "en" | "ja";
+
+/** Translate stays close to the original; rewrite may rephrase and restructure it. */
+export type Mode = "translate" | "rewrite";
+
+/** What the popup lets the user change for one request. */
+export interface RequestOptions {
+  targetLanguage: TargetLanguage;
+  mode: Mode;
+}
+
+export interface Payload extends RequestOptions {
   app: string;
   contextBefore: string;
   selection: string;
   contextAfter: string;
   screenText: string;
   tones: ToneId[];
-  explanationLanguage: string;
 }
 
 export interface Session {
@@ -23,8 +34,6 @@ export interface Session {
   editable: boolean | null;
   /** The original selection, before redaction. */
   selection: string;
-  /** The selection is Vietnamese, so the suggestions are translations. */
-  translated: boolean;
   payload: Payload;
   redactions: [string, string][];
   preview: boolean;
@@ -54,10 +63,8 @@ export interface Notice {
 
 /** Model output, possibly still incomplete while streaming. */
 export interface Suggestions {
-  detected_language?: string;
   /** Keyed by tone id, in the requested order. */
-  variants?: Partial<Record<string, { text?: string; note?: string }>>;
-  issues?: { original?: string; fix?: string; explanation?: string }[];
+  variants?: Partial<Record<string, { text?: string }>>;
 }
 
 export type ProviderId = "claude" | "gemini" | "groq" | "openrouter";
@@ -80,8 +87,9 @@ export interface Settings {
   geminiModel: string;
   groqModel: string;
   openrouterModel: string;
+  targetLanguage: TargetLanguage;
+  mode: Mode;
   tones: ToneId[];
-  explainLanguage: "vi" | "en" | "off";
   contextChars: number;
   ocrFallback: boolean;
   redact: boolean;
@@ -128,7 +136,8 @@ export const api = {
   hasApiKey: (provider: ProviderId) => invoke<boolean>("has_api_key", { provider }),
   /** An empty key removes the provider's saved key. */
   setApiKey: (provider: ProviderId, key: string) => invoke<void>("set_api_key", { provider, key }),
-  sendRequest: () => invoke<void>("send_request"),
+  /** Sends the session, or asks again, in the target language and mode the popup shows. */
+  sendRequest: (options: RequestOptions) => invoke<void>("send_request", { ...options }),
   applyText: (text: string) => invoke<void>("apply_text", { text }),
   copyText: (text: string) => invoke<void>("copy_text", { text }),
   hidePopup: () => invoke<void>("hide_popup"),

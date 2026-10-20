@@ -8,7 +8,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::commands::CommandError;
 use crate::session::Session;
-use crate::settings::{Settings, SettingsIssue};
+use crate::settings::{Mode, Settings, SettingsIssue, TargetLanguage};
 
 pub struct AppState {
     settings: Mutex<Settings>,
@@ -66,6 +66,20 @@ impl AppState {
         *self.session.lock().unwrap() = Some(session);
     }
 
+    /// Sets the language and mode the next request uses for the current session, and returns
+    /// the session; `None` when there is none.
+    pub fn set_session_options(
+        &self,
+        target_language: TargetLanguage,
+        mode: Mode,
+    ) -> Option<Session> {
+        let mut guard = self.session.lock().unwrap();
+        let session = guard.as_mut()?;
+        session.payload.target_language = target_language;
+        session.payload.mode = mode;
+        Some(session.clone())
+    }
+
     pub fn next_session_id(&self) -> u64 {
         self.session_seq.fetch_add(1, SeqCst) + 1
     }
@@ -111,5 +125,47 @@ impl AppState {
 
     pub fn set_hotkey_error(&self, error: Option<CommandError>) {
         *self.hotkey_error.lock().unwrap() = error;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::capture::{ContextSource, SelectionSource};
+
+    fn session() -> Session {
+        Session {
+            id: 1,
+            hwnd: 0,
+            app: "Slack".into(),
+            source: SelectionSource::Uia,
+            context_source: ContextSource::Uia,
+            editable: Some(true),
+            selection: "hello".into(),
+            payload: Default::default(),
+            redactions: Vec::new(),
+            preview: false,
+            model: "m".into(),
+        }
+    }
+
+    #[test]
+    fn the_popup_can_change_the_language_and_mode_of_the_current_session() {
+        let state = AppState::new(Settings::default(), None);
+        assert!(state
+            .set_session_options(TargetLanguage::En, Mode::Rewrite)
+            .is_none());
+
+        state.set_session(session());
+        let changed = state
+            .set_session_options(TargetLanguage::En, Mode::Rewrite)
+            .unwrap();
+        assert_eq!(changed.payload.target_language, TargetLanguage::En);
+        assert_eq!(changed.payload.mode, Mode::Rewrite);
+        // The next request starts from what was chosen.
+        assert_eq!(
+            state.session().unwrap().payload.target_language,
+            TargetLanguage::En
+        );
     }
 }

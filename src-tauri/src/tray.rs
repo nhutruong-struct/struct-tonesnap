@@ -1,6 +1,7 @@
 //! The tray icon and its menu.
 
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::image::Image;
+use tauri::menu::{IconMenuItem, Menu, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, AppHandle, Wry};
 
@@ -8,6 +9,20 @@ use crate::settings::Settings;
 use crate::{i18n, update, window};
 
 const TRAY: &str = "main";
+
+// Drawn by `scripts/make-tray-icons.mjs`.
+const SETTINGS_ICON: &[u8] = include_bytes!("../icons/tray/settings.png");
+const QUIT_ICON: &[u8] = include_bytes!("../icons/tray/quit.png");
+
+fn menu_item(
+    app: &AppHandle,
+    id: &str,
+    label: &str,
+    icon: Option<&'static [u8]>,
+) -> tauri::Result<IconMenuItem<Wry>> {
+    let icon = icon.map(Image::from_bytes).transpose()?;
+    IconMenuItem::with_id(app, id, label, true, icon, None::<&str>)
+}
 
 pub fn build(app: &App, settings: &Settings) -> tauri::Result<()> {
     let mut tray = TrayIconBuilder::with_id(TRAY)
@@ -43,12 +58,12 @@ pub fn build(app: &App, settings: &Settings) -> tauri::Result<()> {
 /// The menu in the interface language, led by an install item while a new version is offered.
 fn menu(app: &AppHandle, settings: &Settings) -> tauri::Result<Menu<Wry>> {
     let labels = i18n::tray_labels(settings);
-    let open = MenuItem::with_id(app, "settings", labels.settings, true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", labels.quit, true, None::<&str>)?;
+    let open = menu_item(app, "settings", labels.settings, Some(SETTINGS_ICON))?;
+    let quit = menu_item(app, "quit", labels.quit, Some(QUIT_ICON))?;
     match update::offered_version(app) {
         Some(version) => {
             let label = i18n::tray_update_label(settings, &version);
-            let install = MenuItem::with_id(app, "update", label, true, None::<&str>)?;
+            let install = menu_item(app, "update", &label, None)?;
             let separator = PredefinedMenuItem::separator(app)?;
             Menu::with_items(app, &[&install, &separator, &open, &quit])
         }
@@ -74,5 +89,18 @@ pub fn hide(app: &AppHandle) {
 pub fn show(app: &AppHandle) {
     if let Some(tray) = app.tray_by_id(TRAY) {
         let _ = tray.set_visible(true);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_menu_icons_are_valid_images_of_the_same_size() {
+        let settings = Image::from_bytes(SETTINGS_ICON).unwrap();
+        let quit = Image::from_bytes(QUIT_ICON).unwrap();
+        assert_eq!((settings.width(), settings.height()), (20, 20));
+        assert_eq!((quit.width(), quit.height()), (20, 20));
     }
 }

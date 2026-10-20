@@ -13,7 +13,7 @@ html[data-window="settings"] #root {
   --control-w: 260px;
 
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   height: 100%;
 }
 
@@ -78,6 +78,7 @@ html[data-window="settings"] #root {
   background: var(--accent);
 }
 
+/* The sidebar is wide enough for the longest section name in both languages. */
 .nav-label {
   overflow: hidden;
   text-overflow: ellipsis;

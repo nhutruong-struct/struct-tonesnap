@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
+use crate::prompt;
+
 /// How the popup is triggered. The hotkey works in every mode except `Off`.
 /// `Icon` shows a floating icon after a selection; `Auto` is not implemented yet.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -13,6 +15,47 @@ pub enum TriggerMode {
     Icon,
     Auto,
     Off,
+}
+
+/// The language every version is written in, whatever language the selection is in.
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TargetLanguage {
+    #[default]
+    Vi,
+    En,
+    Ja,
+}
+
+impl TargetLanguage {
+    /// The name the prompt uses.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Vi => "Vietnamese",
+            Self::En => "English",
+            Self::Ja => "Japanese",
+        }
+    }
+}
+
+/// What is done with the selection: `Translate` stays close to the original, `Rewrite` may
+/// rephrase and restructure it.
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Mode {
+    #[default]
+    Translate,
+    Rewrite,
+}
+
+impl Mode {
+    /// The word the prompt uses.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Translate => "translate",
+            Self::Rewrite => "rewrite",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -54,10 +97,12 @@ pub struct Settings {
     pub gemini_model: String,
     pub groq_model: String,
     pub openrouter_model: String,
+    /// Language of the versions the popup opens with; the popup can change it per use.
+    pub target_language: TargetLanguage,
+    /// Whether the popup opens translating or rewriting; the popup can change it per use.
+    pub mode: Mode,
     /// Tone ids in display order, see `prompt::TONES`.
     pub tones: Vec<String>,
-    /// "vi", "en" or "off".
-    pub explain_language: String,
     /// Characters of surrounding text to send on each side of the selection.
     pub context_chars: u32,
     pub ocr_fallback: bool,
@@ -85,10 +130,9 @@ impl Default for Settings {
             gemini_model: "gemini-3.8-flash".into(),
             groq_model: "openai/gpt-oss-20b".into(),
             openrouter_model: "openai/gpt-oss-20b:free".into(),
-            // Fewer tones mean a shorter answer, which is faster and stays within the free
-            // tiers' token limits.
-            tones: ["minimal", "concise", "polite"].map(String::from).to_vec(),
-            explain_language: "vi".into(),
+            target_language: TargetLanguage::default(),
+            mode: Mode::default(),
+            tones: prompt::TONES.iter().map(|t| t.to_string()).collect(),
             context_chars: 600,
             ocr_fallback: true,
             redact: true,
@@ -290,7 +334,9 @@ mod tests {
         let settings = Settings {
             hotkey: "ctrl+alt+r".into(),
             trigger_mode: TriggerMode::Hotkey,
-            tones: vec!["polite".into()],
+            tones: vec!["formal".into()],
+            target_language: TargetLanguage::Ja,
+            mode: Mode::Rewrite,
             ..Settings::default()
         };
         save_to(&dir.file(), &settings).unwrap();
@@ -298,7 +344,9 @@ mod tests {
         assert_eq!(issue, None);
         assert_eq!(loaded.hotkey, "ctrl+alt+r");
         assert_eq!(loaded.trigger_mode, TriggerMode::Hotkey);
-        assert_eq!(loaded.tones, ["polite"]);
+        assert_eq!(loaded.tones, ["formal"]);
+        assert_eq!(loaded.target_language, TargetLanguage::Ja);
+        assert_eq!(loaded.mode, Mode::Rewrite);
         assert!(!dir.file().with_extension("json.partial").exists());
     }
 
@@ -393,6 +441,28 @@ mod tests {
         assert_eq!(value["previewBeforeSend"], false);
         assert_eq!(value["updateMode"], "auto");
         assert!(value.get("trigger_mode").is_none());
+    }
+
+    #[test]
+    fn the_popup_opens_in_vietnamese_with_every_tone_translating() {
+        let settings = Settings::default();
+        assert_eq!(settings.target_language, TargetLanguage::Vi);
+        assert_eq!(settings.mode, Mode::Translate);
+        assert_eq!(settings.tones, ["concise", "natural", "formal"]);
+        let value = serde_json::to_value(&settings).unwrap();
+        assert_eq!(value["targetLanguage"], "vi");
+        assert_eq!(value["mode"], "translate");
+    }
+
+    #[test]
+    fn an_unknown_language_or_mode_falls_back_alone() {
+        let (settings, invalid) =
+            parse(r#"{ "targetLanguage": "klingon", "mode": "rewrite", "hotkey": "ctrl+alt+r" }"#)
+                .unwrap();
+        assert_eq!(settings.target_language, TargetLanguage::Vi);
+        assert_eq!(settings.mode, Mode::Rewrite);
+        assert_eq!(settings.hotkey, "ctrl+alt+r");
+        assert_eq!(invalid, ["targetLanguage"]);
     }
 
     #[test]

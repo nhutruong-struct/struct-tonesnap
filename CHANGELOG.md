@@ -8,6 +8,9 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ### Added
 
+- Choose the language of the versions (Vietnamese by default, English or Japanese) and a mode, **Translate**
+  (stays close to the original, the default) or **Rewrite** (rephrases freely), in the popup. Settings holds the
+  defaults. Every version is written in the chosen language, whatever language the selection is in.
 - Automatic updates from the GitHub releases. By default ToneSnap downloads a new version in the background
   and installs it, then restarts, only while you are not using it (no popup or Settings window open). Choose
   **Ask before updating** in Settings → Updates to be told about new versions (in the tray and in Settings)
@@ -15,6 +18,21 @@ All notable changes to ToneSnap are listed here. The format follows
   check sends only the app version and platform.
 - **Version 1.0.0 cannot update itself**: install this version by hand once, and later versions arrive by
   themselves.
+
+### Changed
+
+- The tray menu items have icons.
+- Tones are now **Concise**, **Natural** and **Formal**.
+
+### Removed
+
+- The explanations (a note per version and the list of mistakes in the original) and their setting: they made
+  every answer longer and slower.
+
+### Fixed
+
+- Apply is no longer offered for selected text on web pages that cannot be edited (Chrome, Edge): the popup shows
+  Copy only.
 
 ## [1.0.0] - 2026-10-20
 

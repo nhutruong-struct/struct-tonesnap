@@ -16,14 +16,13 @@ export interface Variant {
   tone: ToneId;
   /** With redacted values restored; empty until the model starts this tone. */
   text: string;
-  note: string;
   /** Final, so it can be applied or copied. */
   ready: boolean;
 }
 
 /**
  * One entry per requested tone, in order. A variant is final once the model has moved on to the
- * next one (or to the issues), or the request has finished.
+ * next one, or the request has finished.
  */
 export function toVariants(
   tones: ToneId[],
@@ -33,8 +32,8 @@ export function toVariants(
 ): Variant[] {
   const raw = tones.map((tone) => suggestions.variants?.[tone]);
   return tones.map((tone, i) => {
-    const complete = finished || raw[i + 1] !== undefined || suggestions.issues !== undefined;
+    const complete = finished || raw[i + 1] !== undefined;
     const text = restore(raw[i]?.text ?? "", redactions);
-    return { tone, text, note: restore(raw[i]?.note ?? "", redactions), ready: complete && !!text };
+    return { tone, text, ready: complete && !!text };
   });
 }
