@@ -66,7 +66,7 @@ Number keys are matched by the physical top-row digit key, so they work with Shi
 
 | Notice | Message (English) |
 |---|---|
-| `no_selection` | Nothing is selected. Select the text you want to rewrite, then press the hotkey. |
+| `no_selection` | Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey. |
 | `password_field` | ToneSnap never reads password fields. |
 | `blocked_app` | ToneSnap is turned off in {app} (blocked apps in Settings). |
 | `apply_failed` | Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste. |

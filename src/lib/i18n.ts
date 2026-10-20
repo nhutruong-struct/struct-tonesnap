@@ -30,7 +30,7 @@ const vi = {
   "launchAtLogin.failed": "Đã lưu cài đặt, nhưng không đổi được việc khởi động cùng Windows: {detail}",
 
   "section.ai": "Kết nối AI",
-  "section.ai.desc": "Chọn nhà cung cấp AI để viết lại văn bản, rồi nhập API key của bạn.",
+  "section.ai.desc": "Chọn nhà cung cấp AI để dịch hoặc viết lại văn bản, rồi nhập API key của bạn.",
   "provider.gemini": "Google Gemini – có gói miễn phí",
   "provider.gemini.hint": "Khuyên dùng để bắt đầu. Lấy key miễn phí ở Google AI Studio, giới hạn số lượt gọi mỗi ngày.",
   "provider.groq": "Groq – có gói miễn phí, trả lời rất nhanh",
@@ -73,7 +73,7 @@ const vi = {
   "trigger.icon": "Hiện icon nhỏ cạnh đoạn chọn",
   "trigger.icon.hint": "Bôi đen chữ là icon ToneSnap hiện cạnh con trỏ, bấm vào để mở popup. Phím tắt vẫn dùng được.",
   "trigger.auto": "Tự bật popup khi bôi đen",
-  "trigger.auto.hint": "Popup tự mở sau một khoảng trễ, chỉ với chữ tiếng Anh.",
+  "trigger.auto.hint": "Popup tự mở sau một khoảng trễ ngắn khi bạn bôi đen.",
   "trigger.off": "Tắt",
   "trigger.off.hint": "Tạm dừng ToneSnap, kể cả phím tắt.",
   "trigger.soon": "Sắp có",
@@ -128,7 +128,7 @@ const vi = {
   "updates.status.up_to_date": "Bạn đang dùng phiên bản mới nhất.",
   "updates.status.available": "Đã có phiên bản {version}.",
   "updates.status.downloading": "Đang tải phiên bản {version}…",
-  "updates.status.ready.auto": "Đã tải phiên bản {version}. ToneSnap sẽ cài nó khi bạn không dùng ToneSnap.",
+  "updates.status.ready.auto": "Đã tải phiên bản {version}. ToneSnap sẽ tự cài khi bạn không dùng app.",
   "updates.status.ready.manual": "Đã tải phiên bản {version}, sẵn sàng để cài.",
   "updates.status.installing": "Đang cài phiên bản {version}. ToneSnap sẽ tự khởi động lại.",
   "updates.status.failed.check": "Không kiểm tra được phiên bản mới: {detail}",
@@ -146,7 +146,7 @@ const vi = {
   "tone.formal": "Trang trọng",
   "tone.formal.desc": "Văn phong công việc, dùng cho tài liệu, email gửi khách hàng hoặc sếp",
 
-  "notice.no_selection": "Chưa có đoạn văn nào được chọn. Hãy bôi đen đoạn cần viết lại rồi nhấn phím tắt.",
+  "notice.no_selection": "Chưa có đoạn văn nào được chọn. Hãy bôi đen đoạn cần dịch hoặc viết lại rồi nhấn phím tắt.",
   "notice.password_field": "ToneSnap không đọc nội dung trong ô mật khẩu.",
   "notice.blocked_app": "ToneSnap đang tắt trong {app} (danh sách app bị chặn trong Cài đặt).",
   "notice.apply_failed": "Không đưa được nội dung về app gốc. Đã copy sẵn, bạn nhấn Ctrl+V để dán.",
@@ -224,7 +224,7 @@ const en: Record<Key, string> = {
   "launchAtLogin.failed": "Settings were saved, but starting with Windows could not be changed: {detail}",
 
   "section.ai": "AI connection",
-  "section.ai.desc": "Pick the AI provider that rewrites your text, then enter your API key.",
+  "section.ai.desc": "Pick the AI provider that translates or rewrites your text, then enter your API key.",
   "provider.gemini": "Google Gemini – free tier",
   "provider.gemini.hint": "Recommended to start. Get a free key from Google AI Studio; daily request limits apply.",
   "provider.groq": "Groq – free tier, very fast",
@@ -268,7 +268,7 @@ const en: Record<Key, string> = {
   "trigger.icon.hint":
     "Select text and the ToneSnap icon appears by the cursor; click it to open the popup. The hotkey still works.",
   "trigger.auto": "Open the popup automatically on selection",
-  "trigger.auto.hint": "Opens after a short delay, only for English text.",
+  "trigger.auto.hint": "Opens after a short delay when you select text.",
   "trigger.off": "Off",
   "trigger.off.hint": "Pause ToneSnap, including the hotkey.",
   "trigger.soon": "Coming soon",
@@ -326,7 +326,7 @@ const en: Record<Key, string> = {
   "updates.status.up_to_date": "You have the latest version.",
   "updates.status.available": "Version {version} is available.",
   "updates.status.downloading": "Downloading version {version}…",
-  "updates.status.ready.auto": "Version {version} is downloaded. ToneSnap installs it while you are not using it.",
+  "updates.status.ready.auto": "Version {version} is downloaded. ToneSnap installs it when you are not using the app.",
   "updates.status.ready.manual": "Version {version} is downloaded and ready to install.",
   "updates.status.installing": "Installing version {version}. ToneSnap will restart by itself.",
   "updates.status.failed.check": "Could not check for a new version: {detail}",
@@ -344,7 +344,8 @@ const en: Record<Key, string> = {
   "tone.formal": "Formal",
   "tone.formal.desc": "Professional register for documents and emails to clients or managers",
 
-  "notice.no_selection": "Nothing is selected. Select the text you want to rewrite, then press the hotkey.",
+  "notice.no_selection":
+    "Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey.",
   "notice.password_field": "ToneSnap never reads password fields.",
   "notice.blocked_app": "ToneSnap is turned off in {app} (blocked apps in Settings).",
   "notice.apply_failed": "Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste.",

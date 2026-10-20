@@ -54,4 +54,4 @@ The icon lets mouse users open ToneSnap without the keyboard. Only the mouse is 
 
 ## Not implemented
 
-- **Auto mode** (`docs/PLAN.md`: "Automatic popup on selection"). Planned to reuse the icon's gesture detection. The settings already exist: `autoDelayMs` (default 400 ms, shown but disabled in Settings) and `autoMinChars` (default 8, no control yet). The Settings hint promises it opens only for English text.
+- **Auto mode** (`docs/PLAN.md`: "Automatic popup on selection"). Planned to reuse the icon's gesture detection. The settings already exist: `autoDelayMs` (default 400 ms, shown but disabled in Settings) and `autoMinChars` (default 8, no control yet). Settings lists it as *Coming soon*.

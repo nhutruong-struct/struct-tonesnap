@@ -6,6 +6,10 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- A few interface texts that still described rewriting only now say "translate or rewrite".
+
 ## [1.1.0] - 2026-10-20
 
 ### Install
