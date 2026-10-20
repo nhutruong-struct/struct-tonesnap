@@ -107,6 +107,7 @@ Rules marked ★ are enforced by the `code`, `network`, `language`, `whitespace`
 5. Update `docs/PLAN.md`: tick finished items, add new decisions to the Decisions table, fill in the compatibility table when real tests come in. Update the matching page in `docs/specs/` when behavior changes or a PLAN item is finished.
 6. Odd frontend errors right after several quick edits usually mean Vite kept a stale module: restart `dev.ps1`.
 7. Git: `master` and `develop` are protected and change only through pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Work on a topic branch cut from `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and open the PR against `develop`. Commit only when the user asks, and only with `check.mjs --full` passing. Commit messages are in English, in the imperative mood, with a summary line under ~72 characters.
+8. Releases follow [docs/MAINTAINING.md](docs/MAINTAINING.md) → Releasing. Before opening the `develop` → `master` release PR, update the website (`site/`) for the release through its own PR into `develop`, and name that PR (or "no site change needed") in the release PR.
 
 ## Definition of done
 

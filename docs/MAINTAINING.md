@@ -98,9 +98,14 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
 1. On a `chore/release-x.y.z` branch, bump the version in `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json` (let cargo update `Cargo.lock`), move the `Unreleased` entries of
    `CHANGELOG.md` into a section for the new version, update `docs/PLAN.md`, and merge it into `develop` as usual.
-2. Open a pull request from `develop` into `master` titled `Release vX.Y.Z`, wait for CI, and merge it with
+2. Bring the website up to date with the release. Read `site/index.html` against the new `CHANGELOG.md`
+   section: features, tones, languages, the mock popup, default settings, install and uninstall steps. Fix what
+   no longer matches in a `docs/…` pull request into `develop`. The site deploys from `develop`
+   (`.github/workflows/pages.yml`), so it goes live as soon as that PR is merged. Merge it before the release PR,
+   and say in the release PR which PR updated the site, or that the site needed no change.
+3. Open a pull request from `develop` into `master` titled `Release vX.Y.Z`, wait for CI, and merge it with
    **Create a merge commit**.
-3. Tag the merge commit on `master`. The tag starts `.github/workflows/release.yml`, which checks that the tag
+4. Tag the merge commit on `master`. The tag starts `.github/workflows/release.yml`, which checks that the tag
    matches the app version and is on `master`, builds the installers, attests their provenance and publishes
    the release with the `CHANGELOG.md` section as notes:
 
@@ -116,7 +121,7 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    git push origin vX.Y.Z
    ```
 
-4. Watch the **Release** workflow. Besides the installers it publishes their `.sig` files and `latest.json`,
+5. Watch the **Release** workflow. Besides the installers it publishes their `.sig` files and `latest.json`,
    which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the
    release is published, the installed apps start installing it within hours. Never attach an installer built on a personal machine; if the workflow
    fails, fix it through a PR and push the tag again only if no release was published (releases are immutable).
