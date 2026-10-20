@@ -6,6 +6,30 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-21
+
+### Install
+
+Download `ToneSnap_1.1.2_x64-setup.exe` (installer) or `ToneSnap_1.1.2_x64_en-US.msi` (for managed deployment)
+below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
+chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update
+itself. The installers are still **not code-signed**, so your browser and Windows SmartScreen ask first: keep the
+file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file came from this
+page. You can check that a file was built by this repository's GitHub Actions from this tag:
+
+```
+gh attestation verify ToneSnap_1.1.2_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
+and compare its SHA-256 with `SHA256SUMS.txt`.
+
+### Changed
+
+- The website's **Download for Windows** button downloads the installer directly, and its Install step explains
+  the browser and SmartScreen prompts.
+- The release lists only the installer, the MSI, `SHA256SUMS.txt` and `latest.json`; the `.sig` files are no longer
+  attached, because `latest.json` carries the signatures.
+
 ## [1.1.1] - 2026-10-20
 
 ### Install
@@ -127,7 +151,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   [app compatibility report](https://github.com/nhutruong-struct/struct-tonesnap/issues/new?template=app_compatibility.yml).
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
-[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...develop
+[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...develop
+[1.1.2]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/v1.0.0
