@@ -34,12 +34,11 @@ How both windows look and why. The rules here keep new screens consistent: add a
 
 ## Settings
 
-- **UI-30** The window has a sidebar and one open section. The sidebar holds the app icon and name, one button per section (icon and name), and a reminder of the hotkey. The open section is marked by a tinted row and a bar on its left.
+- **UI-30** The window has a sidebar and one open section. The sidebar holds the app icon and name, one button per section (icon and name), and a reminder of the hotkey. It is 248 px wide, enough for the longest section name in both languages on one line. The open section is marked by a tinted row and a bar on its left.
 - **UI-31** Every section stays mounted while another is open, so text typed in it (such as an API key not yet saved) is still there when the user returns. Reopening the window starts at the first section ([settings.md](settings.md) SET-41).
 - **UI-32** A section is a title, a one-line description, and cards. A card is a list of rows divided by thin lines. A row has the label and its hint on the left and one control on the right; text areas go full width under their label (`stack`). Components: `Section`, `Card`, `Field`, `ToggleField`, `CheckField`, `RadioField`, `Note` in `src/settings/fields.tsx`.
 - **UI-33** A problem the user must see (a damaged settings file, a hotkey another app holds) is a banner above the section, whichever section is open. A hotkey problem also puts a dot on the *Popup trigger* sidebar item while another section is open.
 - **UI-34** The save bar is fixed under the sections: the last message on the left, *Save Settings* on the right, with the same 12 px of space above, below and beside the button.
 - **UI-35** Below 680 px wide the sidebar shrinks to icons (names in tooltips); the window's minimum width is 560 px.
-- **UI-36** A section name in the sidebar wraps onto a second line when it is too long for the row; it is never cut off.
 
 **Verified by:** `src/settings/SettingsPage.test.tsx` ("sections": one section open at a time and edits kept, the attention dot, reopening starts at the first section; the switch role of the start-at-sign-in option), `src/popup/Popup.test.tsx` ("footer": key hints, read-only, preview). Appearance itself is checked by looking at both windows in light and dark mode, in English and Vietnamese, at 540 × 500 (popup) and 760 × 780 and 560 × 640 (Settings).
