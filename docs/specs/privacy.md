@@ -21,7 +21,7 @@ Users select text from work chats, emails and documents. ToneSnap treats that te
 
 When `redact` is on (default), sensitive values are replaced by placeholders before the payload is built, and restored for display and Apply.
 
-- **PRV-10** Redaction applies to the context before, the selection, the context after and the screen text. The app name, tones and explanation language are not redacted. With `redact` off the text is sent as captured and there are no placeholders.
+- **PRV-10** Redaction applies to the context before, the selection, the context after and the screen text. The app name, target language, mode and tones are not redacted. With `redact` off the text is sent as captured and there are no placeholders.
 - **PRV-11** Each distinct value becomes `[KIND_n]`, numbered per kind in order of appearance (`[EMAIL_1]`, `[EMAIL_2]`, `[PHONE_1]`). One redactor serves the whole session, so the same value gets the same placeholder in every field and the model can keep references consistent.
 - **PRV-12** What is detected, in priority order:
 
@@ -40,7 +40,7 @@ When `redact` is on (default), sensitive values are replaced by placeholders bef
 | `SECRET` | Any run of 32+ letters, digits, `_` or `-` that contains both letters and digits | Hashes, opaque tokens; long words without digits are left alone |
 
 - **PRV-13** When matches overlap, the one that starts first wins; at the same start, the higher-priority rule wins (custom terms first); then the longer match. Example: an email inside a URL stays part of the URL.
-- **PRV-14** Restoring swaps every placeholder back to its original value in the variant text and note, and in each issue's original, fix and explanation. Apply and Copy always use the restored text. Placeholders are bracketed, so `[EMAIL_1]` and `[EMAIL_10]` cannot be confused.
+- **PRV-14** Restoring swaps every placeholder back to its original value in the variant text. Apply and Copy always use the restored text. Placeholders are bracketed, so `[EMAIL_1]` and `[EMAIL_10]` cannot be confused.
 - **PRV-15** The system prompt tells the model to keep placeholders exactly as written ([ai-request.md](ai-request.md) AI-03).
 - **PRV-16** The popup header shows how many values were masked ("N sensitive items masked"). The popup does not show the original selection; the suggestions it shows have the masked values restored, locally (PRV-14).
 

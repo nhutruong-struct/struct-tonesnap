@@ -20,7 +20,7 @@ The two windows talk to the Rust core only through the commands and events below
 | `settings_issue` | none | `SettingsIssue \| null` | sync | Settings |
 | `has_api_key` | `provider` | `boolean` | async (credential store) | Settings |
 | `set_api_key` | `provider`, `key: string` (empty deletes) | nothing, or rejects with a message | async | Settings |
-| `send_request` | none | nothing | sync; the request runs on the async runtime | popup (Send, R, Retry) |
+| `send_request` | `targetLanguage: "vi" \| "en" \| "ja"`, `mode: "translate" \| "rewrite"` | nothing | sync; stores both on the session, then the request runs on the async runtime | popup (Send, R, Retry, a new language or mode) |
 | `apply_text` | `text: string` | nothing, or rejects with `"no session"` | sync; pasting on its own thread | popup |
 | `copy_text` | `text: string` | nothing | sync; closes the popup and cancels its request; clipboard on its own thread | popup |
 | `hide_popup` | none | nothing | sync; also cancels the request | popup |
@@ -55,7 +55,6 @@ The two windows talk to the Rust core only through the commands and events below
 | `contextSource` | `"uia" \| "ocr" \| "none"` | Where the context came from |
 | `editable` | `boolean \| null` | Whether the field accepts Apply; `null` = unknown |
 | `selection` | string | The original selection, **before** redaction |
-| `translated` | boolean | The selection looks Vietnamese (AI-12) |
 | `payload` | `Payload` | Exactly what is sent to the model |
 | `redactions` | `[placeholder, original][]` | Pairs that restore the suggestions |
 | `preview` | boolean | Wait for Send before requesting |
@@ -65,7 +64,7 @@ The target window handle stays in Rust and is never serialized.
 
 ### Payload
 
-`app`, `contextBefore`, `selection`, `contextAfter`, `screenText` (all strings, redacted), `tones` (`ToneId[]`, the requested tones in order), `explanationLanguage` (`"Vietnamese"`, `"English"` or `"none"`).
+`app`, `contextBefore`, `selection`, `contextAfter`, `screenText` (all strings, redacted), `targetLanguage` (`vi`, `en` or `ja`), `mode` (`translate` or `rewrite`), `tones` (`ToneId[]`, the requested tones in order).
 
 ### RequestEvent
 
@@ -77,11 +76,11 @@ The target window handle stays in Rust and is never serialized.
 
 ### Suggestions (model output, parsed in the popup)
 
-`detected_language`, `variants` (keyed by tone id, each `{ text, note }`), `issues` (`{ original, fix, explanation }[]`). While streaming, any part may be missing (AI-20..22).
+`variants` (keyed by tone id, each `{ text }`). While streaming, any part may be missing (AI-20, AI-21).
 
 ### Settings
 
-See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `explainLanguage` `vi|en|off`.
+See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `triggerMode` `hotkey|icon|auto|off`, `provider` `claude|gemini|groq|openrouter`, `targetLanguage` `vi|en|ja`, `mode` `translate|rewrite`.
 
 ### InstalledModel
 
@@ -97,7 +96,7 @@ See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `trigger
 
 ## Tone ids
 
-- **CON-40** The six tone ids are listed identically, in the same order, in `prompt.rs TONES`, the `ToneId` type in `api.ts` and `TONE_IDS` in `tones.ts`: `minimal`, `concise`, `natural`, `polite`, `formal`, `friendly`. Labels and descriptions live in the i18n dictionaries (`tone.<id>`, `tone.<id>.desc`).
+- **CON-40** The three tone ids are listed identically, in the same order, in `prompt.rs TONES`, the `ToneId` type in `api.ts` and `TONE_IDS` in `tones.ts`: `concise`, `natural`, `formal`. Labels and descriptions live in the i18n dictionaries (`tone.<id>`, `tone.<id>.desc`).
 
 ## Request error codes
 

@@ -6,6 +6,27 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Choose the language of the versions (Vietnamese by default, English or Japanese) and a mode, **Translate**
+  (stays close to the original, the default) or **Rewrite** (rephrases freely), in the popup. Settings holds the
+  defaults. Every version is written in the chosen language, whatever language the selection is in.
+
+### Changed
+
+- The tray menu items have icons.
+- Tones are now **Concise**, **Natural** and **Formal**.
+
+### Removed
+
+- The explanations (a note per version and the list of mistakes in the original) and their setting: they made
+  every answer longer and slower.
+
+### Fixed
+
+- Apply is no longer offered for selected text on web pages that cannot be edited (Chrome, Edge): the popup shows
+  Copy only.
+
 ## [1.0.0] - 2026-10-20
 
 The first public release of ToneSnap for Windows 10 and 11.

@@ -25,8 +25,6 @@ pub struct Session {
     pub editable: Option<bool>,
     /// The original selection, before redaction.
     pub selection: String,
-    /// The selection is Vietnamese, so the suggestions are translations.
-    pub translated: bool,
     /// Exactly what is sent to the model.
     pub payload: Payload,
     /// (placeholder, original) pairs used to restore suggestions.
@@ -85,7 +83,6 @@ fn start(app: &AppHandle, settings: &Settings, captured: Captured) {
         source: captured.source,
         context_source: captured.context_source,
         editable: captured.editable,
-        translated: prompt::looks_vietnamese(&captured.selection),
         selection: captured.selection,
         payload,
         redactions,
@@ -118,9 +115,9 @@ fn redacted_payload(settings: &Settings, captured: &Captured) -> (Payload, Vec<(
         selection: clean(&captured.selection),
         context_after: clean(&captured.after),
         screen_text: clean(&captured.screen_text),
+        target_language: settings.target_language,
+        mode: settings.mode,
         tones: prompt::requested_tones(&settings.tones),
-        explanation_language: prompt::explanation_language_name(&settings.explain_language)
-            .to_string(),
     };
     (payload, redactor.entries)
 }
@@ -128,6 +125,7 @@ fn redacted_payload(settings: &Settings, captured: &Captured) -> (Payload, Vec<(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::{Mode, TargetLanguage};
 
     fn captured(selection: &str, before: &str) -> Captured {
         Captured {
@@ -156,7 +154,18 @@ mod tests {
             redactions,
             vec![("[EMAIL_1]".to_string(), "an@corp.vn".to_string())]
         );
-        assert_eq!(payload.explanation_language, "Vietnamese");
+    }
+
+    #[test]
+    fn payload_starts_with_the_languages_and_mode_from_the_settings() {
+        let settings = Settings {
+            target_language: TargetLanguage::Ja,
+            mode: Mode::Rewrite,
+            ..Settings::default()
+        };
+        let (payload, _) = redacted_payload(&settings, &captured("pls review", ""));
+        assert_eq!(payload.target_language, TargetLanguage::Ja);
+        assert_eq!(payload.mode, Mode::Rewrite);
     }
 
     #[test]
@@ -183,7 +192,6 @@ mod tests {
             context_source: ContextSource::None,
             editable: None,
             selection: captured.selection.clone(),
-            translated: prompt::looks_vietnamese(&captured.selection),
             payload,
             redactions,
             preview: false,
@@ -209,15 +217,15 @@ mod tests {
                 "preview",
                 "redactions",
                 "selection",
-                "source",
-                "translated"
+                "source"
             ]
         );
         assert_eq!(value["source"], "clipboard");
         assert_eq!(value["contextSource"], "none");
-        assert_eq!(value["translated"], true);
         assert_eq!(value["payload"]["contextBefore"], "");
-        assert_eq!(value["payload"]["explanationLanguage"], "Vietnamese");
+        assert!(value["payload"].get("explanationLanguage").is_none());
+        assert_eq!(value["payload"]["targetLanguage"], "vi");
+        assert_eq!(value["payload"]["mode"], "translate");
         assert_eq!(value["payload"]["tones"], serde_json::json!(settings.tones));
     }
 }

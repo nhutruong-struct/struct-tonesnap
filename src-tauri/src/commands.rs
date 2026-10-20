@@ -7,7 +7,7 @@
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
-use crate::settings::{self, ProviderKind, Settings, SettingsIssue};
+use crate::settings::{self, Mode, ProviderKind, Settings, SettingsIssue, TargetLanguage};
 use crate::state::state;
 use crate::window::{self, NoticeKind};
 use crate::{platform, request, secrets, tray, trigger};
@@ -128,10 +128,11 @@ pub async fn set_api_key(provider: ProviderKind, key: String) -> Result<(), Stri
     secrets::set_api_key(provider, key.trim()).map_err(|e| e.to_string())
 }
 
-/// Sends the current session (after preview) or asks again for new suggestions.
+/// Sends the current session (after preview) or asks again for new suggestions, in the target
+/// language and mode the popup shows.
 #[tauri::command]
-pub fn send_request(app: AppHandle) {
-    if let Some(session) = state(&app).session() {
+pub fn send_request(app: AppHandle, target_language: TargetLanguage, mode: Mode) {
+    if let Some(session) = state(&app).set_session_options(target_language, mode) {
         request::start(&app, session);
     }
 }

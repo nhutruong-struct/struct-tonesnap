@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { events, unsubscribeAll, type Notice, type RequestEvent, type Session } from "../lib/api";
+import { events, unsubscribeAll, type Notice, type RequestEvent, type RequestOptions, type Session } from "../lib/api";
 
 export type Phase = "idle" | "preview" | "streaming" | "done" | "error";
 
@@ -24,6 +24,7 @@ type RequestAction =
 type Action =
   | { type: "session"; session: Session }
   | { type: "notice"; notice: Notice }
+  | { type: "options"; options: RequestOptions }
   | { type: "started"; event: RequestEvent }
   | RequestAction;
 
@@ -42,6 +43,12 @@ function reduce(state: PopupState, action: Action): PopupState {
       return { ...INITIAL, session: action.session, phase: action.session.preview ? "preview" : "streaming" };
     case "notice":
       return { ...state, notice: action.notice };
+    case "options":
+      if (!state.session) return state;
+      return {
+        ...state,
+        session: { ...state.session, payload: { ...state.session.payload, ...action.options } },
+      };
     case "started":
       if (action.event.sessionId !== state.session?.id) return state;
       return {
@@ -71,7 +78,7 @@ function reduceRequest(state: PopupState, action: RequestAction): PopupState {
 }
 
 /** What the popup shows, driven by the session, notice and request events from Rust. */
-export function usePopupState(): PopupState {
+export function usePopupState(): PopupState & { setOptions: (options: RequestOptions) => void } {
   const [state, dispatch] = useReducer(reduce, INITIAL);
   useEffect(
     () =>
@@ -85,5 +92,5 @@ export function usePopupState(): PopupState {
       ]),
     [],
   );
-  return state;
+  return { ...state, setOptions: (options) => dispatch({ type: "options", options }) };
 }

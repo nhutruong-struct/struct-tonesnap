@@ -72,7 +72,7 @@ describe("loading", () => {
 
   test("names the settings that went back to their defaults by their labels", async () => {
     await open({ issue: { kind: "invalid_fields", fields: ["hotkey", "tones", "somethingNew"] } });
-    expect(screen.getByText(/went back to their defaults: Hotkey; Tones to show; somethingNew\./)).toBeTruthy();
+    expect(screen.getByText(/went back to their defaults: Hotkey; Language and tones; somethingNew\./)).toBeTruthy();
   });
 
   test("explains a settings file that could not be read", async () => {
@@ -130,19 +130,36 @@ describe("sections", () => {
 
 describe("saving", () => {
   test("sends cleaned lists and tones in their canonical order, then closes", async () => {
-    const backend = await open();
+    const backend = await open({ settings: { tones: ["formal"] } });
     fireEvent.change(field("Extra terms to mask (one per line)"), { target: { value: "  Falcon \n\n Osprey " } });
     fireEvent.change(field("Blocked apps (process name, one per line)"), {
       target: { value: "KeePass.exe\nBitwarden.EXE" },
     });
-    await click("Natural");
+    await click("Concise");
     await click("Save Settings");
 
     const [sent] = saved(backend);
     expect(sent.customSensitiveTerms).toEqual(["Falcon", "Osprey"]);
     expect(sent.blockedApps).toEqual(["keepass.exe", "bitwarden.exe"]);
-    expect(sent.tones).toEqual(["minimal", "concise", "natural", "polite"]);
+    expect(sent.tones).toEqual(["concise", "formal"]);
     expect(hidden(backend)).toBe(1);
+  });
+
+  test("starts in Vietnamese and translating, and saves the language and mode that were picked", async () => {
+    const backend = await open();
+    expect((field("Default target language") as HTMLSelectElement).value).toBe("vi");
+    expect((field("Default mode") as HTMLSelectElement).value).toBe("translate");
+    expect(screen.getByText(/Stays close to the meaning/)).toBeTruthy();
+
+    fireEvent.change(field("Default target language"), { target: { value: "ja" } });
+    fireEvent.change(field("Default mode"), { target: { value: "rewrite" } });
+    expect(screen.getByText(/Rephrases freely/)).toBeTruthy();
+    await click("Save Settings");
+
+    const [sent] = saved(backend);
+    expect(sent.targetLanguage).toBe("ja");
+    expect(sent.mode).toBe("rewrite");
+    expect(sent.tones).toEqual(["concise", "natural", "formal"]);
   });
 
   test("a new hotkey is captured from the keyboard and flagged when another app uses it", async () => {

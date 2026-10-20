@@ -3,7 +3,7 @@
 
 use std::time::{Duration, Instant};
 
-use windows::core::Interface;
+use windows::core::{IUnknown, Interface};
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER};
 use windows::Win32::System::Ole::{
     SafeArrayAccessData, SafeArrayDestroy, SafeArrayGetLBound, SafeArrayGetUBound,
@@ -13,7 +13,8 @@ use windows::Win32::UI::Accessibility::{
     CUIAutomation, CUIAutomation8, IUIAutomation, IUIAutomation2, IUIAutomationElement,
     IUIAutomationTextPattern, IUIAutomationTextRange, IUIAutomationValuePattern,
     TextPatternRangeEndpoint_End, TextPatternRangeEndpoint_Start, TextUnit_Character,
-    TextUnit_Paragraph, UIA_EditControlTypeId, UIA_TextPatternId, UIA_ValuePatternId,
+    TextUnit_Paragraph, UIA_EditControlTypeId, UIA_IsReadOnlyAttributeId, UIA_TextPatternId,
+    UIA_ValuePatternId, UiaGetReservedMixedAttributeValue,
 };
 
 use super::com::on_mta_thread;
@@ -152,6 +153,9 @@ unsafe fn capture_element(
         });
     }
     let range = ranges.GetElement(0)?;
+    // A focused element that says nothing about editing (a Chromium group, say) leaves the
+    // question to the selected text itself.
+    let editable = editable.or_else(|| range_editable(&range));
     let selection = range.GetText(-1)?.to_string();
     if selection.trim().is_empty() {
         return Ok(UiaCapture {
@@ -346,6 +350,19 @@ unsafe fn editable_state(element: &IUIAutomationElement) -> Option<bool> {
         Ok(ct) if ct == UIA_EditControlTypeId => Some(true),
         _ => None,
     }
+}
+
+/// Whether the selected text can be edited, from its read-only text attribute. Chromium (Slack,
+/// Chrome, Edge) answers "not read-only" inside an editable field and "mixed" for page text
+/// that cannot be edited. An app that does not support the attribute gives no answer.
+unsafe fn range_editable(range: &IUIAutomationTextRange) -> Option<bool> {
+    let value = range.GetAttributeValue(UIA_IsReadOnlyAttributeId).ok()?;
+    if let Ok(read_only) = bool::try_from(&value) {
+        return Some(!read_only);
+    }
+    let answer = IUnknown::try_from(&value).ok()?;
+    let mixed = UiaGetReservedMixedAttributeValue().ok()?;
+    (answer == mixed).then_some(false)
 }
 
 unsafe fn bounding_rect(range: &IUIAutomationTextRange) -> Option<Rect> {
