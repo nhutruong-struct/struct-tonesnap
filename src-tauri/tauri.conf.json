@@ -54,5 +54,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkwQUFGNjNDN0Y4QTM5MTQKUldRVU9ZcC9QUGFxa0RubldUcE5CZ1l3dm5pb0t3OFFFSHNEZFIrNkR4VDVoYjJqRXM4N2t2ZEoK",
+      "endpoints": ["https://github.com/nhutruong-struct/struct-tonesnap/releases/latest/download/latest.json"],
+      "requireSignedVersion": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

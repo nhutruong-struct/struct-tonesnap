@@ -33,6 +33,7 @@ const FIELD_LABELS: Partial<Record<keyof Settings, Key>> = {
   customSensitiveTerms: "terms.label",
   previewBeforeSend: "preview.label",
   blockedApps: "blocked.label",
+  updateMode: "section.updates",
 };
 
 function fieldLabel(t: Translate, field: string): string {

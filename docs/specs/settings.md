@@ -30,6 +30,7 @@ The same `Settings` object exists in Rust and TypeScript, serialized in camelCas
 | `customSensitiveTerms` | empty | Privacy → one term per line | PRV-12 |
 | `previewBeforeSend` | `false` | Privacy → checkbox | PRV-20 |
 | `blockedApps` | `keepass.exe`, `keepassxc.exe`, `1password.exe`, `bitwarden.exe`, `lastpass.exe` | Privacy → one process name per line | CAP-02 |
+| `updateMode` | `auto` | Updates → install automatically when idle, or ask first | [updates.md](updates.md) UPD-20..23 |
 
 Two choices are **not** in this file: the API keys (one per provider) live in the credential store (SET-50), and starting at sign-in is kept by Windows (SET-60).
 
@@ -40,15 +41,15 @@ Two choices are **not** in this file: the API keys (one per provider) live in th
 - **SET-03** The two list fields are edited as one entry per line; on save, lines are trimmed and empty ones dropped, and blocked app names are lower-cased.
 - **SET-04** Choosing a provider shows that provider's key field (with where to get a key) and its model. Gemini, Groq and OpenRouter take any model name, with a few suggestions in a combobox (UI-15); Claude offers a fixed list and the effort. For the free providers the form warns that a free tier may let the provider use the content. Switching provider starts from that provider's own key state; a key being typed is not carried over. The *Get Key* button next to the key field opens that provider's key page in the default browser (`opener:default` permission, http/https only).
 - **SET-05** The hotkey field flags a known conflict ([trigger.md](trigger.md) TRG-13) and a registration error.
-- **SET-06** The window shows one section at a time, chosen in a sidebar: Interface, AI connection, Popup trigger, Language and tones, Context, Privacy. Every section stays mounted, so edits and drafts in a section that is not open are kept and saved with the rest ([ui-design.md](ui-design.md) UI-31).
+- **SET-06** The window shows one section at a time, chosen in a sidebar: Interface, AI connection, Popup trigger, Language and tones, Context, Privacy, Updates. Every section stays mounted, so edits and drafts in a section that is not open are kept and saved with the rest ([ui-design.md](ui-design.md) UI-31).
 
 ## Saving
 
 - **SET-20** *Save Settings* applies the new settings in this order:
   1. switch the hotkey (on the main thread). If the new one cannot be registered, the old one is restored and the save stops with `hotkey_invalid` or `hotkey_taken`: **nothing is written** and the window stays open showing the error;
   2. write the file. A failure registers the old hotkey again, so the hotkey in use always matches the saved settings, and stops with `save_failed`, shown next to the Save button;
-  3. update the tray labels, start or stop the floating icon, 
-  4. keep the new settings in memory, clear any loading problem (SET-34) and tell both windows (`settings-changed`);
+  3. start or stop the floating icon;
+  4. keep the new settings in memory, clear any loading problem (SET-34), tell both windows (`settings-changed`), update the tray menu and apply the update mode ([updates.md](updates.md) UPD-23);
   5. change starting at sign-in, if the user changed it (SET-61).
   The window then hides.
 - **SET-21** The file is written to a sibling `settings.json.partial` first and then renamed over `settings.json`, so a crash mid-write cannot leave a truncated file.

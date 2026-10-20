@@ -71,6 +71,16 @@ pub enum ProviderKind {
     Openrouter,
 }
 
+/// How new versions from the GitHub releases are installed (see `update.rs`).
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdateMode {
+    /// Download in the background and install once ToneSnap is idle.
+    Auto,
+    /// Only say that a new version exists; the user installs it.
+    Manual,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Settings {
@@ -101,6 +111,7 @@ pub struct Settings {
     pub preview_before_send: bool,
     /// Lower-case process names where ToneSnap never reads text.
     pub blocked_apps: Vec<String>,
+    pub update_mode: UpdateMode,
 }
 
 impl Default for Settings {
@@ -136,6 +147,7 @@ impl Default for Settings {
             ]
             .map(String::from)
             .to_vec(),
+            update_mode: UpdateMode::Auto,
         }
     }
 }
@@ -427,6 +439,7 @@ mod tests {
         assert_eq!(value["geminiModel"], "gemini-3.8-flash");
         assert_eq!(value["openrouterModel"], "openai/gpt-oss-20b:free");
         assert_eq!(value["previewBeforeSend"], false);
+        assert_eq!(value["updateMode"], "auto");
         assert!(value.get("trigger_mode").is_none());
     }
 
@@ -476,6 +489,16 @@ mod tests {
         let settings = Settings::default();
         assert!(settings.is_blocked_app("KeePass.exe"));
         assert!(!settings.is_blocked_app("notepad.exe"));
+    }
+
+    #[test]
+    fn the_update_mode_round_trips_and_an_unknown_one_falls_back() {
+        let (settings, invalid) = parse(r#"{ "updateMode": "manual" }"#).unwrap();
+        assert_eq!(settings.update_mode, UpdateMode::Manual);
+        assert!(invalid.is_empty());
+        let (settings, invalid) = parse(r#"{ "updateMode": "nightly" }"#).unwrap();
+        assert_eq!(settings.update_mode, UpdateMode::Auto);
+        assert_eq!(invalid, ["updateMode"]);
     }
 
     #[test]

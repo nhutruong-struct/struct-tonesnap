@@ -9,6 +9,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::settings::{self, Mode, ProviderKind, Settings, SettingsIssue, TargetLanguage};
 use crate::state::state;
+use crate::update::{self, UpdateInfo};
 use crate::window::{self, NoticeKind};
 use crate::{platform, request, secrets, tray, trigger};
 
@@ -101,10 +102,13 @@ pub async fn save_settings(app: AppHandle, new_settings: Settings) -> Result<(),
             let _ = hotkey_on_main_thread(&app, move |app| trigger::apply_hotkey(app, &previous));
         },
     )?;
-    tray::update_labels(&app, &new_settings);
     trigger::apply_icon_mode(&new_settings);
     state(&app).set_saved_settings(new_settings.clone());
+    // Once the new settings are in memory, so an update status change in between cannot rebuild
+    // the menu in the old language.
+    tray::refresh(&app, &new_settings);
     let _ = app.emit("settings-changed", &new_settings);
+    update::settings_changed(&app);
     Ok(())
 }
 
@@ -166,6 +170,23 @@ pub fn hide_popup(app: AppHandle) {
 pub fn open_settings(app: AppHandle) {
     window::dismiss_popup(&app);
     window::show_settings(&app);
+}
+
+#[tauri::command]
+pub fn update_info(app: AppHandle) -> UpdateInfo {
+    update::info(&app)
+}
+
+#[tauri::command]
+pub async fn check_for_updates(app: AppHandle) {
+    update::check_now(&app).await;
+}
+
+/// Downloads the offered version if needed, then installs it; ToneSnap closes and the new
+/// version starts.
+#[tauri::command]
+pub async fn install_update(app: AppHandle) {
+    update::install_now(&app).await;
 }
 
 #[cfg(test)]

@@ -8,7 +8,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 ## Startup
 
 - **APP-01** Only one ToneSnap runs at a time. Starting it again opens the Settings window of the running instance instead.
-- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, and registers the hotkey.
+- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, registers the hotkey, and starts checking for updates ([updates.md](updates.md) UPD-10).
 - **APP-03** The Settings window opens by itself at startup when the user needs to act:
   - the hotkey could not be registered (another app holds it, or it is invalid);
   - the saved settings had a problem (invalid fields, a broken file, or a file that could not be read);
@@ -18,7 +18,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Tray
 
-- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used.
+- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, without an icon ([updates.md](updates.md) UPD-40).
 - **APP-11** Menu labels follow the interface language and are updated as soon as settings are saved.
 - **APP-12** *Quit ToneSnap* exits at once.
 

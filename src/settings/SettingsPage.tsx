@@ -9,6 +9,7 @@ import { InterfaceSection } from "./sections/InterfaceSection";
 import { PrivacySection } from "./sections/PrivacySection";
 import { TonesSection } from "./sections/TonesSection";
 import { TriggerSection } from "./sections/TriggerSection";
+import { UpdatesSection } from "./sections/UpdatesSection";
 import { SettingsNav, type Attention, type SectionId } from "./SettingsNav";
 import { describeCommandError, describeSettingsIssue, useSettingsForm, type SettingsForm } from "./useSettingsForm";
 
@@ -73,6 +74,7 @@ function SettingsBody({ form, settings }: { form: SettingsForm; settings: Settin
         onBlockedChange={form.setBlocked}
       />,
     ],
+    ["updates", <UpdatesSection key="updates" {...section} />],
   ];
 
   return (

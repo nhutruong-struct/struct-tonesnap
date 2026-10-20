@@ -34,6 +34,7 @@
 | Uninstall cleanup (2026-10-19) | The `.exe` (NSIS) uninstaller deletes the API keys from Credential Manager only when *Delete the application data* is ticked, like the settings and WebView folders, so a plain reinstall keeps them; an update never deletes them. It is an NSIS hook (`src-tauri/windows/hooks.nsh`, `CredDeleteW` by target name, never reading the key), not a cleanup mode in the app binary. Tauri's template already removes the `Run` entry. The `.msi` cleans up nothing beyond its files: the README documents the manual steps instead of adding a WiX custom action |
 | Releases (2026-10-20) | Version 1.0.0 is the first public release. Installers (NSIS and MSI) are built only by `.github/workflows/release.yml` from a `v*` tag on `master`, with build provenance attestations and SHA-256 checksums, and the release notes come from `CHANGELOG.md`. Not code-signed yet (issue #25): SmartScreen warns on first run |
 | OpenSSF Scorecard (2026-10-19) | Fix what one maintainer can: branches must be up to date before merging, and the redaction is fuzzed with cargo-fuzz (`src-tauri/fuzz/`, `fuzz.yml`, weekly and on PRs that touch it). Branch-Protection (2 approvals, no admin bypass) and Code-Review (approval by someone other than the author) cannot be met alone and are dismissed until a second maintainer joins; SAST and Maintained clear with time. Details in [MAINTAINING.md](MAINTAINING.md#openssf-scorecard) |
+| Auto-update (2026-10-19) | The official Tauri updater (`tauri-plugin-updater`, `native-tls` and `system-proxy` features, no rustls), driven from Rust: no JS package, no capability. It reads `latest.json` from the latest GitHub release; installers are signed with minisign in a separate `sign` job of `release.yml` that alone sees the key (a `release` environment secret; public key in `tauri.conf.json`), and a signature must name its version. An MSI install always asks first, because its updates need administrator rights. New allowed hosts: `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com`; the requests carry only the version and platform. Setting `updateMode`: `auto` (default; download in the background, install when ToneSnap is idle) or `manual` (announce in the tray and Settings, install on request). 1.0.0 has no updater, so its users install the next version by hand once. Rules in [specs/updates.md](specs/updates.md) |
 
 ## Architecture
 
@@ -110,6 +111,10 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] Target language (Vietnamese, English, Japanese) and mode (translate, rewrite) in the popup, defaults in Settings; tones reduced to concise, natural, formal (see Decisions)
 - [x] Fix: Apply was offered for selected text on web pages that cannot be edited. A Chromium page or rich-text field has no Value pattern, so editability stayed unknown; the selected text's read-only attribute now tells them apart (CAP-07). Only a probe on Edge's accessibility tree was run; a real selection in Chrome and Slack is still to be checked by hand
 - [x] Fixes from the specs review: default tones are the three the local model was benchmarked on; a failed settings write puts the old hotkey back; every way of closing the popup stops its request (Copy and Open Settings used to let it run); the unused `current_session` command is gone
+
+## Phase 5 progress
+
+- [x] Auto-update from the GitHub releases: signed updater artifacts and `latest.json` in `release.yml`, `updateMode` auto (install when idle) or manual (announce, install on request), tray item and Settings section (see Decisions)
 
 ## Compatibility table (filled during Phase 0)
 

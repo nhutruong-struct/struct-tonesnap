@@ -20,6 +20,7 @@ These pages describe what the app **does today**: its behavior, business rules a
 | [apply-copy.md](apply-copy.md) | Putting a suggestion back into the app, or onto the clipboard | `APL` |
 | [settings.md](settings.md) | Every setting, the Settings window, saving and loading, the API key | `SET` |
 | [ui-design.md](ui-design.md) | How both windows look: design tokens, controls, popup and Settings layout | `UI` |
+| [updates.md](updates.md) | New versions from GitHub: checking, the update mode, installing, signing | `UPD` |
 | [contracts.md](contracts.md) | Rust ⇄ TypeScript commands, events, data shapes and error codes | `CON` |
 
 ## The product in one paragraph

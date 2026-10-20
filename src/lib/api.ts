@@ -71,6 +71,9 @@ export type ProviderId = "claude" | "gemini" | "groq" | "openrouter";
 
 export type TriggerMode = "hotkey" | "icon" | "auto" | "off";
 
+/** `auto` installs a new version when ToneSnap is idle; `manual` only says that it exists. */
+export type UpdateMode = "auto" | "manual";
+
 export interface Settings {
   uiLanguage: "auto" | "vi" | "en";
   triggerMode: TriggerMode;
@@ -93,6 +96,7 @@ export interface Settings {
   customSensitiveTerms: string[];
   previewBeforeSend: boolean;
   blockedApps: string[];
+  updateMode: UpdateMode;
 }
 
 /** Rejection value of `saveSettings`, also returned by `hotkeyError`. */
@@ -105,6 +109,24 @@ export interface CommandError {
 /** What was wrong with the saved settings file, until the settings are saved again. */
 export type SettingsIssue =
   { kind: "invalid_fields"; fields: string[] } | { kind: "broken"; backup: string } | { kind: "unreadable" };
+
+/** Where updating stands (`update.rs`). */
+export type UpdateStatus =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "up_to_date" }
+  | { kind: "available"; version: string }
+  | { kind: "downloading"; version: string }
+  | { kind: "ready"; version: string }
+  | { kind: "installing"; version: string }
+  | { kind: "failed"; step: "check" | "download" | "install"; detail: string };
+
+export interface UpdateInfo {
+  currentVersion: string;
+  status: UpdateStatus;
+  /** Installed with the MSI: updates need administrator rights, so they always wait for the user. */
+  msiInstall: boolean;
+}
 
 export const api = {
   getSettings: () => invoke<Settings>("get_settings"),
@@ -120,6 +142,10 @@ export const api = {
   copyText: (text: string) => invoke<void>("copy_text", { text }),
   hidePopup: () => invoke<void>("hide_popup"),
   openSettings: () => invoke<void>("open_settings"),
+  updateInfo: () => invoke<UpdateInfo>("update_info"),
+  checkForUpdates: () => invoke<void>("check_for_updates"),
+  /** Downloads the offered version if needed and installs it; ToneSnap restarts. */
+  installUpdate: () => invoke<void>("install_update"),
   /** Whether Windows starts ToneSnap at sign-in. Windows keeps this choice, not settings.json. */
   launchAtLogin: () => isEnabled(),
   setLaunchAtLogin: (on: boolean) => (on ? enable() : disable()),
@@ -142,6 +168,7 @@ export const events = {
   requestFailed: (f: Listener<RequestEvent>) => listen<RequestEvent>("request-failed", (e) => f(e.payload)),
   settingsOpened: (f: () => void) => listen("settings-opened", () => f()),
   settingsChanged: (f: Listener<Settings>) => listen<Settings>("settings-changed", (e) => f(e.payload)),
+  updateStatus: (f: Listener<UpdateInfo>) => listen<UpdateInfo>("update-status", (e) => f(e.payload)),
 };
 
 /** Unsubscribes from all of `subscriptions`; the cleanup for a subscribing `useEffect`. */

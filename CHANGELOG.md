@@ -11,6 +11,13 @@ All notable changes to ToneSnap are listed here. The format follows
 - Choose the language of the versions (Vietnamese by default, English or Japanese) and a mode, **Translate**
   (stays close to the original, the default) or **Rewrite** (rephrases freely), in the popup. Settings holds the
   defaults. Every version is written in the chosen language, whatever language the selection is in.
+- Automatic updates from the GitHub releases. By default ToneSnap downloads a new version in the background
+  and installs it, then restarts, only while you are not using it (no popup or Settings window open). Choose
+  **Ask before updating** in Settings → Updates to be told about new versions (in the tray and in Settings)
+  and install them with **Update & Restart**. Updates are signed and verified before they are installed; the
+  check sends only the app version and platform.
+- **Version 1.0.0 cannot update itself**: install this version by hand once, and later versions arrive by
+  themselves.
 
 ### Changed
 
