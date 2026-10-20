@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
+use crate::prompt;
+
 /// How the popup is triggered. The hotkey works in every mode except `Off`.
 /// `Icon` shows a floating icon after a selection; `Auto` is not implemented yet.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -13,6 +15,47 @@ pub enum TriggerMode {
     Icon,
     Auto,
     Off,
+}
+
+/// The language every version is written in, whatever language the selection is in.
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TargetLanguage {
+    #[default]
+    Vi,
+    En,
+    Ja,
+}
+
+impl TargetLanguage {
+    /// The name the prompt uses.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Vi => "Vietnamese",
+            Self::En => "English",
+            Self::Ja => "Japanese",
+        }
+    }
+}
+
+/// What is done with the selection: `Translate` stays close to the original, `Rewrite` may
+/// rephrase and restructure it.
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Mode {
+    #[default]
+    Translate,
+    Rewrite,
+}
+
+impl Mode {
+    /// The word the prompt uses.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Translate => "translate",
+            Self::Rewrite => "rewrite",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -26,6 +69,16 @@ pub enum ProviderKind {
     Groq,
     /// OpenRouter; has free models.
     Openrouter,
+}
+
+/// How new versions from the GitHub releases are installed (see `update.rs`).
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdateMode {
+    /// Download in the background and install once ToneSnap is idle.
+    Auto,
+    /// Only say that a new version exists; the user installs it.
+    Manual,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -44,10 +97,12 @@ pub struct Settings {
     pub gemini_model: String,
     pub groq_model: String,
     pub openrouter_model: String,
+    /// Language of the versions the popup opens with; the popup can change it per use.
+    pub target_language: TargetLanguage,
+    /// Whether the popup opens translating or rewriting; the popup can change it per use.
+    pub mode: Mode,
     /// Tone ids in display order, see `prompt::TONES`.
     pub tones: Vec<String>,
-    /// "vi", "en" or "off".
-    pub explain_language: String,
     /// Characters of surrounding text to send on each side of the selection.
     pub context_chars: u32,
     pub ocr_fallback: bool,
@@ -56,13 +111,14 @@ pub struct Settings {
     pub preview_before_send: bool,
     /// Lower-case process names where ToneSnap never reads text.
     pub blocked_apps: Vec<String>,
+    pub update_mode: UpdateMode,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
             ui_language: "auto".into(),
-            trigger_mode: TriggerMode::Hotkey,
+            trigger_mode: TriggerMode::Icon,
             // Ctrl+Alt+Space belongs to Claude desktop's Quick Entry. Ctrl+Alt+E only shadows
             // Word's euro-sign shortcut, which our users rarely need.
             hotkey: "ctrl+alt+e".into(),
@@ -74,10 +130,9 @@ impl Default for Settings {
             gemini_model: "gemini-3.8-flash".into(),
             groq_model: "openai/gpt-oss-20b".into(),
             openrouter_model: "openai/gpt-oss-20b:free".into(),
-            // Fewer tones mean a shorter answer, which is faster and stays within the free
-            // tiers' token limits.
-            tones: ["minimal", "concise", "polite"].map(String::from).to_vec(),
-            explain_language: "vi".into(),
+            target_language: TargetLanguage::default(),
+            mode: Mode::default(),
+            tones: prompt::TONES.iter().map(|t| t.to_string()).collect(),
             context_chars: 600,
             ocr_fallback: true,
             redact: true,
@@ -92,6 +147,7 @@ impl Default for Settings {
             ]
             .map(String::from)
             .to_vec(),
+            update_mode: UpdateMode::Auto,
         }
     }
 }
@@ -277,16 +333,20 @@ mod tests {
         let dir = TempDir::new("round-trip");
         let settings = Settings {
             hotkey: "ctrl+alt+r".into(),
-            trigger_mode: TriggerMode::Icon,
-            tones: vec!["polite".into()],
+            trigger_mode: TriggerMode::Hotkey,
+            tones: vec!["formal".into()],
+            target_language: TargetLanguage::Ja,
+            mode: Mode::Rewrite,
             ..Settings::default()
         };
         save_to(&dir.file(), &settings).unwrap();
         let (loaded, issue) = load_from(&dir.file());
         assert_eq!(issue, None);
         assert_eq!(loaded.hotkey, "ctrl+alt+r");
-        assert_eq!(loaded.trigger_mode, TriggerMode::Icon);
-        assert_eq!(loaded.tones, ["polite"]);
+        assert_eq!(loaded.trigger_mode, TriggerMode::Hotkey);
+        assert_eq!(loaded.tones, ["formal"]);
+        assert_eq!(loaded.target_language, TargetLanguage::Ja);
+        assert_eq!(loaded.mode, Mode::Rewrite);
         assert!(!dir.file().with_extension("json.partial").exists());
     }
 
@@ -374,12 +434,35 @@ mod tests {
     #[test]
     fn settings_serialize_in_camel_case_with_snake_case_enums() {
         let value = serde_json::to_value(Settings::default()).unwrap();
-        assert_eq!(value["triggerMode"], "hotkey");
+        assert_eq!(value["triggerMode"], "icon");
         assert_eq!(value["provider"], "gemini");
         assert_eq!(value["geminiModel"], "gemini-3.8-flash");
         assert_eq!(value["openrouterModel"], "openai/gpt-oss-20b:free");
         assert_eq!(value["previewBeforeSend"], false);
+        assert_eq!(value["updateMode"], "auto");
         assert!(value.get("trigger_mode").is_none());
+    }
+
+    #[test]
+    fn the_popup_opens_in_vietnamese_with_every_tone_translating() {
+        let settings = Settings::default();
+        assert_eq!(settings.target_language, TargetLanguage::Vi);
+        assert_eq!(settings.mode, Mode::Translate);
+        assert_eq!(settings.tones, ["concise", "natural", "formal"]);
+        let value = serde_json::to_value(&settings).unwrap();
+        assert_eq!(value["targetLanguage"], "vi");
+        assert_eq!(value["mode"], "translate");
+    }
+
+    #[test]
+    fn an_unknown_language_or_mode_falls_back_alone() {
+        let (settings, invalid) =
+            parse(r#"{ "targetLanguage": "klingon", "mode": "rewrite", "hotkey": "ctrl+alt+r" }"#)
+                .unwrap();
+        assert_eq!(settings.target_language, TargetLanguage::Vi);
+        assert_eq!(settings.mode, Mode::Rewrite);
+        assert_eq!(settings.hotkey, "ctrl+alt+r");
+        assert_eq!(invalid, ["targetLanguage"]);
     }
 
     #[test]
@@ -406,6 +489,16 @@ mod tests {
         let settings = Settings::default();
         assert!(settings.is_blocked_app("KeePass.exe"));
         assert!(!settings.is_blocked_app("notepad.exe"));
+    }
+
+    #[test]
+    fn the_update_mode_round_trips_and_an_unknown_one_falls_back() {
+        let (settings, invalid) = parse(r#"{ "updateMode": "manual" }"#).unwrap();
+        assert_eq!(settings.update_mode, UpdateMode::Manual);
+        assert!(invalid.is_empty());
+        let (settings, invalid) = parse(r#"{ "updateMode": "nightly" }"#).unwrap();
+        assert_eq!(settings.update_mode, UpdateMode::Auto);
+        assert_eq!(invalid, ["updateMode"]);
     }
 
     #[test]

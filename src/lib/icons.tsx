@@ -39,6 +39,7 @@ const PATHS = {
       <path d="M8 11V8a4 4 0 018 0v3" />
     </>
   ),
+  refresh: <path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7" />,
   warning: <path d="M12 4l9 16H3L12 4zM12 10v4M12 17h.01" />,
   info: (
     <>

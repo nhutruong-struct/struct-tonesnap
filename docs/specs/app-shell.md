@@ -1,14 +1,14 @@
 # App shell
 
 > **Status:** implemented (Phase 0, Windows). macOS is Phase 3.
-> **Source:** `src-tauri/src/lib.rs`, `tray.rs`, `window.rs`, `i18n.rs`, `src/main.tsx`, `src/lib/i18n.ts`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/`.
+> **Source:** `src-tauri/src/lib.rs`, `tray.rs`, `window.rs`, `i18n.rs`, `scripts/make-tray-icons.mjs`, `src/main.tsx`, `src/lib/i18n.ts`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/`.
 
 ToneSnap is a tray app: it has no main window, runs in the background and only shows the popup or the Settings window when needed. It can start when the user signs in to Windows (SET-60).
 
 ## Startup
 
 - **APP-01** Only one ToneSnap runs at a time. Starting it again opens the Settings window of the running instance instead.
-- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, and registers the hotkey.
+- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, registers the hotkey, and starts checking for updates ([updates.md](updates.md) UPD-10).
 - **APP-03** The Settings window opens by itself at startup when the user needs to act:
   - the hotkey could not be registered (another app holds it, or it is invalid);
   - the saved settings had a problem (invalid fields, a broken file, or a file that could not be read);
@@ -18,7 +18,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Tray
 
-- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items: *Settings…* and *Quit ToneSnap*.
+- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, without an icon ([updates.md](updates.md) UPD-40).
 - **APP-11** Menu labels follow the interface language and are updated as soon as settings are saved.
 - **APP-12** *Quit ToneSnap* exits at once.
 
@@ -37,7 +37,15 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 - **APP-32** The Settings window follows the language currently picked in its form, before saving, so the user sees what they are choosing.
 - **APP-33** Every interface string exists in both languages (`src/lib/i18n.ts`, `src-tauri/src/i18n.rs`); a missing translation is a TypeScript error. Strings may contain `{name}` placeholders, filled the same way in both languages.
 
-**Verified by:** `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone/trigger/notice has a label, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
+**Verified by:** `tray.rs` test (the menu icons decode and share one size), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone/trigger/notice has a label, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
+
+## Uninstalling
+
+- **APP-40** The `.exe` (NSIS) uninstaller always removes the "Start with Windows" `Run` entry (SET-60), except during an update. Tauri's installer template does this.
+- **APP-41** Its *Delete the application data* checkbox removes the settings (`%APPDATA%\com.tonesnap.app`), the WebView data (`%LOCALAPPDATA%\com.tonesnap.app`) and every provider's API key in Credential Manager ([privacy.md](privacy.md) PRV-43). The folders are Tauri's template; the keys are `src-tauri/windows/hooks.nsh`. Left unticked, a reinstall finds the settings and keys again. An update (`/UPDATE`) and a silent or passive uninstall, which show no checkbox, keep everything.
+- **APP-42** The `.msi` uninstaller removes only the installed files and shortcuts: the settings, WebView data, keys and `Run` entry stay. The README's Uninstall section lists them and how to remove them by hand; there is no WiX custom action for them.
+
+**Verified by:** `secrets.rs` test "the uninstaller deletes every key" (`hooks.nsh` names every provider's Credential Manager target); the uninstall itself by hand (install the `.exe`, save a key, uninstall with the box ticked, check Credential Manager).
 
 ## Not implemented
 

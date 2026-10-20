@@ -13,7 +13,7 @@ html[data-window="settings"] #root {
   --control-w: 260px;
 
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   height: 100%;
 }
 
@@ -78,6 +78,7 @@ html[data-window="settings"] #root {
   background: var(--accent);
 }
 
+/* The sidebar is wide enough for the longest section name in both languages. */
 .nav-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -263,8 +264,85 @@ html[data-window="settings"] #root {
   width: 320px;
 }
 
-.item.stack > :is(input, select, textarea, .row) {
+.item.stack > :is(input, select, textarea, .row, .combo) {
   width: 100%;
+}
+
+/* ------------------------------------------------- combobox (text + suggestions) */
+
+.combo {
+  position: relative;
+}
+
+.combo > input {
+  padding-right: var(--s-8);
+}
+
+/* The arrow sits inside the field and takes its clicks; the keyboard uses the field's own keys.
+   It is inset by the field's 1px border so its hover fill never paints over the outline. */
+.combo-toggle {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  min-height: 0;
+  width: var(--s-8);
+  padding: 0;
+  border: 0;
+  border-radius: 0 calc(var(--r-sm) - 1px) calc(var(--r-sm) - 1px) 0;
+  background: var(--chevron) no-repeat center;
+  box-shadow: none;
+}
+
+/* The base button states reset the background shorthand, so each state repeats the arrow. */
+.combo-toggle:hover:not(:disabled) {
+  background: var(--chevron) no-repeat center var(--surface-2);
+}
+
+.combo-toggle:active:not(:disabled) {
+  background: var(--chevron) no-repeat center var(--surface-3);
+}
+
+.combo-list {
+  position: absolute;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  left: 0;
+  z-index: 1;
+  max-height: 240px;
+  margin: 0;
+  padding: var(--s-1);
+  overflow-y: auto;
+  border: 1px solid var(--control-border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  list-style: none;
+}
+
+.combo-option {
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.combo-option.active {
+  background: var(--surface-2);
+}
+
+.combo-option[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.combo-option[aria-selected="true"].active {
+  box-shadow: inset 0 0 0 1px var(--accent-ring);
+}
+
+/* A card that holds a suggestion list must not clip it; its rows have no hover fill to round off. */
+.card:has(.combo-list) {
+  overflow: visible;
 }
 
 .row {

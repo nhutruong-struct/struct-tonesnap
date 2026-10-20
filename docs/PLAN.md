@@ -1,8 +1,9 @@
 # ToneSnap: implementation plan
 
-> Working name. A desktop app (Windows first, macOS later): select English (or Vietnamese) text in any app → a
-> popup suggests several English versions in different tones (concise, polite, formal, friendly…) with
-> explanations in Vietnamese → Apply replaces the selection in place when the field is editable.
+> Working name. A desktop app (Windows first, macOS later): select text (Vietnamese, English or Japanese) in any
+> app → a popup suggests several versions in the chosen language (Vietnamese by default) and tones (concise,
+> natural, formal), translated or rewritten → Apply replaces the selection in
+> place when the field is editable.
 >
 > How the built parts behave, rule by rule: [specs/](specs/README.md).
 
@@ -23,11 +24,17 @@
 | Settings file | Loaded field by field: a value ToneSnap does not understand resets only that field; a damaged file is moved to `settings.broken.json` (then `-2`, `-3`… so older backups survive); a file that cannot be read right now (locked) is left untouched. Settings opens with a warning until the next save. Saving writes a temporary file and renames it |
 | Specifications (2026-10-08) | Implemented behavior is written down in `docs/specs/`, one page per area, each rule with a stable ID (`CAP-07`) and the tests that pin it. This plan keeps decisions and the roadmap; a change in behavior updates its spec in the same change |
 | Start with Windows (2026-10-08) | Off until the user ticks it in Settings. Windows keeps the choice (the autostart plugin's `Run` registry entry), so it is not in `settings.json`; Settings reads it on open and changes it on Save. The `ANTHROPIC_API_KEY` environment fallback works only in debug builds, so a developer's key is never billed silently |
+| Default trigger (2026-10-18) | `triggerMode` defaults to `icon`: the floating icon shows next to a selection and the hotkey still works. A settings file that already holds a `triggerMode` keeps it; only new installs and fields that fell back to the default change |
+| Get Key button (2026-10-19) | The API key card has a *Get Key* button that opens the selected provider's key page in the default browser through `opener:default`. Those pages (`aistudio.google.com`, `console.groq.com`, `console.anthropic.com`) are listed in `BROWSER_LINK_HOSTS` in the harness config, apart from `ALLOWED_HOSTS`: the app sends nothing to them. |
+| Target language and modes (2026-10-19) | The popup has two quick controls: the **target language** (`vi` default, `en`, `ja`) and the **mode** (`translate` default: faithful to the meaning and structure; `rewrite`: rephrases freely). Every variant is in the target language whatever language the selection is in; Settings holds the defaults, the popup's choice applies to one session. Tones were cut from six to three (`concise`, `natural`, `formal`). The old "translated from Vietnamese" hint and the Vietnamese letter test went away: the model detects the language |
+| Explanations removed (2026-10-19) | The model no longer lists the mistakes in the selection or writes a note per variant, and the `explainLanguage` setting is gone: the explanations made every answer longer and slower. The answer is now only the text of each variant. Nothing was kept for older settings files, because no version with the old shapes was released |
 | Interface design (2026-10-08) | One design system in `src/styles/` (tokens on a 4 px grid, accent taken from the app icon, light and dark), hand-drawn checkbox, radio and switch with a keyboard-only focus ring, a card per tone in the popup, and a Settings window with a sidebar and one section at a time. No new dependency: system font, inline SVG icons. Rules in [specs/ui-design.md](specs/ui-design.md) |
 | Open source (2026-10-19) | Public on GitHub as `nhutruong-struct/struct-tonesnap` under the MIT License, starting from a fresh history. `develop` (default) and `master` are protected by rulesets: pull requests only, CI `check` green, squash into `develop`, merge commits into `master` for releases; head branches are deleted after the merge. Contributor process in `CONTRIBUTING.md`, maintainer process in `docs/MAINTAINING.md`; questions and ideas go to GitHub Discussions |
 | Contributor style enforcement (2026-10-19) | CI `check` is the gate (same name, so the rulesets did not change) and a fork PR runs the same gates. Added to it: ESLint for `scripts/`, the project rules over every text file in the repository (secrets and English-only now cover `.github/`, `site/`, root docs), a `whitespace` rule (the `.editorconfig` rules for files no formatter touches), a `suppress` rule (`eslint-disable` needs a reason; `prettier-ignore` and `rustfmt::skip` banned), a PR-title check (English, imperative, under 72 characters; run from `ci.yml` on `pull_request` with the `edited` trigger) and failure hints with line annotations. For contributors: `pnpm run fix`, optional `.githooks/` (`pnpm run hooks:install`), style configuration under CODEOWNERS. Markdown stays unformatted on purpose (hand-aligned tables); the Win32 integration tests stay local. Details in [HARNESS.md](HARNESS.md#enforcement-layers) |
+| Uninstall cleanup (2026-10-19) | The `.exe` (NSIS) uninstaller deletes the API keys from Credential Manager only when *Delete the application data* is ticked, like the settings and WebView folders, so a plain reinstall keeps them; an update never deletes them. It is an NSIS hook (`src-tauri/windows/hooks.nsh`, `CredDeleteW` by target name, never reading the key), not a cleanup mode in the app binary. Tauri's template already removes the `Run` entry. The `.msi` cleans up nothing beyond its files: the README documents the manual steps instead of adding a WiX custom action |
 | Releases (2026-10-20) | Version 1.0.0 is the first public release. Installers (NSIS and MSI) are built only by `.github/workflows/release.yml` from a `v*` tag on `master`, with build provenance attestations and SHA-256 checksums, and the release notes come from `CHANGELOG.md`. Not code-signed yet (issue #25): SmartScreen warns on first run |
 | OpenSSF Scorecard (2026-10-19) | Fix what one maintainer can: branches must be up to date before merging, and the redaction is fuzzed with cargo-fuzz (`src-tauri/fuzz/`, `fuzz.yml`, weekly and on PRs that touch it). Branch-Protection (2 approvals, no admin bypass) and Code-Review (approval by someone other than the author) cannot be met alone and are dismissed until a second maintainer joins; SAST and Maintained clear with time. Details in [MAINTAINING.md](MAINTAINING.md#openssf-scorecard) |
+| Auto-update (2026-10-19) | The official Tauri updater (`tauri-plugin-updater`, `native-tls` and `system-proxy` features, no rustls), driven from Rust: no JS package, no capability. It reads `latest.json` from the latest GitHub release; installers are signed with minisign in a separate `sign` job of `release.yml` that alone sees the key (a `release` environment secret; public key in `tauri.conf.json`), and a signature must name its version. An MSI install always asks first, because its updates need administrator rights. New allowed hosts: `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com`; the requests carry only the version and platform. Setting `updateMode`: `auto` (default; download in the background, install when ToneSnap is idle) or `manual` (announce in the tray and Settings, install on request). 1.0.0 has no updater, so its users install the next version by hand once. Rules in [specs/updates.md](specs/updates.md) |
 
 ## Architecture
 
@@ -36,7 +43,7 @@ Trigger (hotkey / floating icon / automatic popup)
   → Selection + context: UIA → (Word COM / browser extension) → on-device screenshot + OCR → clipboard
   → Safety: skip password fields and blocked apps, redact sensitive data (reversibly)
   → AI call: Gemini | Groq | OpenRouter | Claude API (own key) | enterprise gateway (Phase 4)
-  → Popup: one version per tone + explanations
+  → Popup: one version per tone
   → Apply: refocus the original app → paste through the clipboard → restore the previous clipboard
 ```
 
@@ -101,7 +108,13 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] The popup no longer quotes the original selection: the user has just selected it in the other app, and preview mode still shows what will be sent (POP-22)
 - [x] Multi-line selections keep their indentation in Chromium apps (Slack): a single UI Automation read moves the spaces that start a line, a paragraph-by-paragraph read keeps them, so ToneSnap reads paragraph by paragraph when the single read lost indentation (CAP-17; no keystroke, no clipboard; confirmed with the hotkey in Slack on 2026-10-08); the prompt keeps indentation ([report](bench/local-models-2026-10-07.md): 11/11 valid, 53/53 Vietnamese explanations)
 - [x] The floating icon shows in Google Docs: an empty selection reported by the focused element is believed only when the selection gesture ended inside that element (TRG-21)
+- [x] Target language (Vietnamese, English, Japanese) and mode (translate, rewrite) in the popup, defaults in Settings; tones reduced to concise, natural, formal (see Decisions)
+- [x] Fix: Apply was offered for selected text on web pages that cannot be edited. A Chromium page or rich-text field has no Value pattern, so editability stayed unknown; the selected text's read-only attribute now tells them apart (CAP-07). Only a probe on Edge's accessibility tree was run; a real selection in Chrome and Slack is still to be checked by hand
 - [x] Fixes from the specs review: default tones are the three the local model was benchmarked on; a failed settings write puts the old hotkey back; every way of closing the popup stops its request (Copy and Open Settings used to let it run); the unused `current_session` command is gone
+
+## Phase 5 progress
+
+- [x] Auto-update from the GitHub releases: signed updater artifacts and `latest.json` in `release.yml`, `updateMode` auto (install when idle) or manual (announce, install on request), tray item and Settings section (see Decisions)
 
 ## Compatibility table (filled during Phase 0)
 

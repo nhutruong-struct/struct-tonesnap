@@ -23,7 +23,7 @@ body:
       placeholder: |
         1. Open Notepad and type "pls check my PR"
         2. Select it and press Ctrl+Alt+E
-        3. Click Apply on the "polite" version
+        3. Click Apply on the "formal" version
         4. ...
     validations:
       required: true

@@ -4,7 +4,7 @@ import type { RequestEvent, Session, Settings } from "../lib/api";
 export function settings(overrides: Partial<Settings> = {}): Settings {
   return {
     uiLanguage: "en",
-    triggerMode: "hotkey",
+    triggerMode: "icon",
     hotkey: "ctrl+alt+e",
     autoDelayMs: 400,
     autoMinChars: 8,
@@ -14,14 +14,16 @@ export function settings(overrides: Partial<Settings> = {}): Settings {
     geminiModel: "gemini-3.8-flash",
     groqModel: "openai/gpt-oss-20b",
     openrouterModel: "openai/gpt-oss-20b:free",
-    tones: ["minimal", "concise", "polite"],
-    explainLanguage: "vi",
+    targetLanguage: "vi",
+    mode: "translate",
+    tones: ["concise", "natural", "formal"],
     contextChars: 600,
     ocrFallback: true,
     redact: true,
     customSensitiveTerms: [],
     previewBeforeSend: false,
     blockedApps: ["keepass.exe"],
+    updateMode: "auto",
     ...overrides,
   };
 }
@@ -34,15 +36,15 @@ export function session(overrides: Partial<Session> = {}): Session {
     contextSource: "uia",
     editable: true,
     selection: "pls review my PR, an@corp.vn",
-    translated: false,
     payload: {
       app: "Slack",
       contextBefore: "",
       selection: "pls review my PR, [EMAIL_1]",
       contextAfter: "",
       screenText: "",
-      tones: ["minimal", "polite"],
-      explanationLanguage: "English",
+      targetLanguage: "vi",
+      mode: "translate",
+      tones: ["concise", "formal"],
     },
     redactions: [["[EMAIL_1]", "an@corp.vn"]],
     preview: false,
@@ -57,10 +59,8 @@ export function requestEvent(overrides: Partial<RequestEvent> = {}): RequestEven
 
 /** A complete model answer for the tones in `session()`. */
 export const ANSWER = JSON.stringify({
-  detected_language: "en",
   variants: {
-    minimal: { text: "Please review my PR, [EMAIL_1].", note: "Fixed the spelling." },
-    polite: { text: "Could you please review my PR, [EMAIL_1]?", note: "" },
+    concise: { text: "Please review my PR, [EMAIL_1]." },
+    formal: { text: "Could you please review my PR, [EMAIL_1]?" },
   },
-  issues: [{ original: "pls", fix: "please", explanation: "Spell it out in writing." }],
 });

@@ -24,14 +24,16 @@ const FIELD_LABELS: Partial<Record<keyof Settings, Key>> = {
   geminiModel: "model.label",
   groqModel: "model.label",
   openrouterModel: "model.label",
+  targetLanguage: "target.label",
+  mode: "mode.label",
   tones: "section.tones",
-  explainLanguage: "explain.label",
   contextChars: "contextChars.label",
   ocrFallback: "ocr.label",
   redact: "redact.label",
   customSensitiveTerms: "terms.label",
   previewBeforeSend: "preview.label",
   blockedApps: "blocked.label",
+  updateMode: "section.updates",
 };
 
 function fieldLabel(t: Translate, field: string): string {

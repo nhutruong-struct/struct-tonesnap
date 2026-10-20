@@ -72,12 +72,17 @@ function tool(command, commandArgs, { requireTests = false } = {}) {
 
 const ESLINT_TARGETS = ["src", "scripts", "eslint.config.js"];
 
-/** The harness's own tests, listed one by one because `node --test` does not expand globs on every Node version. */
+/**
+ * The tests of the scripts (the harness and the release scripts), listed one by one because `node --test`
+ * does not expand globs on every Node version.
+ */
 function harnessTests() {
-  const dir = join(ROOT, "scripts", "harness");
-  return readdirSync(dir)
-    .filter((f) => f.endsWith(".test.mjs"))
-    .map((f) => join(dir, f));
+  return ["harness", "release"].flatMap((folder) => {
+    const dir = join(ROOT, "scripts", folder);
+    return readdirSync(dir)
+      .filter((f) => f.endsWith(".test.mjs"))
+      .map((f) => join(dir, f));
+  });
 }
 
 const GATES = [
@@ -150,7 +155,7 @@ const GATES = [
   },
   {
     id: "harness",
-    title: "harness tests (project rules, PR title rules)",
+    title: "harness tests (project rules, PR title rules, hook paths)",
     hint: "A test of scripts/harness/ fails: node --test scripts/harness shows the full output.",
     run: tool(node, ["--test", ...harnessTests()]),
   },

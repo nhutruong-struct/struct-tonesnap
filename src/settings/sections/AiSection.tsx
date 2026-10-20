@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, type ProviderId, type Settings } from "../../lib/api";
 import type { Key } from "../../lib/i18n";
 import { Card, Field, Note, RadioField, Section, type SectionProps, type Status } from "../fields";
+import { ModelCombobox } from "../ModelCombobox";
 
 const PROVIDERS: ProviderId[] = ["gemini", "groq", "openrouter", "claude"];
 
@@ -10,6 +11,14 @@ const KEY_PLACEHOLDERS: Record<ProviderId, string> = {
   gemini: "AIza…",
   groq: "gsk_…",
   openrouter: "sk-or-…",
+};
+
+/** Where each provider hands out API keys; the hint under the field names the same page. */
+const KEY_URLS: Record<ProviderId, string> = {
+  claude: "https://console.anthropic.com/settings/keys",
+  gemini: "https://aistudio.google.com/apikey",
+  groq: "https://console.groq.com/keys",
+  openrouter: "https://openrouter.ai/keys",
 };
 
 const CLAUDE_MODELS: { id: string; label: string; hint: Key }[] = [
@@ -115,6 +124,7 @@ function ApiKeyCard({
             onChange={(e) => setKeyDraft(e.target.value)}
             autoComplete="off"
           />
+          <button onClick={() => void api.openUrl(KEY_URLS[provider])}>{t("apiKey.getKey")}</button>
           <button className="primary" disabled={!keyDraft.trim()} onClick={() => void saveKey(keyDraft)}>
             {t("apiKey.save")}
           </button>
@@ -132,23 +142,16 @@ function ApiKeyCard({
 
 function ModelCard({ provider, settings, update, t }: SectionProps & { provider: Exclude<ProviderId, "claude"> }) {
   const { field, models } = SUGGESTED_MODELS[provider];
-  const listId = `models-${provider}`;
   const value = settings[field] as string;
   return (
     <Card>
       <Field label={t("model.label")} hint={<small>{t("model.custom")}</small>} stack>
-        <input
-          list={listId}
+        <ModelCombobox
           value={value}
-          onChange={(e) => update(field, e.target.value as Settings[typeof field])}
-          spellCheck={false}
-          autoComplete="off"
+          options={models}
+          onChange={(model) => update(field, model as Settings[typeof field])}
+          toggleLabel={t("model.suggestions")}
         />
-        <datalist id={listId}>
-          {models.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
       </Field>
     </Card>
   );

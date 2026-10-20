@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ToneSnap",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "identifier": "com.tonesnap.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -14,7 +14,7 @@
       {
         "label": "settings",
         "title": "ToneSnap",
-        "width": 760,
+        "width": 808,
         "height": 780,
         "minWidth": 560,
         "minHeight": 520,
@@ -42,6 +42,11 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/hooks.nsh"
+      }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -49,5 +54,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkwQUFGNjNDN0Y4QTM5MTQKUldRVU9ZcC9QUGFxa0RubldUcE5CZ1l3dm5pb0t3OFFFSHNEZFIrNkR4VDVoYjJqRXM4N2t2ZEoK",
+      "endpoints": ["https://github.com/nhutruong-struct/struct-tonesnap/releases/latest/download/latest.json"],
+      "requireSignedVersion": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

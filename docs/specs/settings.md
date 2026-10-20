@@ -11,7 +11,7 @@ The same `Settings` object exists in Rust and TypeScript, serialized in camelCas
 | Field | Default | Settings control | Effect |
 |---|---|---|---|
 | `uiLanguage` | `auto` | Interface → language (`auto`, `vi`, `en`) | APP-30 |
-| `triggerMode` | `hotkey` | Trigger → four options; `auto` disabled ("Coming soon") | [trigger.md](trigger.md) |
+| `triggerMode` | `icon` | Trigger → four options; `auto` disabled ("Coming soon") | [trigger.md](trigger.md) |
 | `hotkey` | `ctrl+alt+e` | Trigger → press a combination | TRG-10..17 |
 | `autoDelayMs` | `400` | Trigger → number 100–3000, step 50, enabled only in Auto mode | Reserved for Auto mode |
 | `autoMinChars` | `8` | none | Reserved for Auto mode |
@@ -21,14 +21,16 @@ The same `Settings` object exists in Rust and TypeScript, serialized in camelCas
 | `geminiModel` | `gemini-3.8-flash` | AI (Gemini) → model name, with suggestions | AI-30 |
 | `groqModel` | `openai/gpt-oss-20b` | AI (Groq) → model name, with suggestions | AI-30 |
 | `openrouterModel` | `openai/gpt-oss-20b:free` | AI (OpenRouter) → model name, with suggestions | AI-30 |
-| `tones` | `minimal, concise, polite` | Tones → one checkbox per tone | AI-05 |
-| `explainLanguage` | `vi` | Tones → Vietnamese / English / no explanations | AI-08 |
+| `targetLanguage` | `vi` | Language and tones → default target language (`vi`, `en`, `ja`) | AI-01, POP-25 |
+| `mode` | `translate` | Language and tones → default mode (`translate`, `rewrite`) | AI-14, POP-25 |
+| `tones` | `concise, natural, formal` | Language and tones → one checkbox per tone | AI-05 |
 | `contextChars` | `600` | Context → number 0–3000, step 100 | CAP-10, CAP-14 |
 | `ocrFallback` | `true` | Context → checkbox | CAP-11 |
 | `redact` | `true` | Privacy → checkbox | PRV-10 |
 | `customSensitiveTerms` | empty | Privacy → one term per line | PRV-12 |
 | `previewBeforeSend` | `false` | Privacy → checkbox | PRV-20 |
 | `blockedApps` | `keepass.exe`, `keepassxc.exe`, `1password.exe`, `bitwarden.exe`, `lastpass.exe` | Privacy → one process name per line | CAP-02 |
+| `updateMode` | `auto` | Updates → install automatically when idle, or ask first | [updates.md](updates.md) UPD-20..23 |
 
 Two choices are **not** in this file: the API keys (one per provider) live in the credential store (SET-50), and starting at sign-in is kept by Windows (SET-60).
 
@@ -37,17 +39,17 @@ Two choices are **not** in this file: the API keys (one per provider) live in th
 - **SET-01** Edits stay in the form until *Save Settings*; nothing applies earlier, except the interface language preview (APP-32) and the API key (SET-50).
 - **SET-02** Tones are saved in the canonical order whatever order they were ticked in, so the popup is predictable.
 - **SET-03** The two list fields are edited as one entry per line; on save, lines are trimmed and empty ones dropped, and blocked app names are lower-cased.
-- **SET-04** Choosing a provider shows that provider's key field (with where to get a key) and its model. Gemini, Groq and OpenRouter take any model name, with a few suggestions; Claude offers a fixed list and the effort. For the free providers the form warns that a free tier may let the provider use the content. Switching provider starts from that provider's own key state; a key being typed is not carried over.
+- **SET-04** Choosing a provider shows that provider's key field (with where to get a key) and its model. Gemini, Groq and OpenRouter take any model name, with a few suggestions in a combobox (UI-15); Claude offers a fixed list and the effort. For the free providers the form warns that a free tier may let the provider use the content. Switching provider starts from that provider's own key state; a key being typed is not carried over. The *Get Key* button next to the key field opens that provider's key page in the default browser (`opener:default` permission, http/https only).
 - **SET-05** The hotkey field flags a known conflict ([trigger.md](trigger.md) TRG-13) and a registration error.
-- **SET-06** The window shows one section at a time, chosen in a sidebar: Interface, AI connection, Popup trigger, Tones to show, Context, Privacy. Every section stays mounted, so edits and drafts in a section that is not open are kept and saved with the rest ([ui-design.md](ui-design.md) UI-31).
+- **SET-06** The window shows one section at a time, chosen in a sidebar: Interface, AI connection, Popup trigger, Language and tones, Context, Privacy, Updates. Every section stays mounted, so edits and drafts in a section that is not open are kept and saved with the rest ([ui-design.md](ui-design.md) UI-31).
 
 ## Saving
 
 - **SET-20** *Save Settings* applies the new settings in this order:
   1. switch the hotkey (on the main thread). If the new one cannot be registered, the old one is restored and the save stops with `hotkey_invalid` or `hotkey_taken`: **nothing is written** and the window stays open showing the error;
   2. write the file. A failure registers the old hotkey again, so the hotkey in use always matches the saved settings, and stops with `save_failed`, shown next to the Save button;
-  3. update the tray labels, start or stop the floating icon, 
-  4. keep the new settings in memory, clear any loading problem (SET-34) and tell both windows (`settings-changed`);
+  3. start or stop the floating icon;
+  4. keep the new settings in memory, clear any loading problem (SET-34), tell both windows (`settings-changed`), update the tray menu and apply the update mode ([updates.md](updates.md) UPD-23);
   5. change starting at sign-in, if the user changed it (SET-61).
   The window then hides.
 - **SET-21** The file is written to a sibling `settings.json.partial` first and then renamed over `settings.json`, so a crash mid-write cannot leave a truncated file.
@@ -71,7 +73,7 @@ Settings live in `settings.json` in the app's config directory (on Windows, `%AP
 
 ## Starting with Windows
 
-- **SET-60** *Start ToneSnap when I sign in to Windows* (Interface section) makes Windows launch ToneSnap at sign-in, so it waits in the tray, ready to use. It is off until the user turns it on. Windows keeps the choice (an entry under the user's `Run` registry key, written by the autostart plugin), so `settings.json` does not hold it.
+- **SET-60** *Start ToneSnap when I sign in to Windows* (Interface section) makes Windows launch ToneSnap at sign-in, so it waits in the tray, ready to use. It is off until the user turns it on. Windows keeps the choice (an entry under the user's `Run` registry key, written by the autostart plugin), so `settings.json` does not hold it. The `.exe` uninstaller removes the entry; the `.msi` one does not ([app-shell.md](app-shell.md) APP-40, APP-42).
 - **SET-61** The checkbox shows what Windows reports each time the window opens. A change applies only when *Save Settings* succeeds, and only if it differs from what Windows reported. If Windows refuses the change, the settings are still saved, the save bar says the start-up choice could not be changed, and the window stays open.
 - **SET-62** When Windows cannot report the state, the option is not shown.
 - **SET-63** The entry points to the running executable: enabling it from a development build registers the development binary.
@@ -81,4 +83,4 @@ Settings live in `settings.json` in the app's config directory (on Windows, `%AP
 - **SET-50** Each provider has its own key. It is entered in a password field and stored with *Save Key*, immediately and independently of *Save Settings*. The value is trimmed; it goes to Windows Credential Manager ([privacy.md](privacy.md) PRV-40), never into the settings.
 - **SET-51** The form only knows whether a key exists. With a key stored, the field says "Saved (enter a new key to replace it)" and a *Remove* button deletes it.
 
-**Verified by:** `settings.rs` tests (missing file, save/load round trip without a leftover partial file, an invalid field falls back alone, a broken file is set aside without overwriting older backups, a file that cannot be read is left alone, a non-object is broken, issue JSON, camelCase JSON, the active model follows the provider, a saved Ollama provider falls back to the default, blocked apps), `secrets.rs` tests (one account and variable per provider), `commands.rs` tests (error JSON; the save order: switch, then write, and the old hotkey put back when the write fails), `src/settings/SettingsPage.test.tsx` (one section open at a time with edits kept, a hotkey problem marked in the sidebar, saved values shown, settings warning, cleaned lists and canonical tone order on save, hotkey capture and conflict, a taken hotkey keeps the window open, a failed write is reported, a successful save clears the warning, each provider keeps its own key and model and Gemini is the default, a saved key is shown and can be removed, the Claude key goes to the credential store, Haiku disables effort, reopening drops unsaved edits; starting with Windows changes only on save and only when changed, a refused change is reported and keeps the window open, the option is hidden when Windows cannot tell).
+**Verified by:** `settings.rs` tests (missing file, save/load round trip without a leftover partial file, the defaults are Vietnamese, translate and all three tones, an unknown language falls back alone, an invalid field falls back alone, a broken file is set aside without overwriting older backups, a file that cannot be read is left alone, a non-object is broken, issue JSON, camelCase JSON, the active model follows the provider, a saved Ollama provider falls back to the default, blocked apps), `secrets.rs` tests (one account and variable per provider), `commands.rs` tests (error JSON; the save order: switch, then write, and the old hotkey put back when the write fails), `src/settings/SettingsPage.test.tsx` (one section open at a time with edits kept, a hotkey problem marked in the sidebar, saved values shown, settings warning, cleaned lists and canonical tone order on save, the default language and mode are saved, hotkey capture and conflict, a taken hotkey keeps the window open, a failed write is reported, a successful save clears the warning, each provider keeps its own key and model and Gemini is the default, a saved key is shown and can be removed, the Claude key goes to the credential store, Haiku disables effort, reopening drops unsaved edits; starting with Windows changes only on save and only when changed, a refused change is reported and keeps the window open, the option is hidden when Windows cannot tell).

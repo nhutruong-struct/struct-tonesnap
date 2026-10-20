@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   ALLOWED_HOSTS,
+  BROWSER_LINK_HOSTS,
   CONTENT_IDENTIFIERS,
   GENERATED,
   INVOKE_FILE,
@@ -33,6 +34,18 @@ const lineOf = (text, index) => text.slice(0, index).split("\n").length;
 const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
 
 const VIETNAMESE = /[ăâđêôơưàáạảãầấậẩẫằắặẳẵèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]/i;
+
+const TAURI_CONFIG = "src-tauri/tauri.conf.json";
+
+/** The updater's endpoints in the Tauri config, one per line: the only URLs there the app requests. */
+function updaterEndpoints(text) {
+  try {
+    const endpoints = JSON.parse(text).plugins?.updater?.endpoints;
+    return Array.isArray(endpoints) ? endpoints.join("\n") : "";
+  } catch {
+    return "";
+  }
+}
 
 const isRust = (f) => f.startsWith("src-tauri/src/") && f.endsWith(".rs");
 const isWeb = (f) => f.startsWith("src/") && /\.(ts|tsx)$/.test(f);
@@ -175,11 +188,12 @@ const FILE_RULES = {
 
   /** Code may only talk to known hosts, so user text cannot leak to a new endpoint. */
   network(file, text) {
-    if (!isRust(file) && !isWeb(file)) return [];
-    const source = isRust(file) ? withoutTests(text) : text;
+    if (!isRust(file) && !isWeb(file) && file !== TAURI_CONFIG) return [];
+    const source = file === TAURI_CONFIG ? updaterEndpoints(text) : isRust(file) ? withoutTests(text) : text;
     const out = [];
     for (const m of source.matchAll(/\b(?:https?|wss?):\/\/([A-Za-z0-9.-]+)/g)) {
-      if (!ALLOWED_HOSTS.includes(m[1].toLowerCase())) {
+      const host = m[1].toLowerCase();
+      if (!ALLOWED_HOSTS.includes(host) && !BROWSER_LINK_HOSTS.includes(host)) {
         out.push({
           line: lineOf(source, m.index),
           message: `${m[1]} is not an allowed host (${ALLOWED_HOSTS.join(", ")}); new endpoints need the user's approval`,

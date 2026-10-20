@@ -20,15 +20,15 @@
 
 ToneSnap is a small desktop app for people who write English at work, especially Vietnamese speakers. Select a
 sentence in Slack, Outlook, Teams, a browser or any other app, press `Ctrl+Alt+E` (or click the floating icon next
-to the selection), and a popup suggests several English versions, each in a different tone, with a short
-explanation of what changed. **Apply** pastes the version you pick back in place of the selection.
+to the selection), and a popup suggests several versions, each in a different tone. **Apply** pastes the version you pick back in place of the selection.
 
 ## Features
 
 - **Works in any app.** Reads the selection through UI Automation, falls back to the clipboard, and to on-device
   OCR when neither works. Your clipboard is always restored.
-- **Several tones at once:** minimal (just the fixes), concise, natural, polite, formal and friendly, with
-  explanations in Vietnamese or English.
+- **Translate or rewrite, in Vietnamese, English or Japanese.** Pick the target language (Vietnamese by default)
+  and a mode, **Translate** (close to the original) or **Rewrite** (rephrased freely), right in the popup.
+- **Several tones at once:** concise, natural and formal.
 - **Apply in place.** Replaces the selection in the original app when the field is editable; **Copy** otherwise.
 - **Privacy first.** Emails, phone numbers, IDs, card numbers, URLs, API keys and your own terms are redacted
   before anything is sent, and restored for display. Password fields and apps you block are never read.
@@ -98,8 +98,30 @@ local model: the (redacted) text always goes to the provider you choose.
 2. Press `Ctrl+Alt+E`, or click the ToneSnap icon that appears next to the selection.
 3. Read the suggestions, then click **Apply** on the one you like (or **Copy**).
 
-The hotkey, the trigger mode, the tones, the explanation language and the blocked apps can be changed in
+The hotkey, the trigger mode, the tones, the target language and mode, and the blocked apps can be changed in
 Settings. `Ctrl+Alt+Space` is avoided by default because Claude desktop's Quick Entry uses it.
+
+## Uninstall
+
+1. Quit ToneSnap: right-click the tray icon and choose **Quit ToneSnap**.
+2. Open **Settings → Apps → Installed apps** (or **Control Panel → Programs and Features**), find **ToneSnap**
+   and choose **Uninstall**.
+3. The `.exe` installer's uninstaller has a **Delete the application data** checkbox. Tick it to remove
+   everything ToneSnap stored; leave it unticked to keep your settings and API keys for a later reinstall.
+
+What stays on the machine depends on the installer you used:
+
+| Data | Uninstalled with the `.exe` (NSIS) | Uninstalled with the `.msi` |
+|---|---|---|
+| Settings in `%APPDATA%\com.tonesnap.app` | Removed when the box is ticked | Stays |
+| WebView data in `%LOCALAPPDATA%\com.tonesnap.app` | Removed when the box is ticked | Stays |
+| API keys in Windows Credential Manager | Removed when the box is ticked | Stays |
+| The "Start with Windows" entry (`ToneSnap` under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`) | Always removed | Stays |
+
+To clean up by hand (for example after the `.msi`): turn off **Start ToneSnap when I sign in to Windows** in
+Settings before uninstalling, delete the two folders above, and in **Control Panel → Credential Manager →
+Windows Credentials**, remove the generic credentials whose names end in `.ToneSnap` (`gemini_api_key.ToneSnap`,
+`groq_api_key.ToneSnap`, `openrouter_api_key.ToneSnap`, `anthropic_api_key.ToneSnap`).
 
 ## How it works
 
@@ -108,7 +130,7 @@ Trigger (hotkey / floating icon)
   → Selection + context: UI Automation → clipboard → on-device OCR
   → Safety: skip password fields and blocked apps, redact sensitive data (reversibly)
   → AI call to the provider you chose, streamed
-  → Popup: one version per tone + explanations
+  → Popup: one version per tone
   → Apply: refocus the original app → paste → restore the previous clipboard
 ```
 

@@ -72,7 +72,7 @@ describe("loading", () => {
 
   test("names the settings that went back to their defaults by their labels", async () => {
     await open({ issue: { kind: "invalid_fields", fields: ["hotkey", "tones", "somethingNew"] } });
-    expect(screen.getByText(/went back to their defaults: Hotkey; Tones to show; somethingNew\./)).toBeTruthy();
+    expect(screen.getByText(/went back to their defaults: Hotkey; Language and tones; somethingNew\./)).toBeTruthy();
   });
 
   test("explains a settings file that could not be read", async () => {
@@ -130,19 +130,36 @@ describe("sections", () => {
 
 describe("saving", () => {
   test("sends cleaned lists and tones in their canonical order, then closes", async () => {
-    const backend = await open();
+    const backend = await open({ settings: { tones: ["formal"] } });
     fireEvent.change(field("Extra terms to mask (one per line)"), { target: { value: "  Falcon \n\n Osprey " } });
     fireEvent.change(field("Blocked apps (process name, one per line)"), {
       target: { value: "KeePass.exe\nBitwarden.EXE" },
     });
-    await click("Natural");
+    await click("Concise");
     await click("Save Settings");
 
     const [sent] = saved(backend);
     expect(sent.customSensitiveTerms).toEqual(["Falcon", "Osprey"]);
     expect(sent.blockedApps).toEqual(["keepass.exe", "bitwarden.exe"]);
-    expect(sent.tones).toEqual(["minimal", "concise", "natural", "polite"]);
+    expect(sent.tones).toEqual(["concise", "formal"]);
     expect(hidden(backend)).toBe(1);
+  });
+
+  test("starts in Vietnamese and translating, and saves the language and mode that were picked", async () => {
+    const backend = await open();
+    expect((field("Default target language") as HTMLSelectElement).value).toBe("vi");
+    expect((field("Default mode") as HTMLSelectElement).value).toBe("translate");
+    expect(screen.getByText(/Stays close to the meaning/)).toBeTruthy();
+
+    fireEvent.change(field("Default target language"), { target: { value: "ja" } });
+    fireEvent.change(field("Default mode"), { target: { value: "rewrite" } });
+    expect(screen.getByText(/Rephrases freely/)).toBeTruthy();
+    await click("Save Settings");
+
+    const [sent] = saved(backend);
+    expect(sent.targetLanguage).toBe("ja");
+    expect(sent.mode).toBe("rewrite");
+    expect(sent.tones).toEqual(["concise", "natural", "formal"]);
   });
 
   test("a new hotkey is captured from the keyboard and flagged when another app uses it", async () => {
@@ -235,6 +252,20 @@ describe("AI providers", () => {
     expect((field("Model") as HTMLInputElement).value).toBe("gemini-3.8-flash");
   });
 
+  test("Get Key opens the page where the selected provider hands out keys", async () => {
+    const backend = await openAi();
+    await click("Get Key");
+    await click("Groq – free tier, very fast");
+    await click("Get Key");
+    await click("Claude API – paid, highest quality");
+    await click("Get Key");
+    expect(backend.callsTo("plugin:opener|open_url").map((a) => a.url)).toEqual([
+      "https://aistudio.google.com/apikey",
+      "https://console.groq.com/keys",
+      "https://console.anthropic.com/settings/keys",
+    ]);
+  });
+
   test("each provider keeps its own key and model", async () => {
     const backend = await openAi();
     await click("Groq – free tier, very fast");
@@ -252,6 +283,25 @@ describe("AI providers", () => {
     expect(settings.provider).toBe("openrouter");
     expect(settings.groqModel).toBe("openai/gpt-oss-120b");
     expect(settings.geminiModel).toBe("gemini-3.8-flash");
+  });
+
+  test("the Model field offers every suggested model and saves the one picked", async () => {
+    const backend = await openAi();
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "Show suggested models" }));
+    });
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+    ]);
+    act(() => {
+      fireEvent.click(screen.getByRole("option", { name: "gemini-2.5-flash" }));
+    });
+    await click("Save Settings");
+    expect(saved(backend)[0].geminiModel).toBe("gemini-2.5-flash");
   });
 
   test("a provider that has a saved key says so", async () => {

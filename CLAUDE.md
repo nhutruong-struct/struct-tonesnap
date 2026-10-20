@@ -36,6 +36,7 @@ A Tauri 2 desktop app (Rust core, React/TS interface), Windows first, macOS late
 | `src-tauri/src/redact.rs` | Reversible redaction of sensitive data |
 | `src-tauri/src/prompt.rs` + `src-tauri/prompts/` | System prompt, output JSON schema, user turn |
 | `src-tauri/src/llm/` | AI providers: `claude.rs` (paid) and `openai_compat.rs` (Gemini, Groq, OpenRouter; free tiers) |
+| `src-tauri/src/update.rs` | Updates from the GitHub releases (Tauri updater plugin): schedule, update mode, install when idle |
 | `src-tauri/src/settings.rs`, `secrets.rs` | Settings (JSON in the app config dir), API key (Credential Manager) |
 | `src-tauri/src/i18n.rs` | Strings rendered by Rust (tray menu) |
 | `src/popup/`, `src/settings/` | The two windows: a state hook (`usePopupState`, `useSettingsForm`) plus small components (`settings/sections/`) |
@@ -89,7 +90,7 @@ Rules marked ★ are enforced by the `code`, `network`, `language`, `whitespace`
 - State shared between windows goes through Rust events, not through browser storage.
 
 **Everywhere**
-- ★ Network calls only to the provider hosts in `scripts/harness/config.mjs` (`api.anthropic.com`, `generativelanguage.googleapis.com`, `api.groq.com`, `openrouter.ai`) and localhost (tests). A new endpoint is a privacy decision: ask the user first.
+- ★ Network calls only to the hosts in `scripts/harness/config.mjs`: the providers (`api.anthropic.com`, `generativelanguage.googleapis.com`, `api.groq.com`, `openrouter.ai`), GitHub for updates (`github.com` and its asset hosts; version and platform only) and localhost (tests). A new endpoint is a privacy decision: ask the user first.
 - ★ Text files use LF, no trailing spaces (Markdown excepted), one final newline and spaces for indentation (`whitespace`); lint and format suppressions are not allowed: `eslint-disable` needs a reason after ` -- `, and `prettier-ignore` and `rustfmt::skip` are banned (`suppress`).
 - ★ **The repository is written in English**: code, comments, docs, skills, commit messages. Vietnamese is allowed only in `src/lib/i18n.ts`, `src-tauri/src/i18n.rs`, Vietnamese test inputs (`#[cfg(test)]` modules, `scripts/bench-cases.json`) and recorded model output in `docs/bench/` (history of the removed local-model benchmarks). The PreToolUse hook denies edits that add Vietnamese anywhere else.
 - Dependencies: ask before adding or removing one. The hooks ask the user on edits to `Cargo.toml`/`package.json` and on `cargo add`, `pnpm add`, `npm install <pkg>`. Prefer the standard library and crates already in use. A new dependency must pass `deny.toml` (permissive licenses, crates.io only, no known vulnerabilities) and `pnpm audit`.

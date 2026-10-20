@@ -22,7 +22,9 @@ describe("dictionaries", () => {
 
   test("every tone, trigger and notice the app can show has a label", () => {
     const required = [
-      ...["minimal", "concise", "natural", "polite", "formal", "friendly"].map((t) => `tone.${t}`),
+      ...["concise", "natural", "formal"].map((t) => `tone.${t}`),
+      ...["vi", "en", "ja"].map((l) => `target.${l}`),
+      ...["translate", "rewrite"].flatMap((m) => [`mode.${m}`, `mode.${m}.hint`]),
       ...["hotkey", "icon", "auto", "off"].map((t) => `trigger.${t}`),
       ...["no_selection", "password_field", "blocked_app", "apply_failed"].map((n) => `notice.${n}`),
       ...["uia", "clipboard"].map((s) => `popup.source.${s}`),

@@ -4,10 +4,10 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { GROUPS, IGNORED_DIRS, ROOT, STATE_FILE } from "./config.mjs";
+import { GROUPS, IGNORED_DIRS, ROOT, stateFile } from "./config.mjs";
 
-/** Every file under `entries` (files or folders, relative to ROOT), as forward-slash paths. */
-export function listFiles(entries) {
+/** Every file under `entries` (files or folders, relative to `root`), as forward-slash paths. */
+export function listFiles(entries, root = ROOT) {
   const out = [];
   const walk = (abs) => {
     let stat;
@@ -21,10 +21,10 @@ export function listFiles(entries) {
         if (!IGNORED_DIRS.has(name)) walk(join(abs, name));
       }
     } else {
-      out.push(relative(ROOT, abs).replaceAll("\\", "/"));
+      out.push(relative(root, abs).replaceAll("\\", "/"));
     }
   };
-  for (const entry of entries) walk(join(ROOT, entry));
+  for (const entry of entries) walk(join(root, entry));
   return out.sort();
 }
 
@@ -47,12 +47,12 @@ export function repoFiles() {
 }
 
 /** Hash of path, size and mtime for every file in each group. Cheap enough to run per hook. */
-export function fingerprints() {
+export function fingerprints(root = ROOT) {
   const result = {};
   for (const [group, entries] of Object.entries(GROUPS)) {
     const hash = createHash("sha1");
-    for (const file of listFiles(entries)) {
-      const stat = statSync(join(ROOT, file));
+    for (const file of listFiles(entries, root)) {
+      const stat = statSync(join(root, file));
       hash.update(`${file}|${stat.size}|${Math.round(stat.mtimeMs)}\n`);
     }
     result[group] = hash.digest("hex");
@@ -75,15 +75,16 @@ const EMPTY_STATE = {
   lastCheck: null,
 };
 
-export function readState() {
+export function readState(root = ROOT) {
   try {
-    return { ...EMPTY_STATE, ...JSON.parse(readFileSync(STATE_FILE, "utf8")) };
+    return { ...EMPTY_STATE, ...JSON.parse(readFileSync(stateFile(root), "utf8")) };
   } catch {
     return { ...EMPTY_STATE };
   }
 }
 
-export function writeState(state) {
-  if (!existsSync(dirname(STATE_FILE))) mkdirSync(dirname(STATE_FILE), { recursive: true });
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+export function writeState(state, root = ROOT) {
+  const file = stateFile(root);
+  if (!existsSync(dirname(file))) mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify(state, null, 2));
 }

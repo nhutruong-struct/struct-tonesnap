@@ -1,13 +1,52 @@
 // Shared settings for the development harness (check.mjs, invariants.mjs, hooks.mjs).
 // Edit this file, not the scripts, when a rule needs a new exception.
 
+import { realpathSync } from "node:fs";
 import { homedir } from "node:os";
-import { delimiter, join } from "node:path";
+import { basename, delimiter, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/** The checkout these scripts live in. */
 export const ROOT = fileURLToPath(new URL("../../", import.meta.url)).replace(/[\\/]$/, "");
 export const MANIFEST = join(ROOT, "src-tauri", "Cargo.toml");
-export const STATE_FILE = join(ROOT, ".claude", ".state", "harness.json");
+
+/**
+ * The main checkout. Claude Code keeps its git worktrees in `.claude/worktrees/<name>/` of the main
+ * checkout and starts the hooks from there (`CLAUDE_PROJECT_DIR`), also for a session in a worktree.
+ */
+export const MAIN_ROOT = ROOT.replace(/[\\/]\.claude[\\/]worktrees[\\/][^\\/]+$/, "");
+
+/** Harness state of one checkout; each worktree keeps its own. */
+export const stateFile = (root = ROOT) => join(root, ".claude", ".state", "harness.json");
+
+/**
+ * Absolute path with Windows 8.3 short names (C:\Users\ABC~1) expanded, so paths from
+ * different sources compare equal. Works for files that do not exist yet.
+ */
+export function canonical(path) {
+  try {
+    return realpathSync.native(path);
+  } catch {
+    const parent = dirname(path);
+    return parent === path ? path : join(canonical(parent), basename(path));
+  }
+}
+
+/**
+ * The checkout that holds `file` (the main one or a worktree) and the forward-slash path inside it,
+ * which is what the rules match: a worktree's `src/lib/i18n.ts` is `src/lib/i18n.ts`. A relative
+ * `file` is taken from `base`. Null when the file is outside the project.
+ */
+export function locate(file, base = ROOT) {
+  if (typeof file !== "string" || !file) return null;
+  const abs = canonical(resolve(base, file));
+  const main = canonical(MAIN_ROOT);
+  const rel = relative(main, abs).replaceAll("\\", "/");
+  if (rel.startsWith("..") || isAbsolute(rel)) return null;
+  const worktree = /^\.claude\/worktrees\/([^/]+)(?:\/(.*))?$/.exec(rel);
+  if (!worktree) return { root: main, path: rel, abs };
+  return { root: join(main, ".claude", "worktrees", worktree[1]), path: worktree[2] ?? "", abs };
+}
 
 /** Folders never scanned or fingerprinted. */
 // `worktrees` holds Claude Code's git worktrees: full copies of the repository that must not be
@@ -137,9 +176,20 @@ export const ALLOWED_HOSTS = [
   "generativelanguage.googleapis.com",
   "api.groq.com",
   "openrouter.ai",
+  // Updates (src-tauri/src/update.rs): the release manifest and installers on GitHub, which
+  // redirects downloads to its asset hosts. The requests carry only the version and platform.
+  "github.com",
+  "objects.githubusercontent.com",
+  "release-assets.githubusercontent.com",
   "127.0.0.1",
   "localhost",
 ];
+
+/**
+ * Pages the interface opens in the user's own browser (where each provider hands out API keys).
+ * The app sends nothing to them, so they are not endpoints that user text could reach.
+ */
+export const BROWSER_LINK_HOSTS = ["aistudio.google.com", "console.groq.com", "console.anthropic.com"];
 
 /** Only platform glue may use `unsafe`. */
 export const UNSAFE_ALLOWED = /^src-tauri\/src\/platform\//;

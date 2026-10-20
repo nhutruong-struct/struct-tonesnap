@@ -28,12 +28,10 @@ function key(init: KeyboardEventInit) {
 }
 
 describe("suggestions", () => {
-  test("shows each tone with redacted values restored, plus the issues", async () => {
+  test("shows each tone with redacted values restored", async () => {
     await answered();
     expect(screen.getByText("Please review my PR, an@corp.vn.")).toBeTruthy();
     expect(screen.getByText("Could you please review my PR, an@corp.vn?")).toBeTruthy();
-    expect(screen.getByText("Fixed the spelling.")).toBeTruthy();
-    expect(screen.getByText("Spell it out in writing.")).toBeTruthy();
     expect(screen.getByText("0.8s / 2.4s · gemini-3.8-flash")).toBeTruthy();
   });
 
@@ -62,7 +60,7 @@ describe("suggestions", () => {
   test("a variant still being written cannot be applied", async () => {
     await sendEvent("session", session());
     await sendEvent("request-started", requestEvent());
-    await sendEvent("request-delta", requestEvent({ text: ANSWER.slice(0, ANSWER.indexOf('"polite"') - 2) }));
+    await sendEvent("request-delta", requestEvent({ text: ANSWER.slice(0, ANSWER.indexOf('"formal"') - 2) }));
     key({ key: "1", code: "Digit1" });
     expect(backend.callsTo("apply_text")).toEqual([]);
     expect(screen.getByText("Writing…")).toBeTruthy();
@@ -77,10 +75,60 @@ describe("suggestions", () => {
     await sendEvent("request-delta", requestEvent({ requestId: 2, text: ANSWER }));
     expect(screen.getByText("Please review my PR, an@corp.vn.")).toBeTruthy();
   });
+});
 
-  test("a Vietnamese selection says the versions are translations", async () => {
-    await answered({ translated: true });
-    expect(screen.getByText(/translat/i)).toBeTruthy();
+describe("language and mode", () => {
+  const radio = (name: string) => screen.getByRole("radio", { name });
+  const sent = (backend: ReturnType<typeof fakeBackend>) => backend.callsTo("send_request");
+
+  test("shows the language and mode the session starts with", async () => {
+    await answered();
+    expect(radio("Vietnamese").getAttribute("aria-checked")).toBe("true");
+    expect(radio("English").getAttribute("aria-checked")).toBe("false");
+    expect(radio("Translate").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Rewrite").getAttribute("aria-checked")).toBe("false");
+  });
+
+  test("choosing another language asks again in that language and keeps the mode", async () => {
+    await answered();
+    fireEvent.click(radio("Japanese"));
+    expect(sent(backend)).toEqual([{ targetLanguage: "ja", mode: "translate" }]);
+    expect(radio("Japanese").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Vietnamese").getAttribute("aria-checked")).toBe("false");
+  });
+
+  test("choosing rewrite asks again, and R then repeats the request with what is on screen", async () => {
+    await answered();
+    fireEvent.click(radio("Rewrite"));
+    key({ key: "r", code: "KeyR" });
+    expect(sent(backend)).toEqual([
+      { targetLanguage: "vi", mode: "rewrite" },
+      { targetLanguage: "vi", mode: "rewrite" },
+    ]);
+  });
+
+  test("choosing what is already chosen sends nothing", async () => {
+    await answered();
+    fireEvent.click(radio("Vietnamese"));
+    fireEvent.click(radio("Translate"));
+    expect(sent(backend)).toEqual([]);
+  });
+
+  test("while previewing, a choice is only sent together with the data", async () => {
+    await sendEvent("session", session({ preview: true }));
+    fireEvent.click(radio("English"));
+    expect(sent(backend)).toEqual([]);
+    expect(screen.getByText("Target language").nextElementSibling?.textContent).toBe("English");
+    key({ key: "Enter", code: "Enter" });
+    expect(sent(backend)).toEqual([{ targetLanguage: "en", mode: "translate" }]);
+  });
+
+  test("a new session starts from its own language and mode again", async () => {
+    await answered();
+    fireEvent.click(radio("Japanese"));
+    await answered({ id: 2, payload: { ...session().payload, targetLanguage: "en", mode: "rewrite" } });
+    expect(radio("English").getAttribute("aria-checked")).toBe("true");
+    expect(radio("Rewrite").getAttribute("aria-checked")).toBe("true");
   });
 });
 
@@ -88,7 +136,7 @@ describe("keys", () => {
   test("Escape closes, R asks again", async () => {
     await answered();
     key({ key: "r", code: "KeyR" });
-    expect(backend.callsTo("send_request")).toHaveLength(1);
+    expect(backend.callsTo("send_request")).toEqual([{ targetLanguage: "vi", mode: "translate" }]);
     key({ key: "r", code: "KeyR", ctrlKey: true });
     expect(backend.callsTo("send_request")).toHaveLength(1);
     key({ key: "Escape", code: "Escape" });

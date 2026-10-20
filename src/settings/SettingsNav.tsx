@@ -2,7 +2,7 @@ import { formatHotkey } from "../lib/hotkey";
 import type { Key, Translate } from "../lib/i18n";
 import { Icon, Logo, type IconName } from "../lib/icons";
 
-export const SECTION_IDS = ["interface", "ai", "trigger", "tones", "context", "privacy"] as const;
+export const SECTION_IDS = ["interface", "ai", "trigger", "tones", "context", "privacy", "updates"] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
 
 const ITEMS: Record<SectionId, { icon: IconName; label: Key }> = {
@@ -12,6 +12,7 @@ const ITEMS: Record<SectionId, { icon: IconName; label: Key }> = {
   tones: { icon: "type", label: "section.tones" },
   context: { icon: "layers", label: "section.context" },
   privacy: { icon: "shield", label: "section.privacy" },
+  updates: { icon: "refresh", label: "section.updates" },
 };
 
 /** Sections that hold a problem the user should look at, with how bad it is. */

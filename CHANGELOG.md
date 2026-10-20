@@ -6,6 +6,54 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-20
+
+### Install
+
+Download `ToneSnap_1.1.0_x64-setup.exe` (installer) or `ToneSnap_1.1.0_x64_en-US.msi` (for managed deployment)
+below. If you use 1.0.0, install this version by hand once: 1.0.0 cannot update itself, and later versions arrive
+by themselves. The installers are still **not code-signed**, so Windows SmartScreen shows "Windows protected your
+PC" the first time. Choose **More info → Run anyway** if the file came from this page. You can check that a file
+was built by this repository's GitHub Actions from this tag:
+
+```
+gh attestation verify ToneSnap_1.1.0_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
+and compare its SHA-256 with `SHA256SUMS.txt`.
+
+### Added
+
+- Choose the language of the versions (Vietnamese by default, English or Japanese) and a mode, **Translate**
+  (stays close to the original, the default) or **Rewrite** (rephrases freely), in the popup. Settings holds the
+  defaults. Every version is written in the chosen language, whatever language the selection is in.
+- Automatic updates from the GitHub releases. By default ToneSnap downloads a new version in the background
+  and installs it, then restarts, only while you are not using it (no popup or Settings window open). Choose
+  **Ask before updating** in Settings → Updates to be told about new versions (in the tray and in Settings)
+  and install them with **Update & Restart**. Updates are signed and verified before they are installed; the
+  check sends only the app version and platform.
+- Settings → AI suggests models for Gemini, Groq and OpenRouter in a list (any other model name still works),
+  and a **Get Key** button opens the provider's page for creating an API key.
+- Uninstalling with the `.exe` installer and **Delete the application data** ticked also deletes your API keys
+  from Windows Credential Manager. The README explains how to uninstall and what stays behind.
+
+### Changed
+
+- New installs show the floating icon next to a selection by default; `Ctrl+Alt+E` still works, and Settings can
+  switch to the hotkey only. Existing settings keep their mode.
+- The tray menu items have icons.
+- Tones are now **Concise**, **Natural** and **Formal**.
+
+### Removed
+
+- The explanations (a note per version and the list of mistakes in the original) and their setting: they made
+  every answer longer and slower.
+
+### Fixed
+
+- Apply is no longer offered for selected text on web pages that cannot be edited (Chrome, Edge): the popup shows
+  Copy only.
+
 ## [1.0.0] - 2026-10-20
 
 The first public release of ToneSnap for Windows 10 and 11.
@@ -52,5 +100,6 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   [app compatibility report](https://github.com/nhutruong-struct/struct-tonesnap/issues/new?template=app_compatibility.yml).
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
-[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...develop
+[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...develop
+[1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/v1.0.0

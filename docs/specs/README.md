@@ -11,7 +11,7 @@ These pages describe what the app **does today**: its behavior, business rules a
 
 | Page | Covers | Prefix |
 |---|---|---|
-| [app-shell.md](app-shell.md) | Startup, tray, single instance, windows, quitting, interface language | `APP` |
+| [app-shell.md](app-shell.md) | Startup, tray, single instance, windows, quitting, interface language, uninstalling | `APP` |
 | [trigger.md](trigger.md) | What opens the popup: the hotkey, the floating icon, trigger modes | `TRG` |
 | [capture.md](capture.md) | Reading the selection and its context: UI Automation, clipboard, OCR; refusals | `CAP` |
 | [privacy.md](privacy.md) | What leaves the machine, redaction, preview, clipboard hygiene, secrets | `PRV` |
@@ -20,11 +20,12 @@ These pages describe what the app **does today**: its behavior, business rules a
 | [apply-copy.md](apply-copy.md) | Putting a suggestion back into the app, or onto the clipboard | `APL` |
 | [settings.md](settings.md) | Every setting, the Settings window, saving and loading, the API key | `SET` |
 | [ui-design.md](ui-design.md) | How both windows look: design tokens, controls, popup and Settings layout | `UI` |
+| [updates.md](updates.md) | New versions from GitHub: checking, the update mode, installing, signing | `UPD` |
 | [contracts.md](contracts.md) | Rust ⇄ TypeScript commands, events, data shapes and error codes | `CON` |
 
 ## The product in one paragraph
 
-ToneSnap sits in the Windows tray. The user selects text in any app (English, Vietnamese or a mix) and presses a hotkey (default `Ctrl+Alt+E`) or clicks a small floating icon. ToneSnap reads the selection and some surrounding text, masks sensitive values, and asks a cloud AI model (Gemini's free tier by default; Groq, OpenRouter or the paid Claude API as options) for one English version per configured tone, with short explanations of the mistakes in Vietnamese (or English). The popup streams the versions in as they are written. **Apply** pastes the chosen version over the selection in the original app; **Copy** puts it on the clipboard.
+ToneSnap sits in the Windows tray. The user selects text in any app (Vietnamese, English, Japanese or a mix) and presses a hotkey (default `Ctrl+Alt+E`) or clicks a small floating icon. ToneSnap reads the selection and some surrounding text, masks sensitive values, and asks a cloud AI model (Gemini's free tier by default; Groq, OpenRouter or the paid Claude API as options) for one version per configured tone, in the target language (Vietnamese, English or Japanese) and the chosen mode (translate or rewrite). The popup streams the versions in as they are written. **Apply** pastes the chosen version over the selection in the original app; **Copy** puts it on the clipboard.
 
 ## End-to-end flow
 
@@ -48,11 +49,12 @@ Hotkey pressed / floating icon clicked                         trigger.md
 | Selection | The text the user highlighted in another app. |
 | Context | Text just before and after the selection (from UI Automation), or text recognized on screen near it (OCR). Used only to understand the situation; never rewritten. |
 | Session | One use of ToneSnap: the captured selection, its redacted payload and the window to paste back into. Only the latest session exists, in memory. |
-| Payload | Exactly what is sent to the model: app name, redacted context and selection, tones, explanation language. |
+| Payload | Exactly what is sent to the model: app name, redacted context and selection, target language, mode, tones. |
 | Request | One call to the model for a session. Pressing R starts a new request for the same session; a new request cancels the running one. |
-| Tone | One style of rewrite: `minimal`, `concise`, `natural`, `polite`, `formal`, `friendly`. |
-| Variant | The model's version of the selection in one tone, plus a one-line note. |
-| Issue | A mistake in the original English, with the fix and an explanation. |
+| Target language | The language every variant is written in: `vi` (default), `en` or `ja`, whatever language the selection is in. |
+| Mode | `translate` (stays close to the original's meaning and structure, the default) or `rewrite` (rephrases, reorders and fixes freely). |
+| Tone | One style of writing: `concise`, `natural`, `formal`. |
+| Variant | The model's version of the selection in one tone, in the target language. |
 | Notice | A short message the popup shows instead of suggestions (nothing selected, password field, blocked app, Apply failed). |
 | Placeholder | A token such as `[EMAIL_1]` that replaces a sensitive value before sending; restored before display and Apply. |
 | Provider | Which cloud service runs the model: `gemini`, `groq`, `openrouter` (free tiers) or `claude` (Anthropic API, paid). Each has its own API key. |

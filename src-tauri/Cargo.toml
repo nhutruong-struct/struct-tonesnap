@@ -1,6 +1,6 @@
 [package]
 name = "tonesnap"
-version = "1.0.0"
+version = "1.1.0"
 description = "Select English text anywhere and get better phrasings in the tone you need"
 authors = ["Nhu Truong"]
 license = "MIT"
@@ -61,6 +61,9 @@ windows = { version = "0.62", features = [
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
+# The OS TLS stack instead of the default rustls, for the same reason as reqwest above; `zip`
+# is left out because Windows updates are the installers themselves.
+tauri-plugin-updater = { version = "2", default-features = false, features = ["native-tls", "system-proxy"] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]
