@@ -3,9 +3,27 @@ name: Dependency audit
 on:
   push:
     branches: [develop]
-    paths: ["src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "src-tauri/deny.toml", "package.json", "pnpm-lock.yaml"]
+    paths:
+      [
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/deny.toml",
+        "package.json",
+        "pnpm-lock.yaml",
+        "video/package.json",
+        "video/pnpm-lock.yaml",
+      ]
   pull_request:
-    paths: ["src-tauri/Cargo.toml", "src-tauri/Cargo.lock", "src-tauri/deny.toml", "package.json", "pnpm-lock.yaml"]
+    paths:
+      [
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/deny.toml",
+        "package.json",
+        "pnpm-lock.yaml",
+        "video/package.json",
+        "video/pnpm-lock.yaml",
+      ]
   # New advisories appear without any change here, so the audit also runs weekly.
   schedule:
     - cron: "0 2 * * 1"
@@ -41,3 +59,5 @@ jobs:
         with:
           node-version: 22
       - run: pnpm audit --audit-level moderate
+      - run: pnpm audit --audit-level moderate
+        working-directory: video

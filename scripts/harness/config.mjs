@@ -168,6 +168,8 @@ export const VIETNAMESE_ALLOWED = [
   /^src-tauri\/src\/i18n\.rs$/,
   /^scripts\/bench-cases\.json$/,
   /^docs\/bench\//,
+  // The intro video types a Vietnamese sentence into its demo window.
+  /^video\/src\/data\.ts$/,
 ];
 
 /** Hosts the code may talk to. Anything else would be a new place user text could go. */
