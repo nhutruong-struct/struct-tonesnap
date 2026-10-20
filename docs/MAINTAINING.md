@@ -122,7 +122,7 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    git push origin vX.Y.Z
    ```
 
-5. Watch the **Release** workflow. Besides the installers it publishes their `.sig` files and `latest.json`,
+5. Watch the **Release** workflow. Besides the installers it publishes `SHA256SUMS.txt` and `latest.json`,
    which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the
    release is published, the installed apps start installing it within hours. Never attach an installer built on a personal machine; if the workflow
    fails, fix it through a PR and push the tag again only if no release was published (releases are immutable).
