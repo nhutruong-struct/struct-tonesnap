@@ -72,7 +72,7 @@ Trigger (hotkey / floating icon / automatic popup)
 | Phase | Scope | Done when |
 |---|---|---|
 | 0. Technical spike (Windows) | Hotkey → read text (UIA + clipboard) → OCR → popup → stream → Apply. App compatibility table | The app × capability table is filled. First version appears in ≤ 2 s |
-| 1. Windows MVP | Tray icon, complete Settings, icon / automatic popup modes (mouse hook), Vietnamese → English, redaction, a 100-sentence evaluation set | Usable every day in ≥ 80% of the listed apps |
+| 1. Windows MVP | Tray icon, complete Settings, icon / automatic popup modes (mouse hook), target language and translate / rewrite modes, redaction, a 100-sentence evaluation set | Usable every day in ≥ 80% of the listed apps |
 | 2. Richer context | Word COM, browser extension, per-app tones, glossary, encrypted history, image input | Replacing text in Word keeps formatting. Gmail / Google Docs work |
 | 3. macOS | AX, NSPanel, Vision OCR, ScreenCaptureKit, permission onboarding, notarization | Parity with Windows |
 | 4. Enterprise | Gateway (Docker), SSO, policies, GPO/MDM, security documentation | Internal pilot with 5–10 people |
@@ -86,8 +86,8 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] On-device OCR (Windows.Media.Ocr) for context when UIA cannot read the app
 - [x] Reversible redaction of sensitive data + unit tests
 - [x] Claude call: streaming, JSON output schema, `fallbacks: "default"` for refusals
-- [x] Popup: one version per tone, explanations, Apply/Copy, keys 1–9 / R / Esc, preview-before-send mode
-- [x] Settings: API key (Credential Manager), model, effort, popup trigger, tones, context, privacy
+- [x] Popup: one version per tone, Apply/Copy, keys 1–9 / R / Esc, preview-before-send mode
+- [x] Settings: API key (Credential Manager), model, effort, popup trigger, target language and mode, tones, context, privacy, updates
 - [x] Bilingual interface, Vietnamese / English (follows Windows by default), including the tray menu
 - [x] Use the Windows TLS stack so the app works behind corporate TLS inspection (Netskope, Zscaler…)
 - [ ] Fill in the compatibility table below by testing on a real machine
@@ -112,10 +112,12 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] Target language (Vietnamese, English, Japanese) and mode (translate, rewrite) in the popup, defaults in Settings; tones reduced to concise, natural, formal (see Decisions)
 - [x] Fix: Apply was offered for selected text on web pages that cannot be edited. A Chromium page or rich-text field has no Value pattern, so editability stayed unknown; the selected text's read-only attribute now tells them apart (CAP-07). Only a probe on Edge's accessibility tree was run; a real selection in Chrome and Slack is still to be checked by hand
 - [x] Fixes from the specs review: default tones are the three the local model was benchmarked on; a failed settings write puts the old hotkey back; every way of closing the popup stops its request (Copy and Open Settings used to let it run); the unused `current_session` command is gone
+- [x] Settings: the model is a combobox with suggestions (any model name can be typed), and *Get Key* opens the selected provider's key page in the browser (see Decisions; UI-15, SET-04)
 
 ## Phase 5 progress
 
 - [x] Auto-update from the GitHub releases: signed updater artifacts and `latest.json` in `release.yml`, `updateMode` auto (install when idle) or manual (announce, install on request), tray item and Settings section (see Decisions)
+- [x] The `.exe` uninstaller deletes the API keys when *Delete the application data* is ticked (see Decisions; APP-41)
 
 ## Compatibility table (filled during Phase 0)
 

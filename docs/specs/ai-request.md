@@ -3,7 +3,7 @@
 > **Status:** implemented (Phase 0). Claude latency per model is not measured yet (needs an API key).
 > **Source:** `src-tauri/src/prompt.rs`, `src-tauri/prompts/system.md`, `src-tauri/prompts/output_schema.json`, `request.rs`, `llm/mod.rs`, `llm/openai_compat.rs`, `llm/claude.rs`, `secrets.rs`.
 
-Every provider receives the same system prompt, the same user turn and the same JSON output schema, and stream their answer to the popup.
+Every provider receives the same system prompt, the same user turn and the same JSON output schema, and each streams its answer to the popup.
 
 ## What the model is asked to do
 
@@ -29,7 +29,7 @@ Every provider receives the same system prompt, the same user turn and the same 
 ## User turn
 
 - **AI-10** The user turn is a sequence of tags, in this order, each present only when it has text: `<app>`, `<context_before>`, `<selection>`, `<context_after>`, `<screen_text>`, `<target_language>` (`Vietnamese`, `English` or `Japanese`), `<mode>` (`translate` or `rewrite`), `<tones>` (comma-separated). A closing tag that appears inside the data (e.g. `</selection>`) is escaped to `<\/selection>`, so data cannot close a tag early.
-- **AI-11** A one-line **reminder** follows the tags, because small local models follow a reminder next to the input far more reliably than rules at the top of a long prompt:
+- **AI-11** A one-line **reminder** follows the tags, because small models follow a reminder next to the input far more reliably than rules at the top of a long prompt:
   - `translate`: "Translate the selection into {language}, one version per tone: {tones}. Stay close to its meaning and structure."
   - `rewrite`: "Rewrite the selection in {language}, one version per tone: {tones}. Write every version in {language}, whatever language the selection is in."
 - **AI-12** *Removed.* ToneSnap does not guess the selection's language (the model handles any of the three); the popup shows the target language and mode instead of a "translated" hint.

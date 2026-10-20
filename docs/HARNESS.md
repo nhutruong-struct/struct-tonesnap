@@ -42,13 +42,15 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | `src-tauri/src/prompt.rs` + `src-tauri/prompts/` | System prompt, output JSON schema, user turn |
 | `src-tauri/src/llm/` | AI providers: `claude.rs` (paid) and `openai_compat.rs` (Gemini, Groq, OpenRouter; free tiers) |
 | `src-tauri/src/update.rs` | Updates from the GitHub releases (Tauri updater plugin): schedule, update mode, install when idle |
-| `src-tauri/src/settings.rs`, `secrets.rs` | Settings (JSON in the app config dir), API key (Credential Manager) |
+| `src-tauri/src/settings.rs`, `secrets.rs` | Settings (JSON in the app config dir), API keys (Credential Manager, one per provider) |
+| `src-tauri/windows/hooks.nsh` | NSIS uninstaller hook: deletes the API keys when *Delete the application data* is ticked |
 | `src-tauri/src/i18n.rs` | Strings rendered by Rust (tray menu) |
 | `src/popup/`, `src/settings/` | The two windows: a state hook (`usePopupState`, `useSettingsForm`) plus small components (`settings/sections/`) |
 | `src/lib/api.ts` | Types, typed `invoke` wrappers for every command and typed `events` subscriptions |
 | `src/lib/i18n.ts` | Every interface string, in Vietnamese and English |
 | `src/test/` | Frontend test helpers: a fake backend on Tauri's `mockIPC`, fixtures matching the Rust defaults |
 | `scripts/harness/` | Checks and hooks (this page) |
+| `scripts/release/` | `updater-manifest.mjs`: builds the updater's `latest.json` for `release.yml` |
 
 ## Enforcement layers
 
@@ -134,11 +136,12 @@ Test automatically whatever can be; test by hand only what cannot.
 
 | Layer | Where | What it covers |
 |---|---|---|
-| Rust unit tests | `#[cfg(test)] mod tests` next to the code | Redaction rules, prompt and schema, settings loading (bad fields, unreadable files, atomic save), popup placement, OCR area, selection-gesture detection, icon resampling, stop reasons, and the JSON shapes Rust sends to the UI (Session, Notice, RequestEvent, CommandError, SettingsIssue) |
+| Rust unit tests | `#[cfg(test)] mod tests` next to the code | Redaction rules, prompt and schema (language, mode, tones), settings loading (bad fields, unreadable files, atomic save), request cancellation and the capture guard in `AppState`, the update decisions in `update.rs` (what to do next, when ToneSnap is idle, retry timing), tray strings, popup placement, OCR area, app names, selection-gesture detection, icon resampling, stop reasons, and the JSON shapes Rust sends to the UI (Session, Notice, RequestEvent, CommandError, SettingsIssue, UpdateInfo) |
 | Provider tests | `llm/claude.rs`, `llm/openai_compat.rs`, with `llm/test_server.rs` | The providers against a local HTTP server: streaming split across chunks, request headers and body, HTTP and in-stream errors, cancellation, unreachable servers |
+| Release scripts | `scripts/release/*.test.mjs` | The updater manifest: keys, URLs and missing signatures |
 | Win32 integration (`win32` gate) | `mod integration_tests`, `#[ignore]`d | UI Automation on a real off-screen Edit control (selection, context, a multi-line selection read paragraph by paragraph, password, empty), on-device OCR of rendered text (including a second call on a new thread), clipboard snapshot and restore, process and monitor queries. Briefly replaces the clipboard and restores it; never takes focus |
 | Input (`input` gate) | `mod input_tests`, `#[ignore]`d | Ctrl+C capture and Apply (Ctrl+V) into a focused test window, with the clipboard restored. It takes focus and sends key presses, so it runs only when the user asks for it, while nobody is typing |
-| Frontend (`vitest` gate) | `src/**/*.test.ts(x)`, helpers in `src/test/` | Pure logic (hotkeys, i18n parity between languages, redaction restore, streaming suggestions) and the two windows rendered against a fake backend built on Tauri's `mockIPC`: event streams, keys, Apply/Copy, errors, notices, preview, saving settings, the API key, reopening |
+| Frontend (`vitest` gate) | `src/**/*.test.ts(x)`, helpers in `src/test/` | Pure logic (hotkeys, i18n parity between languages, redaction restore, streaming suggestions) and the two windows rendered against a fake backend built on Tauri's `mockIPC`: event streams, keys, language and mode, Apply/Copy, errors, notices, preview, every Settings section (including Updates), saving settings, the API key, reopening |
 
 **Still manual** (`/smoke-test`): the global hotkey through Tauri, the low-level mouse hook and floating icon in other apps, focus and paste behavior in real third-party apps (the compatibility table), and model quality (try `scripts/bench-cases.json` on a real provider). macOS tests are written on a Mac.
 
@@ -163,7 +166,7 @@ The PostToolUse hook runs rustfmt or Prettier on every edited file, so formattin
 | `language` | Vietnamese text outside `src/lib/i18n.ts`, `src-tauri/src/i18n.rs`, Vietnamese test inputs and `docs/bench/` |
 | `privacy` | `println!`, `dbg!`, `console.log`; `eprintln!` printing variables that hold user text |
 | `code` | `unsafe` outside `platform/`; `.unwrap()` outside a mutex lock; `todo!`/`unimplemented!`/`panic!`; `#[allow]` without a reason; TypeScript `any`, `@ts-ignore`, an undescribed `@ts-expect-error`; `invoke` or `listen` outside `api.ts`; a warning for files over 800 lines |
-| `network` | URLs to hosts other than `api.anthropic.com` and localhost |
+| `network` | URLs to hosts other than the AI providers, GitHub (updates) and localhost (`ALLOWED_HOSTS` in `config.mjs`; the key pages the interface opens in the browser are `BROWSER_LINK_HOSTS`) |
 | `secrets` | Real API keys or tokens anywhere in the tree |
 | `whitespace` | What `.editorconfig` asks of files no formatter touches (Markdown, TOML, prompts, `src-tauri/` JSON, PowerShell…): CR line endings, trailing spaces (Markdown excepted), a missing or doubled final newline, tab indentation (Rust excepted). `--fix` repairs all but tabs |
 | `suppress` | `eslint-disable` without a reason after ` -- `, inline ESLint rule settings, `prettier-ignore`, `rustfmt::skip`: ways to hide a problem from the gates |

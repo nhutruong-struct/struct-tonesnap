@@ -119,7 +119,8 @@ alike). The ones that matter most:
 - **Secrets.** API keys live only in the OS credential store (`secrets.rs`). Never commit a real key, not even
   in a test. If you commit one by mistake, revoke it at the provider immediately: deleting the commit is not
   enough.
-- **Network.** Only the provider hosts listed in `scripts/harness/config.mjs` and localhost (tests).
+- **Network.** Only the hosts listed in `scripts/harness/config.mjs`: the AI providers, GitHub (to check for
+  updates) and localhost (tests).
 - **Rust ⇄ TypeScript contracts.** Settings, tones, commands, events and capabilities must match on both sides
   in the same change.
 - **Interface text** lives in `src/lib/i18n.ts` (or `src-tauri/src/i18n.rs`) in both Vietnamese and English.
