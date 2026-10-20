@@ -23,6 +23,14 @@ speakers writing English. Select a sentence in Slack, Outlook, Teams, a browser 
 floating icon next to the selection (or press `Ctrl+Alt+E`), and a popup suggests several versions, each in a
 different tone, in the language you choose. **Apply** pastes the version you pick back in place of the selection.
 
+<p align="center">
+  <a href="https://nhutruong-struct.github.io/struct-tonesnap/#demo">
+    <img src="site/media/tonesnap-intro-poster.jpg" alt="ToneSnap popup suggesting three versions of a sentence. Click to watch the 80-second intro." width="720">
+  </a>
+  <br>
+  <a href="https://nhutruong-struct.github.io/struct-tonesnap/#demo">Watch the 80-second intro</a>
+</p>
+
 ## Features
 
 - **Works in any app.** Reads the selection through UI Automation, falls back to the clipboard, and to on-device
@@ -151,6 +159,7 @@ React + TypeScript interface.
 | `src-tauri/src/update.rs` | Updates from the GitHub releases: schedule, update mode, installing when idle |
 | `src-tauri/src/i18n.rs`, `src/lib/i18n.ts` | Interface strings in Vietnamese and English |
 | `src/popup/`, `src/settings/` | The two windows |
+| `site/` | The website, published to GitHub Pages; `site/media/` holds the intro video and its poster |
 
 More documentation:
 

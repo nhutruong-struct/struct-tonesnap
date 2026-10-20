@@ -99,7 +99,8 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    `src-tauri/tauri.conf.json` (let cargo update `Cargo.lock`), move the `Unreleased` entries of
    `CHANGELOG.md` into a section for the new version, update `docs/PLAN.md`, and merge it into `develop` as usual.
 2. Bring the website up to date with the release. Read `site/index.html` against the new `CHANGELOG.md`
-   section: features, tones, languages, the mock popup, default settings, install and uninstall steps. Fix what
+   section: features, tones, languages, the mock popup, default settings, install and uninstall steps, and the
+   intro video in `site/media/` (re-render it when the popup or the flow changed, see PLAN.md). Fix what
    no longer matches in a `docs/…` pull request into `develop`. The site deploys from `develop`
    (`.github/workflows/pages.yml`), so it goes live as soon as that PR is merged. Merge it before the release PR,
    and say in the release PR which PR updated the site, or that the site needed no change.
