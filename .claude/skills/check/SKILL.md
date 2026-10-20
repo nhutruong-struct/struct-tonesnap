@@ -11,7 +11,7 @@ allowed-tools: Bash(node scripts/harness/*) PowerShell(node scripts/harness/*)
 2. Fix every failing gate at its root:
    - `invariants`: read the message.
      - Contract rules: fix **both sides** (Rust and TS), or add the permission to `src-tauri/capabilities/`.
-     - `code` rules: rewrite the code to follow `CLAUDE.md` → Code rules. Do not silence them.
+     - `code` rules: rewrite the code to follow `.claude/rules/` (`rust.md`, `typescript.md`). Do not silence them.
      - `language`: write the text in English, or move interface text into the i18n files.
      - The rules live in `scripts/harness/invariants.mjs`, the exceptions in `scripts/harness/config.mjs`.
    - `rustfmt`: run `node scripts/harness/check.mjs --fix`.

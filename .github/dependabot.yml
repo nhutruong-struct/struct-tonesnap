@@ -8,10 +8,10 @@ updates:
     labels: ["dependencies", "rust"]
     open-pull-requests-limit: 5
     ignore:
-      # Must stay on the version Tauri itself uses (CLAUDE.md, invariant 5); updated together with Tauri.
+      # Must stay on the version Tauri itself uses (AGENTS.md, invariant 5); updated together with Tauri.
       - dependency-name: windows
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      # reqwest 0.13 defaults to rustls; ToneSnap must keep the OS TLS stack (CLAUDE.md, invariant 6).
+      # reqwest 0.13 defaults to rustls; ToneSnap must keep the OS TLS stack (AGENTS.md, invariant 6).
       # Upgrade by hand, keeping native TLS.
       - dependency-name: reqwest
         update-types: ["version-update:semver-major", "version-update:semver-minor"]

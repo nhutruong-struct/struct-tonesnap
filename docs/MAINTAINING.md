@@ -64,7 +64,7 @@ App compatibility reports also go into the compatibility table of [PLAN.md](PLAN
 
 1. **Fork PRs from first-time contributors:** read the diff, especially `.github/`, `scripts/` and
    `package.json`, before clicking **Approve and run** for the workflows.
-2. Check the change against the project rules in [CLAUDE.md](../CLAUDE.md), privacy first: no user text in
+2. Check the change against the project rules in [AGENTS.md](../AGENTS.md) and `.claude/rules/`, privacy first: no user text in
    logs, no new network host, no secrets, Rust ⇄ TypeScript contracts on both sides, strings in both languages.
 3. Check that it has tests, and that the docs (`docs/specs/`, `docs/PLAN.md`) follow the behavior.
 4. **Security review**: approve only code you understand. Look hard at anything that runs at build, install
