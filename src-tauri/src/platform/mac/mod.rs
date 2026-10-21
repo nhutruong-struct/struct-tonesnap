@@ -96,3 +96,51 @@ pub fn paste_into(pid: isize, text: &str) -> bool {
     clipboard::restore(&snapshot);
     true
 }
+
+/// Tests that send real key presses and move focus. They run only on request
+/// (`cargo test input_tests -- --ignored`), never from hooks or CI: keys typed meanwhile could
+/// land in another window. Select some text in a native text field (TextEdit) first and leave
+/// that app in front; the test refuses to run while ToneSnap or the terminal is.
+///
+/// Assertions never print clipboard contents: the clipboard and the selection are the user's.
+#[cfg(test)]
+mod input_tests {
+    use super::*;
+
+    /// Puts the user's clipboard back however the test ends.
+    struct KeepUserClipboard(clipboard::Snapshot);
+
+    impl Drop for KeepUserClipboard {
+        fn drop(&mut self) {
+            clipboard::restore(&self.0);
+        }
+    }
+
+    fn clipboard_is(expected: &str) -> bool {
+        clipboard::get_text().as_deref() == Some(expected)
+    }
+
+    #[test]
+    #[ignore = "sends key presses and takes focus: select text in TextEdit first"]
+    fn copies_the_selection_and_pastes_over_it_keeping_the_clipboard() {
+        let _user = KeepUserClipboard(clipboard::snapshot());
+        assert!(clipboard::set_text("what the user had copied", true));
+        let front = frontmost().expect("some app is in front");
+        assert!(!front.is_own(), "ToneSnap is in front");
+        assert_eq!(front.process, "textedit", "put TextEdit in front");
+
+        input::wait_modifiers_released(Duration::from_millis(2000));
+        let copied = clipboard::copy_selection();
+        assert!(copied.is_some(), "Cmd+C did not return the selection");
+        assert!(
+            clipboard_is("what the user had copied"),
+            "the clipboard was not restored after Cmd+C"
+        );
+
+        assert!(paste_into(front.pid as isize, "PASTED BY TONESNAP"));
+        assert!(
+            clipboard_is("what the user had copied"),
+            "the clipboard was not restored after Cmd+V"
+        );
+    }
+}

@@ -28,7 +28,7 @@ Apply puts the chosen version back in place of the selection; Copy leaves it on 
 
 - **APL-20** When the capture reported the field as not editable, Apply is not offered and the number keys copy instead ([popup.md](popup.md) POP-35). When editability is unknown, Apply is offered. How editability is found, including the selected text's read-only attribute that tells editable web fields from page text: [capture.md](capture.md) CAP-07.
 
-**Verified by:** `platform/win/mod.rs` input tests, run on request (`check.mjs --only=input`): Ctrl+V into a focused test window replaces the selection and the user's clipboard is kept. `clipboard.rs` integration test (snapshot and restore of every format). `src/popup/Popup.test.tsx` (Apply and Copy send the restored text; read-only copies). Real third-party apps are manual (`/smoke-test`).
+**Verified by:** macOS: `platform/mac/mod.rs` `input_tests` on request (`cargo test input_tests -- --ignored` with TextEdit in front and a selection: Cmd+V replaces it and the clipboard is kept), `platform/mac/clipboard.rs` integration test; `platform/win/mod.rs` input tests, run on request (`check.mjs --only=input`): Ctrl+V into a focused test window replaces the selection and the user's clipboard is kept. `clipboard.rs` integration test (snapshot and restore of every format). `src/popup/Popup.test.tsx` (Apply and Copy send the restored text; read-only copies). Real third-party apps are manual (`/smoke-test`).
 
 ## Not implemented
 
