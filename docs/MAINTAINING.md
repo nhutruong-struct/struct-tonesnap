@@ -142,6 +142,18 @@ webhook. Its credentials are the `RELEASE_APP_CLIENT_ID` variable and the `RELEA
 one and replace the secret. To release without the app, create the `vX.Y.Z` tag on the merge commit as an
 admin and re-run the failed jobs: a release on an existing tag needs no ref creation.
 
+## macOS
+
+The app runs on macOS 14 or later (`./dev.sh` in development; the `check (macOS)` job of `ci.yml` lints and tests the macOS layer on every pull request). A release does **not** carry macOS files yet: the in-app updater says so (`update.rs`, `updates_supported`), and the `build macOS app (check only)` job of `release.yml` only proves that the bundle builds, unsigned and unpublished. To ship it, a maintainer with an Apple Developer account has to:
+
+1. Create a *Developer ID Application* certificate and export it as a `.p12`. Store it as the `APPLE_CERTIFICATE` and `APPLE_CERTIFICATE_PASSWORD` secrets of the `release` environment, with `APPLE_SIGNING_IDENTITY` (for example `Developer ID Application: Name (TEAMID)`).
+2. Create an app-specific password (or an App Store Connect API key) for notarization: `APPLE_ID`, `APPLE_PASSWORD` and `APPLE_TEAM_ID` secrets. Tauri signs with the hardened runtime and notarizes when these are set during `tauri build`.
+3. Give the macOS build job those variables in the `release` environment, build `aarch64-apple-darwin` and `x86_64-apple-darwin`, and attach the `.dmg` files to the release.
+4. For updates: tar the `.app` (`.app.tar.gz`), sign it with the Tauri key in the `sign` job like the Windows installers, add `darwin-aarch64` and `darwin-x86_64` entries to `scripts/release/updater-manifest.mjs`, and turn `updates_supported` back on for macOS.
+5. Tick *Signing and notarization* in `docs/PLAN.md`.
+
+Permissions on a Mac belong to the app's code signature: an unsigned or re-signed build must be allowed again under Privacy & Security.
+
 ## Security reports
 
 Reports arrive as draft advisories under **Security → Advisories**. Acknowledge within 7 days, discuss the fix

@@ -105,4 +105,19 @@ mod tests {
             );
         }
     }
+
+    /// The Keychain stores, replaces and deletes a key. A throwaway item under its own service
+    /// name, so a key the user saved is never touched.
+    #[cfg(target_os = "macos")]
+    #[test]
+    #[ignore = "macOS integration: writes a throwaway item to the login Keychain"]
+    fn the_keychain_round_trips_a_key() {
+        let entry = keyring::Entry::new("ToneSnap-test", "round_trip").expect("a valid entry");
+        entry.set_password("not-a-real-key-1").expect("stored");
+        assert_eq!(entry.get_password().expect("read back"), "not-a-real-key-1");
+        entry.set_password("not-a-real-key-2").expect("replaced");
+        assert_eq!(entry.get_password().expect("read back"), "not-a-real-key-2");
+        entry.delete_credential().expect("deleted");
+        assert!(matches!(entry.get_password(), Err(keyring::Error::NoEntry)));
+    }
 }

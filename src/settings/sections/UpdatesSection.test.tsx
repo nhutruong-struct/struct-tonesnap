@@ -5,23 +5,25 @@ import { fakeBackend, sendEvent, settle } from "../../test/backend";
 import { settings as savedSettings } from "../../test/fixtures";
 import SettingsPage from "../SettingsPage";
 
-const info = (status: UpdateStatus, msiInstall = false): UpdateInfo => ({
+const info = (status: UpdateStatus, msiInstall = false, supported = true): UpdateInfo => ({
   currentVersion: "1.0.0",
   status,
   msiInstall,
+  supported,
 });
 
 async function openUpdates(
   status: UpdateStatus = { kind: "idle" },
   settings: Partial<Settings> = {},
   msiInstall = false,
+  supported = true,
 ) {
   const backend = fakeBackend("settings", {
     get_settings: () => savedSettings(settings),
     hotkey_error: () => null,
     settings_issue: () => null,
     has_api_key: () => true,
-    update_info: () => info(status, msiInstall),
+    update_info: () => info(status, msiInstall, supported),
     save_settings: () => null,
     "plugin:autostart|is_enabled": () => false,
   });
@@ -42,6 +44,12 @@ async function click(text: string) {
 }
 
 describe("updates", () => {
+  test("say so, and offer no check, where releases carry no updater installer", async () => {
+    await openUpdates({ kind: "idle" }, {}, false, false);
+    expect(screen.getByText(/Automatic updates are not available on macOS yet/)).toBeTruthy();
+    expect(screen.queryByText("Check for Updates")).toBeNull();
+  });
+
   test("shows the running version and the status", async () => {
     await openUpdates({ kind: "up_to_date" });
     expect(screen.getByText("Current version: 1.0.0")).toBeTruthy();

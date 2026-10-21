@@ -126,8 +126,8 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 - [x] On-device OCR with Vision, capture with ScreenCaptureKit (CAP-23; needs macOS 14 and the Screen Recording permission). Two crates added for it: `objc2-vision` and `objc2-screen-capture-kit`, plus `objc2-core-foundation` and `objc2-core-graphics` for their types
 - [x] Clipboard snapshot and restore (every item and type, transient marker), Cmd+C fallback for the selection, paste with synthetic Cmd+V (CAP-22, APL-30). The clipboard round trip is tested; the key presses are still to be checked by hand
 - [x] Permission onboarding: a Permissions section in Settings (status, system prompt, link to System Settings), a notice when Accessibility is missing, Settings opens at startup while it is (SET-70 to SET-72)
-- [ ] API keys in the Keychain (already supported by `keyring`; untested on a Mac)
-- [ ] Signing and notarization
+- [x] API keys in the Keychain (`keyring` with `apple-native`; a store, replace and delete round trip is tested on a Mac)
+- [ ] Signing and notarization. Prepared: macOS 14 minimum, a menu-bar `Info.plist`, a macOS CI job, a bundle build check on release PRs, and the maintainer steps in `docs/MAINTAINING.md`; the Developer ID certificate and notarization secrets are the user's to add. Until then macOS has no in-app updates (UPD-50)
 - [ ] macOS integration tests
 
 ## Phase 5 progress
