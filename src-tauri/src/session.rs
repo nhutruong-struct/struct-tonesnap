@@ -38,6 +38,8 @@ pub struct Session {
 /// Handles the hotkey or a click on the floating icon. The capture runs on its own thread
 /// because it waits on the keyboard, the clipboard and UI Automation.
 pub fn on_trigger(app: AppHandle) {
+    // The hotkey and the icon click arrive on the main thread, the one place the layout can be read.
+    platform::refresh();
     platform::selection_icon::hide();
     let Some(capturing) = CaptureInProgress::begin(&app) else {
         return;

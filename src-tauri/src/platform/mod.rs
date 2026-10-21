@@ -28,11 +28,15 @@ use win as imp;
 
 pub use imp::{copy_text, cursor, monitor_at, own_window_in_front, paste_into, selection_icon};
 #[cfg(target_os = "macos")]
-pub use mac::{focus_popup, init, prepare_popup};
+pub use mac::{focus_popup, init, prepare_popup, refresh};
 
 /// Per-platform app setup, run once at startup.
 #[cfg(not(target_os = "macos"))]
 pub fn init(_app: &tauri::AppHandle) {}
+
+/// Re-reads what the OS tells about the keyboard layout; called on the main thread before a capture.
+#[cfg(not(target_os = "macos"))]
+pub fn refresh() {}
 
 /// Gives the popup window the traits it needs to appear without stealing focus.
 #[cfg(not(target_os = "macos"))]

@@ -91,7 +91,7 @@ pub fn copy_selection() -> Option<String> {
     let board = NSPasteboard::generalPasteboard();
     let before = board.changeCount();
     let snapshot = snapshot();
-    input::send_command(input::KEY_C);
+    input::send_command(input::key_c());
 
     let start = Instant::now();
     let mut changed = false;

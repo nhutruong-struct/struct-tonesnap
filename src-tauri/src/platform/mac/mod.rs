@@ -18,6 +18,7 @@ use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 
 pub use ax::capture;
 pub use ax::is_trusted;
+pub use input::refresh_layout as refresh;
 use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
 
@@ -33,6 +34,7 @@ pub fn own_window_in_front() -> Option<bool> {
 /// Runs ToneSnap as a menu-bar app: no Dock icon and no app menu, and prepares the OCR.
 pub fn init(app: &tauri::AppHandle) {
     let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    input::refresh_layout();
     if ocr::screen_capture_allowed() {
         ocr::warm_up();
     }
@@ -90,7 +92,7 @@ pub fn paste_into(pid: isize, text: &str) -> bool {
         return false;
     }
     input::wait_modifiers_released(Duration::from_millis(400));
-    input::send_command(input::KEY_V);
+    input::send_command(input::key_v());
     // Electron apps read the clipboard asynchronously; restoring too early pastes the old content.
     sleep(Duration::from_millis(500));
     clipboard::restore(&snapshot);
