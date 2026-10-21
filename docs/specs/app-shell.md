@@ -39,6 +39,10 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 **Verified by:** `tray.rs` test (the menu icons decode and share one size), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
+## Installing
+
+- **APP-39** The `.exe` installer file, its window and the uninstaller carry the ToneSnap icon (`bundle.windows.nsis.installerIcon` in `tauri.conf.json`). Without that key NSIS falls back to its own generic icon.
+
 ## Uninstalling
 
 - **APP-40** The `.exe` (NSIS) uninstaller always removes the "Start with Windows" `Run` entry (SET-60), except during an update. Tauri's installer template does this.
