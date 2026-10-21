@@ -20,6 +20,10 @@ Apply puts the chosen version back in place of the selection; Copy leaves it on 
 - **APL-10** Copy closes the popup and cancels the running request ([ai-request.md](ai-request.md) AI-54), then puts the text on the clipboard as a normal entry, so it appears in clipboard history like any copy the user makes.
 - **APL-11** The clipboard write runs on its own thread and retries for about 300 ms (20 tries, 15 ms apart), because another app can hold the clipboard open for a moment.
 
+## macOS
+
+- **APL-30** Same flow with Cmd instead of Ctrl (`platform/mac/mod.rs`, `input.rs`, `clipboard.rs`): the app is found by the process id kept in `hwnd`, brought forward if needed (800 ms), the text is placed as a transient entry (`org.nspasteboard.TransientType` and `ConcealedType`, which clipboard managers skip), and Cmd+V is posted after the modifiers were released. The snapshot keeps every item and every type on the clipboard. Posting keys needs the Accessibility permission. The V key is the virtual key at the US position, so layouts that move V (Dvorak) paste with another letter's shortcut.
+
 ## Read-only fields
 
 - **APL-20** When the capture reported the field as not editable, Apply is not offered and the number keys copy instead ([popup.md](popup.md) POP-35). When editability is unknown, Apply is offered. How editability is found, including the selected text's read-only attribute that tells editable web fields from page text: [capture.md](capture.md) CAP-07.

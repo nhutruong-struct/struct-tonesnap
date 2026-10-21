@@ -234,11 +234,13 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     Ok(captured)
 }
 
-/// The selection and its context through the Accessibility API. The clipboard fallback and OCR
-/// context are later Phase 3 steps, so a control that does not expose its selection is refused.
+/// The selection and its context: the Accessibility API first, then the clipboard (Cmd+C) for
+/// the selection. OCR context is a later Phase 3 step.
 #[cfg(target_os = "macos")]
 pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
-    use crate::platform::mac;
+    use std::time::Duration;
+
+    use crate::platform::mac::{self, clipboard, input};
 
     let front = mac::frontmost().ok_or(CaptureError::NoSelection)?;
     if front.is_own() {
@@ -247,6 +249,7 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     if settings.is_blocked_app(&front.process) {
         return Err(CaptureError::BlockedApp(front.name));
     }
+    input::wait_modifiers_released(Duration::from_millis(600));
     let cursor = mac::cursor();
     let n = settings.context_chars as usize;
 
@@ -254,30 +257,38 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     if ax.is_password {
         return Err(CaptureError::PasswordField);
     }
-    if ax.selection.trim().is_empty() {
-        return Err(CaptureError::NoSelection);
-    }
+    let (selection, source) = if !ax.selection.trim().is_empty() {
+        (ax.selection.clone(), SelectionSource::Uia)
+    } else {
+        match clipboard::copy_selection() {
+            Some(text) => (text, SelectionSource::Clipboard),
+            None => return Err(CaptureError::NoSelection),
+        }
+    };
 
-    let has_context = !(ax.before.trim().is_empty() && ax.after.trim().is_empty());
-    Ok(Captured {
+    let mut captured = Captured {
         // The process id plays the part of Windows' window handle.
         hwnd: front.pid as isize,
         app: front.name,
-        selection: ax.selection,
-        before: last_chars(&ax.before, n),
-        after: first_chars(&ax.after, n),
+        selection,
+        before: String::new(),
+        after: String::new(),
         screen_text: String::new(),
         editable: ax.editable,
         bounds: ax.bounds,
         cursor,
         // `Uia` stands for the platform's accessibility API on both systems.
-        source: SelectionSource::Uia,
-        context_source: if has_context {
-            ContextSource::Uia
-        } else {
-            ContextSource::None
-        },
-    })
+        source,
+        context_source: ContextSource::None,
+    };
+    if source == SelectionSource::Uia
+        && !(ax.before.trim().is_empty() && ax.after.trim().is_empty())
+    {
+        captured.before = last_chars(&ax.before, n);
+        captured.after = first_chars(&ax.after, n);
+        captured.context_source = ContextSource::Uia;
+    }
+    Ok(captured)
 }
 
 #[cfg(not(any(windows, target_os = "macos")))]

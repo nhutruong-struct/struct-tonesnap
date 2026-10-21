@@ -1,7 +1,9 @@
 //! Reads the selection, its surrounding text and whether the control is editable through the
 //! Accessibility API, without touching the clipboard. Needs the Accessibility permission.
 
+use std::collections::HashSet;
 use std::ffi::c_void;
+use std::sync::Mutex;
 
 use super::cf::{CFRange, CFTypeRef, Cf};
 use super::window::{scale_at, Point};
@@ -43,6 +45,11 @@ extern "C" {
         attribute: CFTypeRef,
         parameter: CFTypeRef,
         value: *mut CFTypeRef,
+    ) -> AxError;
+    fn AXUIElementSetAttributeValue(
+        element: CFTypeRef,
+        attribute: CFTypeRef,
+        value: CFTypeRef,
     ) -> AxError;
     fn AXUIElementIsAttributeSettable(
         element: CFTypeRef,
@@ -144,6 +151,30 @@ fn decode(mut units: &[u16]) -> String {
     String::from_utf16_lossy(units)
 }
 
+/// Processes already asked to expose their accessibility tree.
+static TREE_REQUESTED: Mutex<Option<HashSet<i32>>> = Mutex::new(None);
+
+/// Electron and Chromium build their accessibility tree only for assistive tools, which they
+/// recognise by this attribute. Asked once per process; the first read right after may still
+/// find nothing, and the clipboard fallback covers it.
+fn request_accessibility_tree(app: &Element, pid: i32) {
+    let first_time = TREE_REQUESTED
+        .lock()
+        .unwrap()
+        .get_or_insert_with(HashSet::new)
+        .insert(pid);
+    if !first_time {
+        return;
+    }
+    let Some(name) = Cf::string("AXManualAccessibility") else {
+        return;
+    };
+    // SAFETY: the element and name are live; the value is the shared `true` constant.
+    unsafe {
+        AXUIElementSetAttributeValue(app.0.as_ptr(), name.as_ptr(), super::cf::boolean_true());
+    }
+}
+
 fn focused_element(pid: i32) -> Option<Element> {
     // SAFETY: both create calls return owned references (or null, which `from_owned` turns into
     // `None`); the timeout call takes the system-wide element, which sets it for every element.
@@ -152,6 +183,7 @@ fn focused_element(pid: i32) -> Option<Element> {
             AXUIElementSetMessagingTimeout(system.as_ptr(), MESSAGING_TIMEOUT_SECONDS);
         }
         let app = Element(Cf::from_owned(AXUIElementCreateApplication(pid))?);
+        request_accessibility_tree(&app, pid);
         app.attribute("AXFocusedUIElement").map(Element)
     }
 }

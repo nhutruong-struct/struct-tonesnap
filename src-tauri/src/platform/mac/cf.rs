@@ -28,6 +28,17 @@ extern "C" {
     ) -> CFTypeRef;
 }
 
+#[link(name = "CoreFoundation", kind = "framework")]
+extern "C" {
+    static kCFBooleanTrue: CFTypeRef;
+}
+
+/// The `true` constant, a shared object nobody owns or releases.
+pub fn boolean_true() -> CFTypeRef {
+    // SAFETY: the constant is initialized by the framework before any code runs.
+    unsafe { kCFBooleanTrue }
+}
+
 const ENCODING_UTF8: u32 = 0x0800_0100;
 
 /// A Core Foundation object we own one reference to (the result of a `Create` or `Copy` call).
