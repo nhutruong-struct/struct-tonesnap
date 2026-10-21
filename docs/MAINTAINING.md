@@ -10,7 +10,7 @@ review, merge and release.
 | Default branch | `develop` | Pull requests target it without anyone having to change the base |
 | `develop` ruleset | Pull request required (1 code-owner approval, stale approvals dismissed, approval of the last push, conversations resolved); `check` and `dependency-review` green on a branch that is up to date with `develop`; no new high or critical CodeQL alert; squash merge only; no force push, no deletion | One commit per change, every change reviewed, tested and scanned |
 | `master` ruleset | Same, but merge commits only | Releases keep `develop`'s history, so the next release merges cleanly |
-| Tag ruleset | Only admins create, move or delete `v*` tags | A release cannot be tagged by anyone else |
+| Tag ruleset | Only admins and the GitHub Actions app (bypass actor) create `v*` tags; nobody moves or deletes them | The release workflow tags the commit it publishes; a release cannot be tagged by anyone else |
 | Ruleset bypass | Repository admins, **through pull requests only** | A sole maintainer cannot approve their own PR; the bypass lets them merge it, but never lets anyone push directly |
 | Merge buttons | Squash and merge commit; rebase off; auto-merge on; "Update branch" suggested | Squash for `develop`, merge commit for releases |
 | Head branches | Deleted automatically after the merge | No stale branches; protected branches are never deleted |
@@ -106,26 +106,18 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    and say in the release PR which PR updated the site, or that the site needed no change.
 3. Open a pull request from `develop` into `master` titled `Release vX.Y.Z`, wait for CI, and merge it with
    **Create a merge commit**.
-4. Tag the merge commit on `master`. The tag starts `.github/workflows/release.yml`, which checks that the tag
-   matches the app version and is on `master`, builds the installers, attests their provenance and publishes
-   the release with the `CHANGELOG.md` section as notes:
-
-   ```bash
-   git fetch origin
-   ```
-
-   ```bash
-   git tag -a vX.Y.Z origin/master -m "ToneSnap vX.Y.Z"
-   ```
-
-   ```bash
-   git push origin vX.Y.Z
-   ```
-
+4. The merge starts `.github/workflows/release.yml` on `master`. There is no tag to push: the workflow reads
+   the version from `src-tauri/tauri.conf.json`, checks that `CHANGELOG.md` has a section for it, builds the
+   installers, attests their provenance and publishes the release `vX.Y.Z` with that section as notes, which
+   creates the tag on the merge commit. The notes end with a **Contributors** list: the GitHub accounts that
+   authored a commit since the previous release, bots excluded. A merge into `master` whose version already has a release (the version
+   was not bumped) builds nothing and says so in the run's summary.
 5. Watch the **Release** workflow. Besides the installers it publishes `SHA256SUMS.txt` and `latest.json`,
    which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the
-   release is published, the installed apps start installing it within hours. Never attach an installer built on a personal machine; if the workflow
-   fails, fix it through a PR and push the tag again only if no release was published (releases are immutable).
+   release is published, the installed apps start installing it within hours. Never attach an installer built
+   on a personal machine. If the workflow fails before publishing, fix it through a PR into `develop` and
+   re-run the workflow on `master` from the Actions tab (a draft left by the failed run is replaced); if a
+   release was already published, it is immutable, so the fix ships as the next version.
    Merging `master` back into `develop` is not needed: the release PR's merge commit is the only commit `master`
    has that `develop` lacks, and it changes no files. Announce the release in Discussions → Announcements.
 
@@ -134,7 +126,7 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
 The installers are signed for the in-app updater with a minisign key made by `pnpm tauri signer generate`.
 The public key is `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`; the private key and its password
 are the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` secrets of the `release`
-environment, whose deployment rule allows only `v*` tags. Keep an offline copy of the private key: without
+environment, whose deployment rule allows only the `master` branch. Keep an offline copy of the private key: without
 it, no installed ToneSnap accepts another update, and a new key reaches users only through a manual install.
 Never commit it, and never sign on a personal machine.
 

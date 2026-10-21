@@ -46,7 +46,7 @@ reach a release unnoticed:
 - **Pinned CI.** Every GitHub Action is pinned to a full commit SHA, workflows get a read-only token by
   default, and workflows from outside contributors run only after a maintainer approves them.
 - **Dependabot** proposes dependency and security updates, which go through the same review.
-- **Release tags** (`v*`) can be created only by maintainers.
+- **Release tags** (`v*`) can be created only by maintainers and by the release workflow.
 - **[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/nhutruong-struct/struct-tonesnap)**
   checks these practices weekly.
 
@@ -54,7 +54,7 @@ reach a release unnoticed:
 
 Only download ToneSnap from the
 [Releases page](https://github.com/nhutruong-struct/struct-tonesnap/releases) of this repository. Installers
-will be built by GitHub Actions from a tagged commit on `master`, never on a personal machine, and published
+will be built by GitHub Actions from a commit on `master`, never on a personal machine, and published
 with a [build provenance attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations).
 Once releases exist, you can check that an installer was built from this repository:
 
