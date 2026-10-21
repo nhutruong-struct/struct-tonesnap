@@ -6,6 +6,27 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-10-21
+
+### Install
+
+Download `ToneSnap_1.1.3_x64-setup.exe` (installer) or `ToneSnap_1.1.3_x64_en-US.msi` (for managed deployment)
+below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
+chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update
+itself. The installers are still **not code-signed**, so your browser and Windows SmartScreen ask first: keep the
+file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file came from this
+page. You can check that a file was built by this repository's GitHub Actions from this tag:
+
+```
+gh attestation verify ToneSnap_1.1.3_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
+and compare its SHA-256 with `SHA256SUMS.txt`.
+
+### Changed
+
+- The `.exe` installer, its window and the uninstaller show the ToneSnap icon instead of the generic installer icon.
+
 ## [1.1.2] - 2026-10-21
 
 ### Install
@@ -151,7 +172,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   [app compatibility report](https://github.com/nhutruong-struct/struct-tonesnap/issues/new?template=app_compatibility.yml).
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
-[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...develop
+[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.3...develop
+[1.1.3]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
