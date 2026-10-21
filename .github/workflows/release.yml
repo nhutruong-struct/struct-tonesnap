@@ -195,6 +195,8 @@ jobs:
           fi
           # The manifest the in-app updater reads; it fails when an installer has no signature.
           node scripts/release/updater-manifest.mjs "$version" release notes.md "$GITHUB_REPOSITORY"
-          gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
+          # The `.sig` files stay out: latest.json carries the signatures, and fewer assets tell a visitor
+          # which file to download.
+          gh release create "$TAG" release/*.exe release/*.msi release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
             --notes-file notes.md --verify-tag --draft
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest

@@ -50,8 +50,9 @@ different tone, in the language you choose. **Apply** pastes the version you pic
 
 ## Status
 
-ToneSnap runs on **Windows 10/11**; macOS support is planned. Download the installer from the
-[latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest), or build it from source
+ToneSnap runs on **Windows 10/11**; macOS support is planned. Download `ToneSnap_x.y.z_x64-setup.exe` from the
+[latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest) (or use the
+**Download for Windows** button on the [website](https://nhutruong-struct.github.io/struct-tonesnap/)), or build it from source
 as described below. The installers are not code-signed yet, so Windows SmartScreen asks for confirmation the
 first time (**More info → Run anyway**). See the [changelog](CHANGELOG.md) for what is in each version.
 
