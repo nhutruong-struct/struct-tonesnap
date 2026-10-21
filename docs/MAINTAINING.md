@@ -109,7 +109,8 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
 4. The merge starts `.github/workflows/release.yml` on `master`. There is no tag to push: the workflow reads
    the version from `src-tauri/tauri.conf.json`, checks that `CHANGELOG.md` has a section for it, builds the
    installers, attests their provenance and publishes the release `vX.Y.Z` with that section as notes, which
-   creates the tag on the merge commit. A merge into `master` whose version already has a release (the version
+   creates the tag on the merge commit. The notes end with a **Contributors** list: the GitHub accounts that
+   authored a commit since the previous release, bots excluded. A merge into `master` whose version already has a release (the version
    was not bumped) builds nothing and says so in the run's summary.
 5. Watch the **Release** workflow. Besides the installers it publishes `SHA256SUMS.txt` and `latest.json`,
    which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the

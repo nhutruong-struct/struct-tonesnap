@@ -221,6 +221,21 @@ jobs:
           fi
           # The manifest the in-app updater reads; it fails when an installer has no signature.
           node scripts/release/updater-manifest.mjs "$version" release notes.md "$GITHUB_REPOSITORY"
+          # Contributors: everyone who authored a commit since the previous release, bots excluded. Added after
+          # the manifest, so the in-app updater's notes stay the changelog section alone.
+          previous="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // empty')"
+          if [ -n "${previous}" ]; then
+            contributors="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/compare/${previous}...${GITHUB_SHA}" \
+              --jq '.commits[].author.login // empty' | grep -v '\[bot\]$' | sort -fu || true)"
+            if [ -n "${contributors}" ]; then
+              {
+                printf '\n### Contributors\n\n'
+                while read -r login; do
+                  printf -- '- [@%s](https://github.com/%s)\n' "$login" "$login"
+                done <<< "${contributors}"
+              } >> notes.md
+            fi
+          fi
           # The `.sig` files stay out: latest.json carries the signatures, and fewer assets tell a visitor
           # which file to download.
           if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null)" = "true" ]; then
