@@ -65,10 +65,11 @@ pub fn on_trigger(app: AppHandle) {
     });
 }
 
-/// Shows the system's Accessibility prompt the first time a capture needs the permission, so the
-/// user meets it at the moment it matters. Later refusals only show the notice: the system
-/// prompts once, and Settings has the button for the rest.
-fn ask_for_accessibility_once() {
+/// Shows the system's Accessibility prompt, once per run: at startup when the permission is
+/// missing, or at the first capture that needs it. The prompt also adds ToneSnap to the list in
+/// System Settings and has a button that opens it. Later refusals only show the notice, and
+/// Settings has the buttons for the rest.
+pub fn ask_for_accessibility_once() {
     static ASKED: AtomicBool = AtomicBool::new(false);
     if !ASKED.swap(true, Ordering::SeqCst) {
         platform::request_permission(platform::Permission::Accessibility);

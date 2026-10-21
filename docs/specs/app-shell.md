@@ -13,7 +13,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
   - the hotkey could not be registered (another app holds it, or it is invalid);
   - the saved settings had a problem (invalid fields, a broken file, or a file that could not be read);
   - no API key is stored for the chosen provider (so a first run opens Settings to ask for one);
-  - on macOS, the Accessibility permission has not been granted.
+  - on macOS, the Accessibility permission has not been granted: Settings opens on its Permissions section and the system's prompt is shown at once (once per run), which adds ToneSnap to the list in System Settings and offers a button to open it.
   Otherwise ToneSnap starts silently in the tray.
 - **APP-04** Both windows exist from the start but are hidden (`tauri.conf.json`). One web bundle serves both; the window label (`popup` or `settings`) decides which page renders.
 

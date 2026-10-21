@@ -101,6 +101,9 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let missing_key = secrets::api_key(settings.provider).is_none();
     let permissions = platform::permissions();
     let missing_permission = permissions.required && !permissions.accessibility;
+    if missing_permission {
+        session::ask_for_accessibility_once();
+    }
     if settings_need_attention || missing_key || missing_permission {
         window::show_settings(&handle);
     }

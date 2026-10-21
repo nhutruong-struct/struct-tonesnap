@@ -119,7 +119,7 @@ const vi = {
   "section.permissions.desc": "macOS chỉ cho ToneSnap đọc văn bản đã chọn và gửi phím khi bạn cho phép.",
   "permission.accessibility.label": "Trợ năng (Accessibility)",
   "permission.accessibility.hint":
-    "Cần để đọc đoạn văn bản bôi đen, sao chép và dán lại vào app gốc. Không có quyền này ToneSnap không dùng được.",
+    "Cần để đọc đoạn văn bản bôi đen, sao chép và dán lại vào app gốc. Bấm Mở Cài đặt hệ thống rồi bật ToneSnap trong danh sách; trạng thái ở đây tự cập nhật.",
   "permission.screen_recording.label": "Ghi màn hình (Screen Recording)",
   "permission.screen_recording.hint":
     "Chỉ cần để đọc ngữ cảnh quanh đoạn văn bản bằng OCR trên máy. Có thể bỏ qua; sau khi cho phép, hãy mở lại ToneSnap.",
@@ -333,7 +333,7 @@ const en: Record<Key, string> = {
   "section.permissions.desc": "macOS lets ToneSnap read selected text and send key presses only when you allow it.",
   "permission.accessibility.label": "Accessibility",
   "permission.accessibility.hint":
-    "Needed to read the selected text, copy it and paste the result back into the original app. ToneSnap does not work without it.",
+    "Needed to read the selected text, copy it and paste the result back into the original app. Click Open System Settings and turn ToneSnap on in the list; this status updates by itself.",
   "permission.screen_recording.label": "Screen Recording",
   "permission.screen_recording.hint":
     "Only needed to read the text around the selection with on-device OCR. You can skip it; after allowing it, reopen ToneSnap.",
