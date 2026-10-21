@@ -47,8 +47,20 @@ A Tauri 2 desktop app (Rust core, React/TS interface), Windows first, macOS late
 3. **Never send synthetic keystrokes or mouse input to the user's desktop without asking**, including the `input` gate.
 4. Update `docs/PLAN.md` (tick items, add decisions, fill the compatibility table) and the matching `docs/specs/` page.
 5. Odd frontend errors after quick edits usually mean Vite kept a stale module: restart `dev.ps1`.
-6. Git: `master` and `develop` change only through pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Branch from `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and target `develop`. Commit only when the user asks, with `check.mjs --full` passing. Commit messages: English, imperative, summary under ~72 characters.
+6. Git: `master` and `develop` change only through pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Branch from `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and target `develop`. Commit only when the user asks, or on a `feat/…`/`fix/…`/`chore/…` branch while executing a plan the user approved (see Superpowers). Never commit to `develop` or `master`, never push or open a PR unasked. Commit messages: English, imperative, summary under ~72 characters.
 7. Releases follow [docs/MAINTAINING.md](docs/MAINTAINING.md) → Releasing. Before the `develop` → `master` release PR, update the website (`site/`) through its own PR into `develop`, and name that PR (or "no site change needed") in the release PR.
+
+## Superpowers
+
+The Superpowers plugin is enabled for this repository (`.claude/settings.json`). This file wins over any plugin skill. Where they differ:
+
+- **Specs and plans** go to `docs/superpowers/specs/` and `docs/superpowers/plans/` (gitignored scratch, English). They never replace `docs/PLAN.md` and `docs/specs/`: the last plan task is always to update those and tick the item.
+- **Approval:** an approved brainstorming spec plus plan satisfies "present a short plan and ask". A new dependency, permission, endpoint or prompt change still needs its own explicit yes.
+- **Worktrees** live in `.claude/worktrees/<name>/` (the hooks resolve them; run `pnpm install` there). Not `.worktrees/` or elsewhere.
+- **Tests:** TDD at the lowest layer that shows the behavior. Win32, hotkey and mouse-hook behavior stays manual (`/smoke-test`); never fake input on the user's desktop.
+- **Per task:** `check.mjs` (fast) before each commit; `--full` before saying the work is done, together with the Definition of done below.
+- **Finishing a branch:** offer only "open a PR into `develop`", "keep" or "discard". No local merge into `develop` or `master`.
+- **Review:** for the areas named in the Definition of done, request `tonesnap-reviewer` in addition to the plugin's reviewer.
 
 ## Definition of done
 
