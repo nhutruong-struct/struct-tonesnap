@@ -1,17 +1,19 @@
 name: Release
 
 # Builds the Windows installers in GitHub Actions, never on a personal machine. A pull request that changes
-# this file only builds them (as a check); a `v*` tag on master builds them, attests their provenance and
-# publishes the GitHub release with the notes from CHANGELOG.md. Tags `v*` can be created by admins only
-# (tag ruleset), and releases are immutable once published.
+# this file only builds them (as a check); a push to master (the merge of a release PR) builds them, attests
+# their provenance and publishes the GitHub release `v<version>` with the notes from CHANGELOG.md, which also
+# creates the tag. A push whose version already has a release (a merge without a version bump) builds nothing.
+# Releases are immutable once published. The tag ruleset lets only admins and this workflow create `v*` tags.
 #
 # A release also carries what the in-app updater needs (src-tauri/src/update.rs): a minisign `.sig` for each
 # installer and `latest.json`, which the app reads from releases/latest/download/. The signing key is the
-# TAURI_SIGNING_PRIVATE_KEY secret of the `release` environment. Only the `sign` job sees it, in one step that
-# runs nothing but the Tauri CLI, so no build script or dependency of the build ever has it.
+# TAURI_SIGNING_PRIVATE_KEY secret of the `release` environment (deployable from master only). Only the `sign`
+# job sees it, in one step that runs nothing but the Tauri CLI, so no build script or dependency of the build
+# ever has it.
 on:
   push:
-    tags: ["v*"]
+    branches: [master]
   pull_request:
     paths: [".github/workflows/release.yml", "src-tauri/tauri.conf.json"]
   workflow_dispatch:
@@ -24,29 +26,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: build installers
-    runs-on: windows-latest
-    timeout-minutes: 90
+  # Decides whether this run releases: only on master (reached through a reviewed PR), and only when the
+  # version the app reports has no published release yet.
+  plan:
+    name: plan the release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
 
-      # A release must come from a commit that went through a reviewed PR into master, and its tag must
-      # match the version the app reports.
-      - name: Check the tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Read the version and check it can be released
+        id: plan
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
-          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not match tauri.conf.json version ${version}"
-            exit 1
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF}" != "refs/heads/master" ]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/master; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not point to a commit on master"
+          if [ "$(gh release view "v${version}" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null)" = "false" ]; then
+            echo "::notice::v${version} is already released, so nothing is built. Bump the version to release again."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! grep -q "^## \[${version}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no section for ${version}"
             exit 1
           fi
           pubkey="$(node -p "require('./src-tauri/tauri.conf.json').plugins.updater.pubkey")"
@@ -54,6 +66,18 @@ jobs:
             echo "::error::plugins.updater.pubkey in tauri.conf.json is empty, so the app could not verify updates"
             exit 1
           fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build installers
+    needs: plan
+    if: github.event_name == 'pull_request' || needs.plan.outputs.release == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
@@ -94,8 +118,8 @@ jobs:
 
   sign:
     name: sign for the updater
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    if: needs.plan.outputs.release == 'true'
+    needs: [plan, build]
     runs-on: ubuntu-latest
     environment: release
     timeout-minutes: 15
@@ -126,7 +150,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then
             echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set in the release environment"
@@ -134,7 +158,7 @@ jobs:
           fi
           mkdir signatures
           for installer in release/*.exe release/*.msi; do
-            node_modules/.bin/tauri signer sign --app-version "${TAG#v}" "$installer"
+            node_modules/.bin/tauri signer sign --app-version "${VERSION}" "$installer"
             mv "$installer.sig" signatures/
           done
 
@@ -147,8 +171,8 @@ jobs:
 
   publish:
     name: publish release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build, sign]
+    if: needs.plan.outputs.release == 'true'
+    needs: [plan, build, sign]
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -177,13 +201,15 @@ jobs:
             release/*.msi
 
       # Notes are the CHANGELOG.md section of this version. The release is created as a draft, the files
-      # are attached, and only then is it published, because a published release is immutable.
+      # are attached, and only then is it published (which creates the tag on this commit), because a
+      # published release is immutable. A draft left by a failed run is replaced.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          version="${TAG#v}"
+          version="${VERSION}"
+          TAG="v${version}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { on = 1; next }
             on && /^## \[/ { exit }
@@ -195,8 +221,26 @@ jobs:
           fi
           # The manifest the in-app updater reads; it fails when an installer has no signature.
           node scripts/release/updater-manifest.mjs "$version" release notes.md "$GITHUB_REPOSITORY"
+          # Contributors: everyone who authored a commit since the previous release, bots excluded. Added after
+          # the manifest, so the in-app updater's notes stay the changelog section alone.
+          previous="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // empty')"
+          if [ -n "${previous}" ]; then
+            contributors="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/compare/${previous}...${GITHUB_SHA}" \
+              --jq '.commits[].author.login // empty' | grep -v '\[bot\]$' | sort -fu || true)"
+            if [ -n "${contributors}" ]; then
+              {
+                printf '\n### Contributors\n\n'
+                while read -r login; do
+                  printf -- '- [@%s](https://github.com/%s)\n' "$login" "$login"
+                done <<< "${contributors}"
+              } >> notes.md
+            fi
+          fi
           # The `.sig` files stay out: latest.json carries the signatures, and fewer assets tell a visitor
           # which file to download.
+          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null)" = "true" ]; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
+          fi
           gh release create "$TAG" release/*.exe release/*.msi release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
-            --notes-file notes.md --verify-tag --draft
+            --notes-file notes.md --target "$GITHUB_SHA" --draft
           gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
