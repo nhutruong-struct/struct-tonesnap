@@ -25,6 +25,7 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | PR title rules | `scripts/harness/pr-title.mjs` | The pull request title becomes the commit message; CI checks its form |
 | Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test` |
 | Review | `.claude/agents/tonesnap-reviewer.md` | Read-only agent that reviews against the invariants and code rules |
+| Superpowers | `enabledPlugins` in `.claude/settings.json`, `AGENTS.md` → Superpowers | Trial of the Superpowers plugin (brainstorming, plans, TDD, subagents). `AGENTS.md` decides where its specs go (`docs/superpowers/`, gitignored), where worktrees live, and when it may commit. `/feature` stays as the project's own workflow for comparison |
 | State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed); each worktree keeps its own |
 
 ## Code map
