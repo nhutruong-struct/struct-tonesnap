@@ -4,7 +4,9 @@ name: Release
 # this file only builds them (as a check); a push to master (the merge of a release PR) builds them, attests
 # their provenance and publishes the GitHub release `v<version>` with the notes from CHANGELOG.md, which also
 # creates the tag. A push whose version already has a release (a merge without a version bump) builds nothing.
-# Releases are immutable once published. The tag ruleset lets only admins and this workflow create `v*` tags.
+# Releases are immutable once published. The tag ruleset lets only admins and the release GitHub App create
+# `v*` tags (the workflow's own token cannot). The app's credentials are the RELEASE_APP_CLIENT_ID variable and
+# RELEASE_APP_PRIVATE_KEY secret of the `release` environment; only the final publish command uses its token.
 #
 # A release also carries what the in-app updater needs (src-tauri/src/update.rs): a minisign `.sig` for each
 # installer and `latest.json`, which the app reads from releases/latest/download/. The signing key is the
@@ -200,12 +202,23 @@ jobs:
             release/*.exe
             release/*.msi
 
+      # Publishing creates the tag, which the tag ruleset allows only the release app to do. The token is
+      # limited to this repository and to contents, and expires with the job.
+      - name: Get the release app token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       # Notes are the CHANGELOG.md section of this version. The release is created as a draft, the files
       # are attached, and only then is it published (which creates the tag on this commit), because a
       # published release is immutable. A draft left by a failed run is replaced.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          APP_TOKEN: ${{ steps.app.outputs.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           version="${VERSION}"
@@ -243,4 +256,4 @@ jobs:
           fi
           gh release create "$TAG" release/*.exe release/*.msi release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
             --notes-file notes.md --target "$GITHUB_SHA" --draft
-          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          GH_TOKEN="${APP_TOKEN}" gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest

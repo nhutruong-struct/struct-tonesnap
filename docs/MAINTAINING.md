@@ -130,6 +130,18 @@ environment, whose deployment rule allows only the `master` branch. Keep an offl
 it, no installed ToneSnap accepts another update, and a new key reaches users only through a manual install.
 Never commit it, and never sign on a personal machine.
 
+### Release app (tags)
+
+The ruleset **Protect release tags** lets only repository admins and the **ToneSnap Release** GitHub App create
+`v*` tags; the workflow's own `GITHUB_TOKEN` cannot, so publishing a release with it fails with "Cannot create
+ref due to creations being restricted". The `publish` job therefore gets a short-lived token of the app
+(`actions/create-github-app-token`) and uses it only for the command that publishes the draft, which creates the
+tag. The app is installed on this repository alone, with the **Contents: Read and write** permission and no
+webhook. Its credentials are the `RELEASE_APP_CLIENT_ID` variable and the `RELEASE_APP_PRIVATE_KEY` secret of the
+`release` environment. If it is ever lost or the key leaks, delete the key in the app's settings, generate a new
+one and replace the secret. To release without the app, create the `vX.Y.Z` tag on the merge commit as an
+admin and re-run the failed jobs: a release on an existing tag needs no ref creation.
+
 ## Security reports
 
 Reports arrive as draft advisories under **Security → Advisories**. Acknowledge within 7 days, discuss the fix
