@@ -20,6 +20,13 @@ impl Rect {
         }
     }
 
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     pub fn inflate(self, dx: i32, dy: i32) -> Self {
         Self {
             left: self.left - dx,
@@ -30,6 +37,13 @@ impl Rect {
     }
 
     /// The part of `self` inside `other`; empty (zero or negative size) when they do not meet.
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     pub fn intersect(self, other: Self) -> Self {
         Self {
             left: self.left.max(other.left),
@@ -40,6 +54,13 @@ impl Rect {
     }
 
     /// The smallest rectangle holding both.
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     pub fn union(self, other: Self) -> Self {
         Self {
             left: self.left.min(other.left),
@@ -49,6 +70,13 @@ impl Rect {
         }
     }
 
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     pub fn contains(&self, x: i32, y: i32) -> bool {
         x >= self.left && x < self.right && y >= self.top && y < self.bottom
     }

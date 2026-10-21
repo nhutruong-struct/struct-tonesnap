@@ -53,4 +53,4 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Not implemented
 
-- macOS (Phase 3): the platform layer returns inert stubs there, and capture always reports "nothing selected".
+- macOS (Phase 3): `platform/mac/` reads the selection and places the popup; the popup and icon as `NSPanel`s, paste, copy to the clipboard, OCR, permission onboarding and signing are not built, so Apply and Copy do nothing there yet.

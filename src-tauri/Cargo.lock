@@ -2426,6 +2426,7 @@ checksum = "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c"
 dependencies = [
  "bitflags 2.13.2",
  "block2",
+ "libc",
  "objc2",
  "objc2-core-foundation",
  "objc2-foundation",
@@ -4559,8 +4560,12 @@ name = "tonesnap"
 version = "1.1.4"
 dependencies = [
  "anyhow",
+ "dispatch2",
  "futures-util",
  "keyring",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-foundation",
  "regex",
  "reqwest 0.12.28",
  "serde",

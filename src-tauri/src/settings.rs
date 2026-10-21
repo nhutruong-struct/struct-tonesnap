@@ -163,11 +163,17 @@ impl Settings {
         }
     }
 
-    /// Whether ToneSnap must never read text from this process (a lower-case `name.exe`).
+    /// Whether ToneSnap must never read text from this process (a lower-case `name.exe`; macOS
+    /// executables have no extension, so `.exe` is ignored on both sides).
     pub fn is_blocked_app(&self, process: &str) -> bool {
-        self.blocked_apps
-            .iter()
-            .any(|b| b.eq_ignore_ascii_case(process))
+        let bare = |name: &str| {
+            let name = name.to_ascii_lowercase();
+            name.strip_suffix(".exe")
+                .map(str::to_string)
+                .unwrap_or(name)
+        };
+        let process = bare(process);
+        self.blocked_apps.iter().any(|b| bare(b) == process)
     }
 }
 
@@ -489,6 +495,14 @@ mod tests {
         let settings = Settings::default();
         assert!(settings.is_blocked_app("KeePass.exe"));
         assert!(!settings.is_blocked_app("notepad.exe"));
+    }
+
+    #[test]
+    fn blocked_apps_match_macos_executables_without_the_extension() {
+        let settings = Settings::default();
+        assert!(settings.is_blocked_app("1password"));
+        assert!(settings.is_blocked_app("KeePassXC"));
+        assert!(!settings.is_blocked_app("pages"));
     }
 
     #[test]

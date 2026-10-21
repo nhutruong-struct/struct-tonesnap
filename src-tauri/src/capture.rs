@@ -11,6 +11,13 @@ use crate::settings::Settings;
 #[serde(rename_all = "snake_case")]
 pub enum SelectionSource {
     Uia,
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     Clipboard,
 }
 
@@ -19,6 +26,13 @@ pub enum SelectionSource {
 #[serde(rename_all = "snake_case")]
 pub enum ContextSource {
     Uia,
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        )
+    )]
     Ocr,
     None,
 }
@@ -49,6 +63,13 @@ pub enum CaptureError {
     BlockedApp(String),
 }
 
+#[cfg_attr(
+    not(windows),
+    allow(
+        dead_code,
+        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+    )
+)]
 pub fn friendly_app_name(process: &str) -> String {
     let name = match process {
         "winword.exe" => "Microsoft Word",
@@ -85,6 +106,13 @@ fn first_chars(s: &str, n: usize) -> String {
 
 /// The screen area to OCR for context: generously around the selection, or around the pointer
 /// when the app does not say where the selection is, kept on the monitor.
+#[cfg_attr(
+    not(windows),
+    allow(
+        dead_code,
+        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+    )
+)]
 fn ocr_area(selection: Option<Rect>, cursor: (i32, i32), monitor: Rect, scale: f64) -> Rect {
     let pad_x = (420.0 * scale) as i32;
     let pad_y = (200.0 * scale) as i32;
@@ -97,6 +125,13 @@ fn ocr_area(selection: Option<Rect>, cursor: (i32, i32), monitor: Rect, scale: f
 
 /// Cuts OCR output down to the part around the selection. OCR text differs slightly from the
 /// real text, so the match ignores whitespace and case and only uses the selection's start.
+#[cfg_attr(
+    not(windows),
+    allow(
+        dead_code,
+        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+    )
+)]
 fn focus_screen_text(lines: &[String], selection: &str, n: usize) -> String {
     let text: Vec<char> = lines.join("\n").chars().collect();
     let mut normalized: Vec<char> = Vec::new();
@@ -199,9 +234,54 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     Ok(captured)
 }
 
-#[cfg(not(windows))]
+/// The selection and its context through the Accessibility API. The clipboard fallback and OCR
+/// context are later Phase 3 steps, so a control that does not expose its selection is refused.
+#[cfg(target_os = "macos")]
+pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
+    use crate::platform::mac;
+
+    let front = mac::frontmost().ok_or(CaptureError::NoSelection)?;
+    if front.is_own() {
+        return Err(CaptureError::OwnWindow);
+    }
+    if settings.is_blocked_app(&front.process) {
+        return Err(CaptureError::BlockedApp(front.name));
+    }
+    let cursor = mac::cursor();
+    let n = settings.context_chars as usize;
+
+    let ax = mac::capture(front.pid, n);
+    if ax.is_password {
+        return Err(CaptureError::PasswordField);
+    }
+    if ax.selection.trim().is_empty() {
+        return Err(CaptureError::NoSelection);
+    }
+
+    let has_context = !(ax.before.trim().is_empty() && ax.after.trim().is_empty());
+    Ok(Captured {
+        // The process id plays the part of Windows' window handle.
+        hwnd: front.pid as isize,
+        app: front.name,
+        selection: ax.selection,
+        before: last_chars(&ax.before, n),
+        after: first_chars(&ax.after, n),
+        screen_text: String::new(),
+        editable: ax.editable,
+        bounds: ax.bounds,
+        cursor,
+        // `Uia` stands for the platform's accessibility API on both systems.
+        source: SelectionSource::Uia,
+        context_source: if has_context {
+            ContextSource::Uia
+        } else {
+            ContextSource::None
+        },
+    })
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn capture(_settings: &Settings) -> Result<Captured, CaptureError> {
-    // macOS (Accessibility API + Vision OCR) is Phase 3.
     Err(CaptureError::NoSelection)
 }
 

@@ -59,6 +59,13 @@ windows = { version = "0.62", features = [
     "Storage_Streams",
 ] }
 
+# Already compiled for Tauri (same versions, same lockfile entries); only the classes we call are on.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSGeometry", "NSString", "NSURL"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "libc", "NSScreen", "NSWorkspace", "NSRunningApplication"] }
+dispatch2 = "0.3"
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
 # The OS TLS stack instead of the default rustls, for the same reason as reqwest above; `zip`

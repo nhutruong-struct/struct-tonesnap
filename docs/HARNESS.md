@@ -37,7 +37,7 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | `src-tauri/src/window.rs`, `tray.rs`, `trigger.rs` | Popup/Settings windows and placement; tray menu; hotkey and floating icon |
 | `src-tauri/src/commands.rs`, `state.rs` | Every `#[tauri::command]` and `CommandError`; `AppState` (settings, session, request cancellation) |
 | `src-tauri/src/capture.rs` | Selection and context: UIA → clipboard → OCR |
-| `src-tauri/src/platform/` | `mod.rs` is the platform-neutral facade (non-Windows stubs in `stub.rs`); `win/` holds all Win32/COM: `uia`, `clipboard`, `input`, `ocr`, `window`, `com` (MTA threads), `selection_icon` (floating icon + mouse hook) |
+| `src-tauri/src/platform/` | `mod.rs` is the platform-neutral facade (stubs in `stub.rs`); `mac/` holds the macOS layer (`ax` Accessibility reads, `window` pointer, monitors and frontmost app, `cf` Core Foundation); `win/` holds all Win32/COM: `uia`, `clipboard`, `input`, `ocr`, `window`, `com` (MTA threads), `selection_icon` (floating icon + mouse hook) |
 | `src-tauri/src/geometry.rs` | `Rect` in physical pixels, shared by capture, placement and the platform layer |
 | `src-tauri/src/redact.rs` | Reversible redaction of sensitive data |
 | `src-tauri/src/prompt.rs` + `src-tauri/prompts/` | System prompt, output JSON schema, user turn |
