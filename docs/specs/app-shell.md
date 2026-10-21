@@ -37,6 +37,13 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 - **APP-32** The Settings window follows the language currently picked in its form, before saving, so the user sees what they are choosing.
 - **APP-33** Every interface string exists in both languages (`src/lib/i18n.ts`, `src-tauri/src/i18n.rs`); a missing translation is a TypeScript error. Strings may contain `{name}` placeholders, filled the same way in both languages.
 
+## macOS
+
+- **APP-50** ToneSnap runs as a menu-bar app (`ActivationPolicy::Accessory`): no Dock icon and no app menu. The tray icon sits in the menu bar. `./dev.sh` runs it in development.
+- **APP-51** At startup the popup window becomes a non-activating panel (`platform/mac/panel.rs`): its class is swapped for an `NSPanel` subclass that can become the key window, with the non-activating style, status window level, and the join-all-Spaces and full-screen-auxiliary behaviors, so it floats over full-screen apps. Showing it makes it the key window without making ToneSnap the active app: the app the user selected text in stays in front with its caret and selection. If the class cannot be swapped safely (the panel would need more memory than the window has), the popup stays an ordinary window and a diagnostic line goes to stderr.
+- **APP-52** "Is one of our windows in front" is answered by the frontmost app being ToneSnap or one of ToneSnap's windows being the key window (`NSApp.keyWindow`). Pressing the hotkey while the popup holds the keyboard therefore still closes it (CAP-01), and clicking another app closes the popup through the blur handling.
+- **APP-53** The interface names macOS instead of Windows where it speaks of the system (macOS, Keychain, Vision, the menu bar, `⌘V`) and shows shortcuts with the Mac symbols (`⌃⌥E`). The strings are overrides in `i18n.ts`, checked for the same placeholders as the originals.
+
 **Verified by:** `tray.rs` test (the menu icons decode and share one size), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
 ## Installing

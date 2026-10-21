@@ -14,6 +14,12 @@ test("formats for display", () => {
   expect(formatHotkey("super+shift+f5")).toBe("Shift+Win+F5");
 });
 
+test("formats with symbols on a Mac", () => {
+  expect(formatHotkey("ctrl+alt+e", true)).toBe("⌃⌥E");
+  expect(formatHotkey("super+shift+f5", true)).toBe("⇧⌘F5");
+  expect(formatHotkey("ctrl+space", true)).toBe("⌃Space");
+});
+
 test("knows shortcuts other apps take", () => {
   expect(hotkeyConflict("Ctrl+Alt+Space")).toContain("Claude");
   expect(hotkeyConflict("alt+ctrl+r")).toContain("Word");

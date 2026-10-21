@@ -84,6 +84,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let settings_need_attention = issue.is_some();
     app.manage(AppState::new(settings.clone(), issue));
     app.manage(update::Updates::default());
+    platform::init(&handle);
+    if let Some(popup) = app.get_webview_window(window::POPUP) {
+        platform::prepare_popup(&popup);
+    }
     tray::build(app, &settings)?;
     trigger::init_icon(&handle)?;
     trigger::apply_icon_mode(&settings);

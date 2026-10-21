@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, events, unsubscribeAll } from "./api";
+import { isMac } from "./platform";
 
 export type Lang = "vi" | "en";
 
@@ -399,6 +400,37 @@ const en: Record<Key, string> = {
 
 const DICTIONARIES: Record<Lang, Record<Key, string>> = { vi, en };
 
+/** The strings that name Windows, its keys or its credential store, worded for macOS. */
+const MAC_OVERRIDES: Record<Lang, Partial<Record<Key, string>>> = {
+  vi: {
+    "section.interface.desc": "Ngôn ngữ hiển thị và việc khởi động cùng macOS.",
+    "uiLanguage.auto": "Tự động (theo macOS)",
+    "launchAtLogin.label": "Khởi động ToneSnap khi đăng nhập macOS",
+    "launchAtLogin.help": "ToneSnap chờ sẵn ở thanh menu để dùng được ngay.",
+    "launchAtLogin.failed": "Đã lưu cài đặt, nhưng không đổi được việc khởi động cùng macOS: {detail}",
+    "apiKey.help":
+      "Key được lưu trong Keychain của macOS, không ghi ra file. Nội dung chỉ gửi thẳng tới nhà cung cấp bạn chọn.",
+    "apiKey.saved": "Đã lưu API key vào Keychain.",
+    "hotkey.help": "Bấm vào ô rồi nhấn tổ hợp phím mới (cần ít nhất một phím ⌃/⌥/⇧/⌘).",
+    "ocr.help": "Ảnh chỉ xử lý trên máy bằng Vision, không gửi đi. Chỉ phần chữ (đã che) được gửi.",
+    "notice.apply_failed": "Không đưa được nội dung về app gốc. Đã copy sẵn, bạn nhấn ⌘V để dán.",
+  },
+  en: {
+    "section.interface.desc": "Display language and starting with macOS.",
+    "uiLanguage.auto": "Automatic (follow macOS)",
+    "launchAtLogin.label": "Start ToneSnap when I log in to macOS",
+    "launchAtLogin.help": "ToneSnap waits in the menu bar so it is ready at once.",
+    "launchAtLogin.failed": "Settings were saved, but starting with macOS could not be changed: {detail}",
+    "apiKey.help":
+      "The key is stored in the macOS Keychain, never in a file. Text is sent only to the provider you choose.",
+    "apiKey.saved": "API key saved to the Keychain.",
+    "hotkey.help": "Click the box and press a new key combination (with at least one of ⌃/⌥/⇧/⌘).",
+    "ocr.help":
+      "The image is processed on this Mac with Vision and never sent. Only the recognized text, masked, is sent.",
+    "notice.apply_failed": "Could not put the text back into the app. It is on your clipboard; press ⌘V to paste.",
+  },
+};
+
 export const KEYS = Object.keys(vi) as Key[];
 
 export function resolveLang(setting: string | undefined): Lang {
@@ -408,11 +440,12 @@ export function resolveLang(setting: string | undefined): Lang {
 
 export type Translate = (key: Key, params?: Record<string, string | number>) => string;
 
-export function translator(lang: Lang): Translate {
+export function translator(lang: Lang, mac: boolean = isMac()): Translate {
+  const strings = mac ? { ...DICTIONARIES[lang], ...MAC_OVERRIDES[lang] } : DICTIONARIES[lang];
   return (key, params) =>
     Object.entries(params ?? {}).reduce(
       (text, [name, value]) => text.split(`{${name}}`).join(String(value)),
-      DICTIONARIES[lang][key],
+      strings[key],
     );
 }
 

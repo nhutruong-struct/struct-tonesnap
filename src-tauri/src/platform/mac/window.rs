@@ -99,7 +99,7 @@ fn screen_at_point(screens: &[Screen], p: Point) -> Option<Screen> {
 }
 
 /// Runs `f` on the main thread, which AppKit requires for screens, and waits for it.
-fn on_main<R: Send>(f: impl FnOnce(MainThreadMarker) -> R + Send) -> Option<R> {
+pub(super) fn on_main<R: Send>(f: impl FnOnce(MainThreadMarker) -> R + Send) -> Option<R> {
     if let Some(mtm) = MainThreadMarker::new() {
         return Some(f(mtm));
     }

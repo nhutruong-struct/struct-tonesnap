@@ -83,7 +83,9 @@ fn place_and_show(app: &AppHandle, selection: Option<Rect>, cursor: (i32, i32), 
     ));
     state(app).mark_popup_shown();
     let _ = win.show();
-    let _ = win.set_focus();
+    if !platform::focus_popup(&win) {
+        let _ = win.set_focus();
+    }
 }
 
 /// Where the popup goes: just below the anchor, or above it when there is no room below, kept

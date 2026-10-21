@@ -25,6 +25,22 @@ use stub as imp;
 use win as imp;
 
 pub use imp::{copy_text, cursor, monitor_at, own_window_in_front, paste_into, selection_icon};
+#[cfg(target_os = "macos")]
+pub use mac::{focus_popup, init, prepare_popup};
+
+/// Per-platform app setup, run once at startup.
+#[cfg(not(target_os = "macos"))]
+pub fn init(_app: &tauri::AppHandle) {}
+
+/// Gives the popup window the traits it needs to appear without stealing focus.
+#[cfg(not(target_os = "macos"))]
+pub fn prepare_popup(_window: &tauri::WebviewWindow) {}
+
+/// Gives the shown popup the keyboard; false when the caller should focus it the usual way.
+#[cfg(not(target_os = "macos"))]
+pub fn focus_popup(_window: &tauri::WebviewWindow) -> bool {
+    false
+}
 
 use crate::geometry::Rect;
 

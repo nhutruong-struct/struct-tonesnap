@@ -20,6 +20,19 @@ describe("dictionaries", () => {
     }
   });
 
+  test("the macOS wording keeps every placeholder and names no Windows feature", () => {
+    for (const lang of ["vi", "en"] as const) {
+      const base = translator(lang, false);
+      const mac = translator(lang, true);
+      const changed = KEYS.filter((key) => mac(key) !== base(key));
+      expect(changed.length).toBeGreaterThan(5);
+      for (const key of changed) {
+        expect(placeholders(mac(key)), key).toEqual(placeholders(base(key)));
+        expect(mac(key), key).not.toMatch(/Windows|Ctrl|Credential/);
+      }
+    }
+  });
+
   test("every tone, trigger and notice the app can show has a label", () => {
     const required = [
       ...["concise", "natural", "formal"].map((t) => `tone.${t}`),

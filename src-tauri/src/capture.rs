@@ -243,7 +243,8 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     use crate::platform::mac::{self, clipboard, input};
 
     let front = mac::frontmost().ok_or(CaptureError::NoSelection)?;
-    if front.is_own() {
+    // The popup does not make ToneSnap the active app, so ask who holds the keyboard too.
+    if front.is_own() || mac::own_window_in_front() == Some(true) {
         return Err(CaptureError::OwnWindow);
     }
     if settings.is_blocked_app(&front.process) {

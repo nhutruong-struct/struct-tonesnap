@@ -5,6 +5,7 @@ mod ax;
 mod cf;
 pub mod clipboard;
 pub mod input;
+mod panel;
 mod window;
 
 use std::thread::sleep;
@@ -13,14 +14,49 @@ use std::time::{Duration, Instant};
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 
 pub use ax::capture;
+use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
 
 // Not built for macOS yet: `selection_icon` (NSPanel).
 pub use super::stub::selection_icon;
 
-/// Whether the foreground app is ToneSnap (the popup or Settings).
+/// Whether ToneSnap's popup or Settings is in front. The popup never makes ToneSnap the active
+/// app, so the frontmost app alone does not tell: one of our windows holding the keyboard does.
 pub fn own_window_in_front() -> Option<bool> {
-    Some(frontmost()?.is_own())
+    if frontmost()?.is_own() {
+        return Some(true);
+    }
+    on_main(panel::has_key_window)
+}
+
+/// Runs ToneSnap as a menu-bar app: no Dock icon and no app menu.
+pub fn init(app: &tauri::AppHandle) {
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+}
+
+/// Makes the popup window a non-activating panel.
+pub fn prepare_popup(window: &tauri::WebviewWindow) {
+    let Ok(native) = window.ns_window() else {
+        return;
+    };
+    let native = native as usize;
+    let _ = window.run_on_main_thread(move || {
+        if !panel::make_panel(native as *mut std::ffi::c_void) {
+            eprintln!("the popup could not become a panel; it stays an ordinary window");
+        }
+    });
+}
+
+/// Gives the shown popup the keyboard without activating ToneSnap. False when the window is
+/// not a panel, so the caller focuses it the usual way.
+pub fn focus_popup(window: &tauri::WebviewWindow) -> bool {
+    let Ok(native) = window.ns_window() else {
+        return false;
+    };
+    let native = native as usize;
+    window
+        .run_on_main_thread(move || panel::focus_panel(native as *mut std::ffi::c_void))
+        .is_ok()
 }
 
 /// Puts `text` on the clipboard for the user to paste wherever they like.
