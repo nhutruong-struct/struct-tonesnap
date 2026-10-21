@@ -13,6 +13,8 @@ type AxError = i32;
 const AX_SUCCESS: AxError = 0;
 
 // AXValueType
+const VALUE_CG_POINT: i32 = 1;
+const VALUE_CG_SIZE: i32 = 2;
 const VALUE_CF_RANGE: i32 = 4;
 const VALUE_CG_RECT: i32 = 3;
 
@@ -28,6 +30,28 @@ struct CgRect {
     y: f64,
     width: f64,
     height: f64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct Size {
+    width: f64,
+    height: f64,
+}
+
+struct Frame {
+    origin: Point,
+    width: f64,
+    height: f64,
+}
+
+impl Frame {
+    fn contains(&self, p: Point) -> bool {
+        p.x >= self.origin.x
+            && p.x < self.origin.x + self.width
+            && p.y >= self.origin.y
+            && p.y < self.origin.y + self.height
+    }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -77,6 +101,44 @@ pub struct Captured {
 pub fn is_trusted() -> bool {
     // SAFETY: takes no arguments.
     unsafe { AXIsProcessTrusted() != 0 }
+}
+
+/// What the focused control says about a selection, for the cheap check before the floating
+/// icon is shown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelectionState {
+    Selected,
+    /// The pointer is inside a control that exposes its text and has nothing selected.
+    Empty,
+    /// The app does not say (common in Electron apps); callers fall back to heuristics.
+    Unknown,
+    Password,
+}
+
+/// `at` is where the selection gesture ended, in points. An empty selection is believed only
+/// when it ended inside the focused control: some apps (Google Docs) keep focus on a hidden
+/// input while the user selects elsewhere.
+pub fn selection_state(pid: i32, at: Point) -> SelectionState {
+    if !is_trusted() {
+        return SelectionState::Unknown;
+    }
+    let Some(focused) = focused_element(pid) else {
+        return SelectionState::Unknown;
+    };
+    if focused.subrole().as_deref() == Some("AXSecureTextField") {
+        return SelectionState::Password;
+    }
+    if focused
+        .string("AXSelectedText")
+        .is_some_and(|text| !text.is_empty())
+    {
+        return SelectionState::Selected;
+    }
+    match focused.range("AXSelectedTextRange") {
+        Some(range) if range.length > 0 => SelectionState::Selected,
+        Some(_) if focused.frame().is_some_and(|f| f.contains(at)) => SelectionState::Empty,
+        _ => SelectionState::Unknown,
+    }
 }
 
 /// Reads the focused element of the app with this process id. Everything is best effort: an
@@ -232,6 +294,19 @@ impl Element {
     fn string_for_range(&self, range: CFRange) -> Option<String> {
         let units = self.parameterized("AXStringForRange", range)?.utf16()?;
         Some(String::from_utf16_lossy(&units))
+    }
+
+    /// The control's rectangle in points.
+    fn frame(&self) -> Option<Frame> {
+        let mut origin = Point::default();
+        let mut size = Size::default();
+        read_ax_value(&self.attribute("AXPosition")?, VALUE_CG_POINT, &mut origin).then_some(())?;
+        read_ax_value(&self.attribute("AXSize")?, VALUE_CG_SIZE, &mut size).then_some(())?;
+        Some(Frame {
+            origin,
+            width: size.width,
+            height: size.height,
+        })
     }
 
     fn bounds_for_range(&self, range: CFRange) -> Option<Rect> {

@@ -3,6 +3,8 @@
 //! A function returning `Option` answers `None` where the platform cannot tell, so the caller
 //! falls back to what Tauri knows.
 
+#[cfg(any(windows, target_os = "macos"))]
+mod gesture;
 #[cfg(target_os = "macos")]
 pub mod mac;
 #[cfg(not(windows))]

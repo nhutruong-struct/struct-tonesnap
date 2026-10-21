@@ -122,7 +122,7 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 
 - [x] `platform/mac/` replaces the stub for the pointer, monitors and the foreground app; the selection, context, editability and bounds are read through the Accessibility API (CAP-18 to CAP-22). Tested against a TextEdit document: context and editability read; a real selection and its bounds still to be checked by hand
 - [x] Popup as a non-activating `NSPanel`, menu-bar app without a Dock icon, Mac wording and `⌃⌥E` shortcut display (APP-50 to APP-53). The floating icon is the next step. Panel behavior with a real selection still to be checked by hand
-- [ ] Floating icon as a non-activating `NSPanel`
+- [x] Floating icon as a non-activating `NSPanel` with a global mouse monitor and the Accessibility check (TRG-30 to TRG-33); the gesture logic is shared with Windows. Not yet tried with a real mouse
 - [ ] On-device OCR with Vision, capture with ScreenCaptureKit
 - [x] Clipboard snapshot and restore (every item and type, transient marker), Cmd+C fallback for the selection, paste with synthetic Cmd+V (CAP-22, APL-30). The clipboard round trip is tested; the key presses are still to be checked by hand
 - [ ] Permission onboarding (Accessibility, Screen Recording)

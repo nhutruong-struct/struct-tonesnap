@@ -1,11 +1,12 @@
 //! macOS integration. Selection, context, the foreground app, the clipboard and paste are real;
-//! the popup, OCR and the floating icon still use the stubs until their Phase 3 steps land.
+//! OCR is the one piece still to come (Phase 3).
 
 mod ax;
 mod cf;
 pub mod clipboard;
 pub mod input;
 mod panel;
+pub mod selection_icon;
 mod window;
 
 use std::thread::sleep;
@@ -16,9 +17,6 @@ use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 pub use ax::capture;
 use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
-
-// Not built for macOS yet: `selection_icon` (NSPanel).
-pub use super::stub::selection_icon;
 
 /// Whether ToneSnap's popup or Settings is in front. The popup never makes ToneSnap the active
 /// app, so the frontmost app alone does not tell: one of our windows holding the keyboard does.

@@ -26,15 +26,15 @@ pub struct Point {
 
 /// A rectangle in points, origin at the top left.
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct PointRect {
-    left: f64,
-    top: f64,
-    right: f64,
-    bottom: f64,
+pub(super) struct PointRect {
+    pub left: f64,
+    pub top: f64,
+    pub right: f64,
+    pub bottom: f64,
 }
 
 impl PointRect {
-    fn contains(&self, p: Point) -> bool {
+    pub fn contains(&self, p: Point) -> bool {
         p.x >= self.left && p.x < self.right && p.y >= self.top && p.y < self.bottom
     }
 
@@ -128,7 +128,7 @@ fn screens() -> Vec<Screen> {
 }
 
 /// The pointer in points, as Core Graphics reports it (origin top left).
-fn pointer() -> Point {
+pub(super) fn pointer() -> Point {
     // SAFETY: a null source makes an event stamped with the current state; we own the result and
     // release it once the location is read.
     unsafe {
@@ -142,6 +142,19 @@ fn pointer() -> Point {
 /// The scale of the screen under a point.
 pub(super) fn scale_at(p: Point) -> f64 {
     screen_at_point(&screens(), p).map_or(1.0, |s| s.scale)
+}
+
+/// The part of the screen under `p` not covered by the menu bar and the Dock, and the height
+/// of the primary screen (the origin of Cocoa's upward y), both in points. Main thread.
+pub(super) fn visible_area(p: Point) -> Option<(PointRect, f64)> {
+    let screens = screens();
+    let primary_height = on_main(|mtm| {
+        NSScreen::screens(mtm)
+            .iter()
+            .next()
+            .map(|s| s.frame().size.height)
+    })??;
+    screen_at_point(&screens, p).map(|s| (s.visible, primary_height))
 }
 
 pub fn cursor() -> (i32, i32) {

@@ -27,13 +27,12 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
 };
 
-mod gesture;
 mod paint;
 
 use super::uia::{self, SelectionState};
 use super::window;
 use crate::geometry::Rect;
-use gesture::{DoubleClick, Gesture};
+use crate::platform::gesture::{DoubleClick, Gesture};
 
 /// Posted by the hook after a selection gesture; lParam packs the cursor position.
 const WM_CANDIDATE: u32 = WM_APP + 1;
