@@ -5,6 +5,7 @@ mod ax;
 mod cf;
 pub mod clipboard;
 pub mod input;
+pub mod ocr;
 mod panel;
 pub mod selection_icon;
 mod window;
@@ -27,9 +28,12 @@ pub fn own_window_in_front() -> Option<bool> {
     on_main(panel::has_key_window)
 }
 
-/// Runs ToneSnap as a menu-bar app: no Dock icon and no app menu.
+/// Runs ToneSnap as a menu-bar app: no Dock icon and no app menu, and prepares the OCR.
 pub fn init(app: &tauri::AppHandle) {
     let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    if ocr::screen_capture_allowed() {
+        ocr::warm_up();
+    }
 }
 
 /// Makes the popup window a non-activating panel.

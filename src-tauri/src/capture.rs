@@ -11,13 +11,6 @@ use crate::settings::Settings;
 #[serde(rename_all = "snake_case")]
 pub enum SelectionSource {
     Uia,
-    #[cfg_attr(
-        not(windows),
-        allow(
-            dead_code,
-            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
-        )
-    )]
     Clipboard,
 }
 
@@ -26,13 +19,6 @@ pub enum SelectionSource {
 #[serde(rename_all = "snake_case")]
 pub enum ContextSource {
     Uia,
-    #[cfg_attr(
-        not(windows),
-        allow(
-            dead_code,
-            reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
-        )
-    )]
     Ocr,
     None,
 }
@@ -67,7 +53,7 @@ pub enum CaptureError {
     not(windows),
     allow(
         dead_code,
-        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
+        reason = "only the Windows capture uses it; macOS names apps itself and keeps no window rectangles"
     )
 )]
 pub fn friendly_app_name(process: &str) -> String {
@@ -106,13 +92,6 @@ fn first_chars(s: &str, n: usize) -> String {
 
 /// The screen area to OCR for context: generously around the selection, or around the pointer
 /// when the app does not say where the selection is, kept on the monitor.
-#[cfg_attr(
-    not(windows),
-    allow(
-        dead_code,
-        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
-    )
-)]
 fn ocr_area(selection: Option<Rect>, cursor: (i32, i32), monitor: Rect, scale: f64) -> Rect {
     let pad_x = (420.0 * scale) as i32;
     let pad_y = (200.0 * scale) as i32;
@@ -125,13 +104,6 @@ fn ocr_area(selection: Option<Rect>, cursor: (i32, i32), monitor: Rect, scale: f
 
 /// Cuts OCR output down to the part around the selection. OCR text differs slightly from the
 /// real text, so the match ignores whitespace and case and only uses the selection's start.
-#[cfg_attr(
-    not(windows),
-    allow(
-        dead_code,
-        reason = "the clipboard and OCR capture is Windows-only until their macOS Phase 3 steps"
-    )
-)]
 fn focus_screen_text(lines: &[String], selection: &str, n: usize) -> String {
     let text: Vec<char> = lines.join("\n").chars().collect();
     let mut normalized: Vec<char> = Vec::new();
@@ -235,7 +207,7 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
 }
 
 /// The selection and its context: the Accessibility API first, then the clipboard (Cmd+C) for
-/// the selection. OCR context is a later Phase 3 step.
+/// the selection, and on-device OCR for context when the app does not give any.
 #[cfg(target_os = "macos")]
 pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     use std::time::Duration;
@@ -282,12 +254,21 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
         source,
         context_source: ContextSource::None,
     };
-    if source == SelectionSource::Uia
-        && !(ax.before.trim().is_empty() && ax.after.trim().is_empty())
-    {
+    let ax_has_context = !(ax.before.trim().is_empty() && ax.after.trim().is_empty());
+    if source == SelectionSource::Uia && ax_has_context {
         captured.before = last_chars(&ax.before, n);
         captured.after = first_chars(&ax.after, n);
         captured.context_source = ContextSource::Uia;
+    } else if settings.ocr_fallback {
+        let monitor = mac::monitor_at(cursor.0, cursor.1);
+        let area = ocr_area(ax.bounds, cursor, monitor.bounds, monitor.scale);
+        if let Some(lines) = mac::ocr::recognize(area, monitor.scale) {
+            let text = focus_screen_text(&lines, &captured.selection, n);
+            if !text.trim().is_empty() {
+                captured.screen_text = text;
+                captured.context_source = ContextSource::Ocr;
+            }
+        }
     }
     Ok(captured)
 }

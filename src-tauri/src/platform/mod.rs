@@ -51,13 +51,6 @@ use crate::geometry::Rect;
 pub struct Monitor {
     /// The part not covered by the taskbar.
     pub work: Rect,
-    #[cfg_attr(
-        not(windows),
-        allow(
-            dead_code,
-            reason = "only the Windows OCR area uses it until the macOS OCR step"
-        )
-    )]
     pub bounds: Rect,
     /// Effective DPI scale: 1.0 at 96 DPI.
     pub scale: f64,
