@@ -144,15 +144,42 @@ admin and re-run the failed jobs: a release on an existing tag needs no ref crea
 
 ## macOS
 
-The app runs on macOS 14 or later (`./dev.sh` in development; the `check (macOS)` job of `ci.yml` lints and tests the macOS layer on every pull request). A release does **not** carry macOS files yet: the in-app updater says so (`update.rs`, `updates_supported`), and the `build macOS app (check only)` job of `release.yml` only proves that the bundle builds, unsigned and unpublished. To ship it, a maintainer with an Apple Developer account has to:
+The app runs on macOS 14 or later, Apple Silicon (`./dev.sh` in development; the `check (macOS)` job of `ci.yml` lints and tests the macOS layer on every pull request). A release carries `ToneSnap_<version>_aarch64.dmg` and the signed update archive `ToneSnap_<version>_aarch64.app.tar.gz` next to the Windows installers, and `latest.json` lists `darwin-aarch64` for the in-app updater.
 
-1. Create a *Developer ID Application* certificate and export it as a `.p12`. Store it as the `APPLE_CERTIFICATE` and `APPLE_CERTIFICATE_PASSWORD` secrets of the `release` environment, with `APPLE_SIGNING_IDENTITY` (for example `Developer ID Application: Name (TEAMID)`).
-2. Create an app-specific password (or an App Store Connect API key) for notarization: `APPLE_ID`, `APPLE_PASSWORD` and `APPLE_TEAM_ID` secrets. Tauri signs with the hardened runtime and notarizes when these are set during `tauri build`.
-3. Give the macOS build job those variables in the `release` environment, build `aarch64-apple-darwin` and `x86_64-apple-darwin`, and attach the `.dmg` files to the release.
-4. For updates: tar the `.app` (`.app.tar.gz`), sign it with the Tauri key in the `sign` job like the Windows installers, add `darwin-aarch64` and `darwin-x86_64` entries to `scripts/release/updater-manifest.mjs`, and turn `updates_supported` back on for macOS.
-5. Tick *Signing and notarization* in `docs/PLAN.md`.
+How a release is made (`release.yml`): `build macOS app` builds `ToneSnap.app` without any secret (it also runs on pull requests, as a check); `sign and notarize macOS app`, in the `release` environment, runs only `scripts/release/sign-macos.sh`, which signs with the Developer ID certificate and the hardened runtime, notarizes the app and the disk image with Apple, staples both and writes the `.dmg` and the `.app.tar.gz`; the `sign for the updater` job signs the archive with the Tauri key like the installers.
 
-Permissions on a Mac belong to the app's code signature: an unsigned or re-signed build must be allowed again under Privacy & Security.
+### Apple credentials (one time)
+
+1. **Certificate.** In the Apple Developer account (Account Holder role) create a *Developer ID Application* certificate from a certificate signing request, install it in Keychain Access, and export it with its private key as a `.p12` (a password of your own).
+2. **Notarization key.** In App Store Connect → Users and Access → Integrations → *Team Keys*, create a key with the *Developer* role and download its `.p8` once.
+3. **Secrets** in the `release` environment of the repository (`gh secret set NAME --env release`):
+
+| Secret | Value |
+|---|---|
+| `APPLE_CERTIFICATE` | `base64 -i certificate.p12`, the whole output |
+| `APPLE_CERTIFICATE_PASSWORD` | the `.p12` password |
+| `APPLE_SIGNING_IDENTITY` | the certificate's name, e.g. `Developer ID Application: Name (TEAMID)` |
+| `APPLE_API_KEY_ID` | the key's id |
+| `APPLE_API_ISSUER_ID` | the issuer id shown above the keys list |
+| `APPLE_API_KEY_P8` | the contents of the `.p8` file |
+
+A release stops with a message naming the secret when one is missing. The Tauri update key (`TAURI_SIGNING_PRIVATE_KEY`) is the one already used for Windows.
+
+### Trying it on your own Mac
+
+With the certificate in your login keychain and a notarization profile (`xcrun notarytool store-credentials tonesnap-notary --apple-id … --team-id …`):
+
+```bash
+pnpm tauri build --bundles app
+```
+
+```bash
+APPLE_SIGNING_IDENTITY="Developer ID Application: Name (TEAMID)" NOTARY_PROFILE=tonesnap-notary scripts/release/sign-macos.sh src-tauri/target/release/bundle/macos/ToneSnap.app 1.2.3 out
+```
+
+Add `SKIP_NOTARIZE=1` to sign and package without Apple's service (for example with an *Apple Development* certificate). The script ends with `spctl` checks that the app and the disk image are accepted by Gatekeeper.
+
+Permissions on a Mac belong to the app's code signature: a build signed with the same certificate keeps its Accessibility and Screen Recording permissions across updates, while an unsigned or re-signed build has to be allowed again under Privacy & Security.
 
 ## Security reports
 

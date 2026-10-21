@@ -129,8 +129,6 @@ const vi = {
   "permission.openSettings": "Mở Cài đặt hệ thống",
   "section.updates": "Cập nhật",
   "section.updates.desc": "Phiên bản mới của ToneSnap trên GitHub và cách cài đặt chúng.",
-  "updates.unsupported":
-    "Chưa có cập nhật tự động cho macOS. Tải phiên bản mới từ trang Releases của ToneSnap trên GitHub.",
   "updates.current": "Phiên bản hiện tại: {version}",
   "updateMode.auto": "Tự động cập nhật",
   "updateMode.auto.hint":
@@ -343,8 +341,6 @@ const en: Record<Key, string> = {
   "permission.openSettings": "Open System Settings",
   "section.updates": "Updates",
   "section.updates.desc": "New versions of ToneSnap on GitHub, and how they are installed.",
-  "updates.unsupported":
-    "Automatic updates are not available on macOS yet. Download new versions from the ToneSnap Releases page on GitHub.",
   "updates.current": "Current version: {version}",
   "updateMode.auto": "Update automatically",
   "updateMode.auto.hint":

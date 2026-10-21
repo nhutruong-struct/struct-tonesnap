@@ -135,8 +135,6 @@ export interface UpdateInfo {
   status: UpdateStatus;
   /** Installed with the MSI: updates need administrator rights, so they always wait for the user. */
   msiInstall: boolean;
-  /** False where releases carry no updater installer (macOS, for now): the section only says so. */
-  supported: boolean;
 }
 
 export const api = {

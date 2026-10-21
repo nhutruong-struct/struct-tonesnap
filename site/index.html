@@ -6,7 +6,7 @@
     <title>ToneSnap: say it in the right tone, in any app</title>
     <meta
       name="description"
-      content="Select text in any Windows app, click the floating icon or press a hotkey, and get versions in several tones, translated or rewritten. Apply one in place. Free and open source."
+      content="Select text in any Windows or Mac app, click the floating icon or press a hotkey, and get versions in several tones, translated or rewritten. Apply one in place. Free and open source."
     />
     <meta property="og:title" content="ToneSnap" />
     <meta
@@ -56,12 +56,13 @@
       <section class="hero">
         <div class="wrap hero-inner">
           <div class="hero-copy">
-            <p class="eyebrow">Free and open source · Windows 10/11</p>
+            <p class="eyebrow">Free and open source · Windows 10/11 · macOS 14+ (Apple Silicon)</p>
             <h1>Say it in the right tone, <span class="grad">in any app.</span></h1>
             <p class="lead">
               Select a sentence in Slack, Outlook, Teams or your browser, click the small icon that appears next to it
-              (or press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>), and ToneSnap suggests versions in several tones,
-              in Vietnamese, English or Japanese. Click <strong>Apply</strong> and it replaces your text in place.
+              (or press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd>, <kbd>⌃</kbd><kbd>⌥</kbd><kbd>E</kbd> on a Mac), and
+              ToneSnap suggests versions in several tones, in Vietnamese, English or Japanese. Click
+              <strong>Apply</strong> and it replaces your text in place.
             </p>
             <div class="cta">
               <a
@@ -69,6 +70,12 @@
                 href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest"
                 data-download
                 >Download for Windows</a
+              >
+              <a
+                class="btn btn-primary"
+                href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest"
+                data-download-mac
+                >Download for Mac</a
               >
               <a class="btn" href="#start">Get started</a>
               <a class="btn" href="https://github.com/nhutruong-struct/struct-tonesnap">View on GitHub</a>
@@ -242,7 +249,8 @@
         <div class="wrap">
           <h2>Get started</h2>
           <p class="section-lead">
-            Download the Windows installer from the latest release, or build ToneSnap from source in a few minutes.
+            Download the Windows installer or the Mac disk image from the latest release, or build ToneSnap from source
+            in a few minutes.
           </p>
           <ol class="steps">
             <li>
@@ -256,6 +264,17 @@
                 <em>More info → Run anyway</em>. The other files on the
                 <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest">releases page</a> are for
                 updates, checksums and managed deployment.
+              </p>
+            </li>
+            <li>
+              <h3>On a Mac</h3>
+              <p>
+                <a href="https://github.com/nhutruong-struct/struct-tonesnap/releases/latest" data-download-mac
+                  >Download the disk image</a
+                >
+                (<code>aarch64.dmg</code>, for Apple Silicon and macOS 14 or later), drag ToneSnap to Applications and
+                open it. It is signed and notarized by Apple. ToneSnap asks for the <em>Accessibility</em> permission
+                the first time; turn it on in System Settings, and the Settings window shows when it is done.
               </p>
             </li>
             <li>

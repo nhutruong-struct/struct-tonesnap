@@ -50,7 +50,7 @@ different tone, in the language you choose. **Apply** pastes the version you pic
 
 ## Status
 
-ToneSnap runs on **Windows 10/11**. **macOS 14 or later** works when built from source (see [Run on a Mac](#run-on-a-mac)); there is no macOS download or in-app update yet. On Windows, download `ToneSnap_x.y.z_x64-setup.exe` from the
+ToneSnap runs on **Windows 10/11**. **macOS 14 or later (Apple Silicon)** is supported too: the releases carry a signed and notarized `ToneSnap_x.y.z_aarch64.dmg` (see [Run on a Mac](#run-on-a-mac)). On Windows, download `ToneSnap_x.y.z_x64-setup.exe` from the
 [latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest) (or use the
 **Download for Windows** button on the [website](https://nhutruong-struct.github.io/struct-tonesnap/)), or build it from source
 as described below. The installers are not code-signed yet, so Windows SmartScreen asks for confirmation the
@@ -97,7 +97,7 @@ pnpm install
 ToneSnap lives in the menu bar. Its **Settings** window opens at first start with a **Permissions** section: allow
 **Accessibility** (reads the selected text, presses ⌘C and ⌘V) and, optionally, **Screen Recording** (on-device OCR
 context). Keys are kept in the Keychain. When started from a terminal or an editor, macOS grants the permission to
-that program, not to ToneSnap. `pnpm tauri build --bundles app,dmg` makes an unsigned app and disk image.
+that program, not to ToneSnap. To install a release instead, open the `.dmg` from the [latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest) and drag ToneSnap to Applications; ToneSnap updates itself like on Windows. `pnpm tauri build --bundles app` makes an unsigned app.
 
 ### Build an installer
 

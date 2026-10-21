@@ -88,8 +88,6 @@ pub struct UpdateInfo {
     pub status: UpdateStatus,
     /// Installed with the MSI, so updates need administrator rights and always wait for the user.
     pub msi_install: bool,
-    /// False where releases carry no installer for the in-app updater (macOS, for now).
-    pub supported: bool,
 }
 
 /// The release the last check found, with its installer once downloaded.
@@ -195,14 +193,7 @@ pub fn info(app: &AppHandle) -> UpdateInfo {
         current_version: app.package_info().version.to_string(),
         status: app.state::<Updates>().status(),
         msi_install: is_msi_install(),
-        supported: updates_supported(),
     }
-}
-
-/// The release workflow publishes updater installers for Windows only; a macOS build would
-/// look for a platform the manifest does not list and report a failed check every time.
-fn updates_supported() -> bool {
-    cfg!(not(target_os = "macos"))
 }
 
 /// The version the tray offers to install, if any.
@@ -216,7 +207,7 @@ pub fn offered_version(app: &AppHandle) -> Option<String> {
 /// Checks on a schedule and installs a downloaded update when ToneSnap is idle. Release builds
 /// only: a development build would replace itself with the released installer.
 pub fn start(app: &AppHandle) {
-    if cfg!(debug_assertions) || !updates_supported() {
+    if cfg!(debug_assertions) {
         return;
     }
     let app = app.clone();
@@ -254,9 +245,6 @@ pub fn settings_changed(app: &AppHandle) {
 /// Checks for a new release (when `check`), then takes every step allowed now. Only one run
 /// works at a time; one that finds another running does nothing.
 async fn run(app: &AppHandle, check: bool, user_asked: bool) {
-    if !updates_supported() {
-        return;
-    }
     let updates = app.state::<Updates>();
     let Some(_busy) = updates.try_begin() else {
         return;
@@ -389,11 +377,19 @@ fn install(app: &AppHandle) {
         },
     );
     window::dismiss_popup(app);
-    // Starts the installer and ends this process; the installer starts the new version.
-    if let Err(e) = update.install(installer) {
-        // The icon was hidden just before the installer was to start.
-        tray::show(app);
-        fail(app, FailedStep::Install, e);
+    // On Windows this starts the installer and ends this process; the installer starts the new
+    // version. On macOS it replaces the app bundle in place and returns, so ToneSnap restarts.
+    match update.install(installer) {
+        Ok(()) => {
+            if cfg!(target_os = "macos") {
+                app.restart();
+            }
+        }
+        Err(e) => {
+            // The icon was hidden just before the installer was to start.
+            tray::show(app);
+            fail(app, FailedStep::Install, e);
+        }
     }
 }
 
@@ -561,25 +557,18 @@ mod tests {
     }
 
     #[test]
-    fn only_macos_has_no_in_app_updates_yet() {
-        assert_eq!(updates_supported(), !cfg!(target_os = "macos"));
-    }
-
-    #[test]
     fn the_status_serializes_like_the_typescript_type() {
         let info = UpdateInfo {
             current_version: "1.0.0".into(),
             status: ready(),
             msi_install: false,
-            supported: true,
         };
         assert_eq!(
             serde_json::to_value(info).unwrap(),
             json!({
                 "currentVersion": "1.0.0",
                 "status": { "kind": "ready", "version": "1.1.0" },
-                "msiInstall": false,
-                "supported": true
+                "msiInstall": false
             })
         );
         assert_eq!(

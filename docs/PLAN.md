@@ -127,7 +127,7 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 - [x] Clipboard snapshot and restore (every item and type, transient marker), Cmd+C fallback for the selection, paste with synthetic Cmd+V (CAP-22, APL-30). The clipboard round trip is tested, and an on-request test (`cargo test input_tests -- --ignored`, TextEdit in front with a selection) copies the selection and pastes over it with the clipboard kept
 - [x] Permission onboarding: a Permissions section in Settings (status, system prompt, link to System Settings), a notice when Accessibility is missing, Settings opens at startup while it is (SET-70 to SET-72)
 - [x] API keys in the Keychain (`keyring` with `apple-native`; a store, replace and delete round trip is tested on a Mac)
-- [ ] Signing and notarization. Prepared: macOS 14 minimum, a menu-bar `Info.plist`, a macOS CI job, a bundle build check on release PRs, and the maintainer steps in `docs/MAINTAINING.md`; the Developer ID certificate and notarization secrets are the user's to add. Until then macOS has no in-app updates (UPD-50)
+- [x] Signing and notarization written: `scripts/release/sign-macos.sh` (Developer ID signature with the hardened runtime, notarization with a notarytool profile or an App Store Connect key, stapling, `.dmg` and update archive), the `release.yml` jobs around it, `darwin-aarch64` in `latest.json`, in-app updates on macOS (UPD-50) and a Mac button on the website. The script was tried on this Mac with a development certificate and no notarization; the first notarized run needs the Developer ID certificate and the secrets in `docs/MAINTAINING.md`
 - [ ] macOS integration tests
 
 ## Phase 5 progress

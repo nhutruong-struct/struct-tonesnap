@@ -69,9 +69,8 @@ export function UpdatesSection({ settings, update, t }: SectionProps) {
           />
         ))}
         {info?.msiInstall && <Note>{t("updates.msiNote")}</Note>}
-        {info && !info.supported && <Note>{t("updates.unsupported")}</Note>}
       </Card>
-      {info?.supported && (
+      {info && (
         <Card>
           <div className="item field stack">
             <span className="item-text">
