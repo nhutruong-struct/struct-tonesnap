@@ -115,6 +115,18 @@ const vi = {
   "terms.placeholder": "Tên khách hàng\nMã dự án",
   "blocked.label": "App bị chặn (tên tiến trình, mỗi dòng một app)",
 
+  "section.permissions": "Quyền truy cập",
+  "section.permissions.desc": "macOS chỉ cho ToneSnap đọc văn bản đã chọn và gửi phím khi bạn cho phép.",
+  "permission.accessibility.label": "Trợ năng (Accessibility)",
+  "permission.accessibility.hint":
+    "Cần để đọc đoạn văn bản bôi đen, sao chép và dán lại vào app gốc. Không có quyền này ToneSnap không dùng được.",
+  "permission.screen_recording.label": "Ghi màn hình (Screen Recording)",
+  "permission.screen_recording.hint":
+    "Chỉ cần để đọc ngữ cảnh quanh đoạn văn bản bằng OCR trên máy. Có thể bỏ qua; sau khi cho phép, hãy mở lại ToneSnap.",
+  "permission.allowed": "Đã cho phép",
+  "permission.denied": "Chưa cho phép",
+  "permission.allow": "Cho phép…",
+  "permission.openSettings": "Mở Cài đặt hệ thống",
   "section.updates": "Cập nhật",
   "section.updates.desc": "Phiên bản mới của ToneSnap trên GitHub và cách cài đặt chúng.",
   "updates.current": "Phiên bản hiện tại: {version}",
@@ -150,6 +162,8 @@ const vi = {
   "notice.no_selection": "Chưa có đoạn văn nào được chọn. Hãy bôi đen đoạn cần dịch hoặc viết lại rồi nhấn phím tắt.",
   "notice.password_field": "ToneSnap không đọc nội dung trong ô mật khẩu.",
   "notice.blocked_app": "ToneSnap đang tắt trong {app} (danh sách app bị chặn trong Cài đặt).",
+  "notice.accessibility_denied":
+    "ToneSnap chưa được cấp quyền Trợ năng nên không đọc được văn bản đã chọn. Mở Cài đặt của ToneSnap, mục Quyền truy cập.",
   "notice.apply_failed": "Không đưa được nội dung về app gốc. Đã copy sẵn, bạn nhấn Ctrl+V để dán.",
 
   "popup.empty": "Bôi đen một đoạn văn rồi nhấn phím tắt.",
@@ -313,6 +327,18 @@ const en: Record<Key, string> = {
   "terms.placeholder": "Client name\nProject code",
   "blocked.label": "Blocked apps (process name, one per line)",
 
+  "section.permissions": "Permissions",
+  "section.permissions.desc": "macOS lets ToneSnap read selected text and send key presses only when you allow it.",
+  "permission.accessibility.label": "Accessibility",
+  "permission.accessibility.hint":
+    "Needed to read the selected text, copy it and paste the result back into the original app. ToneSnap does not work without it.",
+  "permission.screen_recording.label": "Screen Recording",
+  "permission.screen_recording.hint":
+    "Only needed to read the text around the selection with on-device OCR. You can skip it; after allowing it, reopen ToneSnap.",
+  "permission.allowed": "Allowed",
+  "permission.denied": "Not allowed",
+  "permission.allow": "Allow…",
+  "permission.openSettings": "Open System Settings",
   "section.updates": "Updates",
   "section.updates.desc": "New versions of ToneSnap on GitHub, and how they are installed.",
   "updates.current": "Current version: {version}",
@@ -349,6 +375,8 @@ const en: Record<Key, string> = {
     "Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey.",
   "notice.password_field": "ToneSnap never reads password fields.",
   "notice.blocked_app": "ToneSnap is turned off in {app} (blocked apps in Settings).",
+  "notice.accessibility_denied":
+    "ToneSnap does not have the Accessibility permission, so it cannot read the selected text. Open ToneSnap Settings, Permissions.",
   "notice.apply_failed": "Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste.",
 
   "popup.empty": "Select some text, then press the hotkey.",

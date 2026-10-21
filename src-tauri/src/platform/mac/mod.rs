@@ -7,6 +7,7 @@ pub mod clipboard;
 pub mod input;
 pub mod ocr;
 mod panel;
+pub mod permissions;
 pub mod selection_icon;
 mod window;
 
@@ -16,6 +17,7 @@ use std::time::{Duration, Instant};
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 
 pub use ax::capture;
+pub use ax::is_trusted;
 use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
 

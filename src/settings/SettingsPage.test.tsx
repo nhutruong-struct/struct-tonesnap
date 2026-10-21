@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
-import type { Settings, SettingsIssue } from "../lib/api";
+import type { Permissions, Settings, SettingsIssue } from "../lib/api";
 import { translator } from "../lib/i18n";
 import { fakeBackend, sendEvent, settle } from "../test/backend";
 import { settings as savedSettings } from "../test/fixtures";
@@ -13,6 +13,8 @@ interface Setup {
   /** What Windows reports for starting at sign-in. */
   launchAtLogin?: () => unknown;
   setLaunchAtLogin?: () => unknown;
+  /** What the OS reports for its permissions; nothing to grant by default. */
+  permissions?: () => Permissions;
 }
 
 async function open(setup: Setup = {}) {
@@ -26,6 +28,7 @@ async function open(setup: Setup = {}) {
       if (args.key === "") keys.delete(args.provider as string);
       else keys.add(args.provider as string);
     },
+    get_permissions: () => setup.permissions?.() ?? { required: false, accessibility: true, screenRecording: true },
     save_settings: setup.save ?? (() => null),
     "plugin:autostart|is_enabled": setup.launchAtLogin ?? (() => false),
     "plugin:autostart|enable": setup.setLaunchAtLogin ?? (() => null),
@@ -455,5 +458,34 @@ describe("interface language", () => {
     await settle();
     await click(translator("vi")("settings.save"));
     expect(saved(backend)[0].uiLanguage).toBe("vi");
+  });
+});
+
+describe("permissions (macOS)", () => {
+  test("have no section where the OS grants nothing", async () => {
+    await open();
+    expect(screen.queryByRole("button", { name: /Permissions/ })).toBeNull();
+  });
+
+  test("open on their section when Accessibility is missing, and stay there once granted", async () => {
+    let current: Permissions = { required: true, accessibility: false, screenRecording: true };
+    const backend = await open({ permissions: () => current });
+    expect(screen.getByRole("heading", { name: "Permissions" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Allow…" })).toBeTruthy();
+    expect(backend.callsTo("get_permissions").length).toBeGreaterThan(0);
+
+    current = { required: true, accessibility: true, screenRecording: true };
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    await settle();
+    expect(screen.getByRole("heading", { name: "Permissions" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Allow…" })).toBeNull();
+  });
+
+  test("do not take the first look when Accessibility is allowed", async () => {
+    await open({ permissions: () => ({ required: true, accessibility: true, screenRecording: false }) });
+    expect(screen.getByRole("heading", { name: "Interface" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Permissions/ })).toBeTruthy();
   });
 });

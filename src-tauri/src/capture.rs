@@ -47,6 +47,12 @@ pub enum CaptureError {
     NoSelection,
     PasswordField,
     BlockedApp(String),
+    /// The Accessibility permission is missing (macOS).
+    #[cfg_attr(
+        not(target_os = "macos"),
+        allow(dead_code, reason = "only macOS asks the user for a permission")
+    )]
+    AccessibilityDenied,
 }
 
 #[cfg_attr(
@@ -214,6 +220,9 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
 
     use crate::platform::mac::{self, clipboard, input};
 
+    if !mac::is_trusted() {
+        return Err(CaptureError::AccessibilityDenied);
+    }
     let front = mac::frontmost().ok_or(CaptureError::NoSelection)?;
     // The popup does not make ToneSnap the active app, so ask who holds the keyboard too.
     if front.is_own() || mac::own_window_in_front() == Some(true) {

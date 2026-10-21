@@ -23,6 +23,9 @@ The two windows talk to the Rust core only through the commands and events below
 | `send_request` | `targetLanguage: "vi" \| "en" \| "ja"`, `mode: "translate" \| "rewrite"` | nothing | sync; stores both on the session, then the request runs on the async runtime | popup (Send, R, Retry, a new language or mode) |
 | `apply_text` | `text: string` | nothing, or rejects with `"no session"` | sync; pasting on its own thread | popup |
 | `copy_text` | `text: string` | nothing | sync; closes the popup and cancels its request; clipboard on its own thread | popup |
+| `get_permissions` | none | `{ required, accessibility, screenRecording }` (camelCase; `required` is false where the OS has nothing to grant) | sync, reads the OS state | Settings (polled every 1.5 s and on focus) |
+| `request_permission` | `permission: "accessibility" \| "screen_recording"` | nothing | async; shows the system prompt | Settings |
+| `open_permission_settings` | `permission` as above | nothing | async; opens the pane of System Settings | Settings |
 | `hide_popup` | none | nothing | sync; also cancels the request | popup |
 | `open_settings` | none | nothing | sync; closes the popup and cancels its request | popup |
 | `update_info` | none | `UpdateInfo` | sync, memory | Settings |
@@ -76,7 +79,7 @@ The target window handle stays in Rust and is never serialized.
 
 ### Notice
 
-`kind`: `no_selection` \| `password_field` \| `blocked_app` \| `apply_failed`; `detail`: the blocked app's name for `blocked_app`, empty otherwise.
+`kind`: `no_selection` \| `password_field` \| `blocked_app` \| `apply_failed` \| `accessibility_denied`; `detail`: the blocked app's name for `blocked_app`, empty otherwise.
 
 ### Suggestions (model output, parsed in the popup)
 

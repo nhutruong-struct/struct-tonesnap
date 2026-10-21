@@ -1,5 +1,7 @@
 //! One use of ToneSnap: capture the selection, redact it, show the popup, then ask the model.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
@@ -55,8 +57,22 @@ pub fn on_trigger(app: AppHandle) {
             Err(CaptureError::BlockedApp(name)) => {
                 window::show_notice(&app, NoticeKind::BlockedApp, name)
             }
+            Err(CaptureError::AccessibilityDenied) => {
+                ask_for_accessibility_once();
+                window::show_notice(&app, NoticeKind::AccessibilityDenied, String::new())
+            }
         }
     });
+}
+
+/// Shows the system's Accessibility prompt the first time a capture needs the permission, so the
+/// user meets it at the moment it matters. Later refusals only show the notice: the system
+/// prompts once, and Settings has the button for the rest.
+fn ask_for_accessibility_once() {
+    static ASKED: AtomicBool = AtomicBool::new(false);
+    if !ASKED.swap(true, Ordering::SeqCst) {
+        platform::request_permission(platform::Permission::Accessibility);
+    }
 }
 
 /// Ignores triggers while a capture is running, and clears that flag however the capture ends.

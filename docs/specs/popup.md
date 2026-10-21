@@ -69,7 +69,8 @@ Number keys are matched by the physical top-row digit key, so they work with Shi
 | `no_selection` | Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey. |
 | `password_field` | ToneSnap never reads password fields. |
 | `blocked_app` | ToneSnap is turned off in {app} (blocked apps in Settings). |
-| `apply_failed` | Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste. |
+| `apply_failed` | Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste. (⌘V on macOS) |
+| `accessibility_denied` | ToneSnap does not have the Accessibility permission, so it cannot read the selected text. Open ToneSnap Settings, Permissions. (macOS only) |
 
 ## Errors
 

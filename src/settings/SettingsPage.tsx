@@ -6,6 +6,7 @@ import type { Settings } from "../lib/api";
 import { AiSection } from "./sections/AiSection";
 import { ContextSection } from "./sections/ContextSection";
 import { InterfaceSection } from "./sections/InterfaceSection";
+import { PermissionsSection, usePermissions } from "./sections/PermissionsSection";
 import { PrivacySection } from "./sections/PrivacySection";
 import { TonesSection } from "./sections/TonesSection";
 import { TriggerSection } from "./sections/TriggerSection";
@@ -31,14 +32,22 @@ export default function SettingsPage() {
 
 function SettingsBody({ form, settings }: { form: SettingsForm; settings: Settings }) {
   const { update, t } = form;
-  const [active, setActive] = useState<SectionId>("interface");
+  const [chosen, setChosen] = useState<SectionId | null>(null);
+  const [landing, setLanding] = useState<SectionId | null>(null);
   const scroll = useRef<HTMLDivElement>(null);
+  const permissions = usePermissions();
 
   const open = (id: SectionId) => {
-    setActive(id);
+    setChosen(id);
     // The next section starts at its top, whatever the last one was scrolled to.
     if (scroll.current) scroll.current.scrollTop = 0;
   };
+
+  // Without the Accessibility permission nothing works, so the first look goes to its section.
+  // Decided once, when the permissions first arrive, so granting it does not move the page.
+  const missingPermission = permissions?.required === true && !permissions.accessibility;
+  if (landing === null && permissions) setLanding(missingPermission ? "permissions" : "interface");
+  const active = chosen ?? landing ?? "interface";
 
   // A hotkey problem is explained in the Trigger section; the dot leads the user there.
   const attention: Attention = form.hotkeyError
@@ -46,6 +55,7 @@ function SettingsBody({ form, settings }: { form: SettingsForm; settings: Settin
     : hotkeyConflict(settings.hotkey)
       ? { trigger: "warn" }
       : {};
+  if (missingPermission) attention.permissions = "bad";
 
   const section = { settings, update, t };
   // Every section stays mounted, so what the user typed in one is still there when they come back.
@@ -59,6 +69,7 @@ function SettingsBody({ form, settings }: { form: SettingsForm; settings: Settin
         onLaunchAtLoginChange={form.changeLaunchAtLogin}
       />,
     ],
+    ["permissions", <PermissionsSection key="permissions" permissions={permissions} t={t} />],
     ["ai", <AiSection key="ai" {...section} onStatus={form.setStatus} />],
     ["trigger", <TriggerSection key="trigger" {...section} hotkeyError={form.hotkeyError} />],
     ["tones", <TonesSection key="tones" {...section} />],
@@ -79,7 +90,14 @@ function SettingsBody({ form, settings }: { form: SettingsForm; settings: Settin
 
   return (
     <div className="settings">
-      <SettingsNav active={active} onSelect={open} attention={attention} hotkey={settings.hotkey} t={t} />
+      <SettingsNav
+        active={active}
+        onSelect={open}
+        attention={attention}
+        hotkey={settings.hotkey}
+        showPermissions={permissions?.required === true}
+        t={t}
+      />
       <div className="settings-main">
         {(form.issue || form.hotkeyError) && (
           <div className="banners">

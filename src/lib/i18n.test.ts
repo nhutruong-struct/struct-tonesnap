@@ -39,7 +39,9 @@ describe("dictionaries", () => {
       ...["vi", "en", "ja"].map((l) => `target.${l}`),
       ...["translate", "rewrite"].flatMap((m) => [`mode.${m}`, `mode.${m}.hint`]),
       ...["hotkey", "icon", "auto", "off"].map((t) => `trigger.${t}`),
-      ...["no_selection", "password_field", "blocked_app", "apply_failed"].map((n) => `notice.${n}`),
+      ...["no_selection", "password_field", "blocked_app", "apply_failed", "accessibility_denied"].map(
+        (n) => `notice.${n}`,
+      ),
       ...["uia", "clipboard"].map((s) => `popup.source.${s}`),
       ...["uia", "ocr", "none"].map((s) => `popup.context.${s}`),
       ...["no_api_key", "authentication_error", "permission_error", "not_found_error", "rate_limit_error"].map(

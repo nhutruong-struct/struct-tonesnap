@@ -24,6 +24,7 @@ pub enum NoticeKind {
     PasswordField,
     BlockedApp,
     ApplyFailed,
+    AccessibilityDenied,
 }
 
 #[derive(Clone, Serialize)]

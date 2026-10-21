@@ -2,11 +2,21 @@ import { formatHotkey } from "../lib/hotkey";
 import type { Key, Translate } from "../lib/i18n";
 import { Icon, Logo, type IconName } from "../lib/icons";
 
-export const SECTION_IDS = ["interface", "ai", "trigger", "tones", "context", "privacy", "updates"] as const;
+export const SECTION_IDS = [
+  "interface",
+  "permissions",
+  "ai",
+  "trigger",
+  "tones",
+  "context",
+  "privacy",
+  "updates",
+] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
 
 const ITEMS: Record<SectionId, { icon: IconName; label: Key }> = {
   interface: { icon: "sliders", label: "section.interface" },
+  permissions: { icon: "lock", label: "section.permissions" },
   ai: { icon: "sparkles", label: "section.ai" },
   trigger: { icon: "keyboard", label: "section.trigger" },
   tones: { icon: "type", label: "section.tones" },
@@ -23,18 +33,20 @@ interface SettingsNavProps {
   onSelect: (id: SectionId) => void;
   attention: Attention;
   hotkey: string;
+  /** Whether the OS has permissions to grant, which adds their section. */
+  showPermissions: boolean;
   t: Translate;
 }
 
 /** The sidebar: the app name, one button per section, and a reminder of the hotkey. */
-export function SettingsNav({ active, onSelect, attention, hotkey, t }: SettingsNavProps) {
+export function SettingsNav({ active, onSelect, attention, hotkey, showPermissions, t }: SettingsNavProps) {
   return (
     <nav className="settings-nav" aria-label={t("settings.windowTitle")}>
       <div className="brand">
         <Logo size={28} />
         <span className="brand-name">ToneSnap</span>
       </div>
-      {SECTION_IDS.map((id) => {
+      {SECTION_IDS.filter((id) => id !== "permissions" || showPermissions).map((id) => {
         const { icon, label } = ITEMS[id];
         const level = active === id ? undefined : attention[id];
         return (

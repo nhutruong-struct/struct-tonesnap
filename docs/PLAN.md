@@ -125,7 +125,7 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 - [x] Floating icon as a non-activating `NSPanel` with a global mouse monitor and the Accessibility check (TRG-30 to TRG-33); the gesture logic is shared with Windows. Not yet tried with a real mouse
 - [x] On-device OCR with Vision, capture with ScreenCaptureKit (CAP-23; needs macOS 14 and the Screen Recording permission). Two crates added for it: `objc2-vision` and `objc2-screen-capture-kit`, plus `objc2-core-foundation` and `objc2-core-graphics` for their types
 - [x] Clipboard snapshot and restore (every item and type, transient marker), Cmd+C fallback for the selection, paste with synthetic Cmd+V (CAP-22, APL-30). The clipboard round trip is tested; the key presses are still to be checked by hand
-- [ ] Permission onboarding (Accessibility, Screen Recording)
+- [x] Permission onboarding: a Permissions section in Settings (status, system prompt, link to System Settings), a notice when Accessibility is missing, Settings opens at startup while it is (SET-70 to SET-72)
 - [ ] API keys in the Keychain (already supported by `keyring`; untested on a Mac)
 - [ ] Signing and notarization
 - [ ] macOS integration tests
