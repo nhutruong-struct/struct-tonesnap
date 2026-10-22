@@ -1,9 +1,9 @@
 //! Tells a selection gesture (a drag, or a double/triple click, over text) apart from an
-//! ordinary click, from the raw left-button events the mouse hook sees.
+//! ordinary click, from the raw left-button events the mouse hook (Windows) or event monitor (macOS) sees.
 
 use std::time::{Duration, Instant};
 
-/// Mouse travel (physical px) that counts as a drag-selection rather than a click.
+/// Mouse travel (physical px on Windows, points on macOS) that counts as a drag-selection rather than a click.
 const DRAG_DISTANCE: i32 = 6;
 
 /// The system's double-click limits: the longest pause and the largest move between clicks.
@@ -22,6 +22,8 @@ pub struct Gesture {
     ibeam_at_down: bool,
     last_up: Option<((i32, i32), Instant)>,
     clicks: u32,
+    /// The last selection was made by clicking, so another click could still extend it.
+    extendable: bool,
 }
 
 impl Gesture {
@@ -65,7 +67,18 @@ impl Gesture {
         };
         let dragged =
             (down.0 - at.0).abs() > DRAG_DISTANCE || (down.1 - at.1).abs() > DRAG_DISTANCE;
+        self.extendable = !dragged && self.clicks >= 2;
         (dragged || self.clicks >= 2) && (self.ibeam_at_down || ibeam_now())
+    }
+
+    /// How long another click could still extend the selection just made: the double-click
+    /// time after a double click (a triple click selects the paragraph), nothing after a drag.
+    pub fn settle_time(&self, double: DoubleClick) -> Duration {
+        if self.extendable {
+            double.time
+        } else {
+            Duration::ZERO
+        }
     }
 }
 
@@ -143,6 +156,30 @@ mod tests {
         let now = Instant::now();
         g.press((100, 100), now, false, false, DOUBLE);
         assert!(g.release((300, 100), now, || true));
+    }
+
+    #[test]
+    fn only_a_selection_made_by_clicking_can_still_be_extended() {
+        let start = Instant::now();
+        let mut g = Gesture::default();
+        click(&mut g, (100, 100), start, true);
+        assert!(click(
+            &mut g,
+            (100, 100),
+            start + Duration::from_millis(200),
+            true
+        ));
+        assert_eq!(g.settle_time(DOUBLE), DOUBLE.time);
+
+        g.press(
+            (100, 100),
+            start + Duration::from_secs(2),
+            false,
+            true,
+            DOUBLE,
+        );
+        assert!(g.release((180, 100), start + Duration::from_secs(3), || true));
+        assert_eq!(g.settle_time(DOUBLE), Duration::ZERO);
     }
 
     #[test]

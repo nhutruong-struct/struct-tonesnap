@@ -1,5 +1,7 @@
 /** Hotkeys are stored as lower-case "ctrl+alt+e", which the Rust side parses. */
 
+import { isMac } from "./platform";
+
 const MODIFIER_ORDER = ["ctrl", "alt", "shift", "super"];
 const MODIFIER_ALIASES: Record<string, string> = {
   control: "ctrl",
@@ -26,13 +28,15 @@ export function normalizeHotkey(combo: string): string {
 }
 
 const DISPLAY: Record<string, string> = { ctrl: "Ctrl", alt: "Alt", shift: "Shift", super: "Win" };
+const MAC_DISPLAY: Record<string, string> = { ctrl: "⌃", alt: "⌥", shift: "⇧", super: "⌘" };
 
-/** "ctrl+alt+e" → "Ctrl+Alt+E" */
-export function formatHotkey(combo: string): string {
+/** "ctrl+alt+e" → "Ctrl+Alt+E", or "⌃⌥E" on a Mac */
+export function formatHotkey(combo: string, mac: boolean = isMac()): string {
+  const names = mac ? MAC_DISPLAY : DISPLAY;
   return normalizeHotkey(combo)
     .split("+")
-    .map((p) => DISPLAY[p] ?? (p.length === 1 ? p.toUpperCase() : p[0].toUpperCase() + p.slice(1)))
-    .join("+");
+    .map((p) => names[p] ?? (p.length === 1 ? p.toUpperCase() : p[0].toUpperCase() + p.slice(1)))
+    .join(mac ? "" : "+");
 }
 
 /**

@@ -377,11 +377,19 @@ fn install(app: &AppHandle) {
         },
     );
     window::dismiss_popup(app);
-    // Starts the installer and ends this process; the installer starts the new version.
-    if let Err(e) = update.install(installer) {
-        // The icon was hidden just before the installer was to start.
-        tray::show(app);
-        fail(app, FailedStep::Install, e);
+    // On Windows this starts the installer and ends this process; the installer starts the new
+    // version. On macOS it replaces the app bundle in place and returns, so ToneSnap restarts.
+    match update.install(installer) {
+        Ok(()) => {
+            if cfg!(target_os = "macos") {
+                app.restart();
+            }
+        }
+        Err(e) => {
+            // The icon was hidden just before the installer was to start.
+            tray::show(app);
+            fail(app, FailedStep::Install, e);
+        }
     }
 }
 

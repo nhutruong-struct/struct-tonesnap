@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 use tauri::{AppHandle, Manager};
 
-use crate::commands::CommandError;
+use crate::error::CommandError;
 use crate::session::Session;
 use crate::settings::{Mode, Settings, SettingsIssue, TargetLanguage};
 
@@ -132,11 +132,13 @@ impl AppState {
 mod tests {
     use super::*;
     use crate::capture::{ContextSource, SelectionSource};
+    use crate::platform::Target;
 
     fn session() -> Session {
         Session {
             id: 1,
-            hwnd: 0,
+            target: Target::default(),
+            anchor: None,
             app: "Slack".into(),
             source: SelectionSource::Uia,
             context_source: ContextSource::Uia,

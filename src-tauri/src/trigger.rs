@@ -1,10 +1,10 @@
-//! What opens the popup: the global hotkey and, in Icon mode, the floating icon next to a fresh
-//! selection.
+//! What opens the popup: the global hotkey, in Icon mode the floating icon next to a fresh
+//! selection, and in Auto mode the selection itself.
 
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
-use crate::commands::CommandError;
+use crate::error::CommandError;
 use crate::platform::selection_icon;
 use crate::session;
 use crate::settings::{Settings, TriggerMode};
@@ -44,13 +44,17 @@ fn register_hotkey(app: &AppHandle, settings: &Settings) -> Result<(), CommandEr
         .map_err(|e| CommandError::hotkey("hotkey_taken", &settings.hotkey, e.to_string()))
 }
 
-/// Gives the floating icon what it needs from the app: its image, what a click does and which
-/// apps it must stay away from.
+/// Gives the floating icon what it needs from the app: its image, what a click does, what Auto
+/// mode does with a selection and which apps it must stay away from.
 pub fn init_icon(app: &AppHandle) -> tauri::Result<()> {
     let image = tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))?;
     selection_icon::set_image(image.rgba().to_vec(), image.width(), image.height());
     let click_app = app.clone();
     selection_icon::set_on_click(move || session::on_trigger(click_app.clone()));
+    let selection_app = app.clone();
+    selection_icon::set_on_selection(move |selection| {
+        session::on_selection(&selection_app, selection)
+    });
     let filter_app = app.clone();
     selection_icon::set_app_filter(move |process| {
         !state(&filter_app).settings().is_blocked_app(process)
@@ -58,9 +62,10 @@ pub fn init_icon(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Starts or stops the floating icon. The hotkey stays active in every mode but Off.
+/// Starts or stops the selection watcher behind the floating icon, which Auto mode shares. The
+/// hotkey stays active in every mode but Off.
 pub fn apply_icon_mode(settings: &Settings) {
-    if settings.trigger_mode == TriggerMode::Icon {
+    if matches!(settings.trigger_mode, TriggerMode::Icon | TriggerMode::Auto) {
         selection_icon::start();
     } else {
         selection_icon::stop();

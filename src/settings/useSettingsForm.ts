@@ -18,6 +18,7 @@ const FIELD_LABELS: Partial<Record<keyof Settings, Key>> = {
   triggerMode: "section.trigger",
   hotkey: "hotkey.label",
   autoDelayMs: "autoDelay.label",
+  autoMinChars: "autoMinChars.label",
   provider: "section.ai",
   model: "model.label",
   effort: "effort.label",

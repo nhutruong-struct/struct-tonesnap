@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -7,7 +8,8 @@ use tauri::{AppHandle, Manager};
 use crate::prompt;
 
 /// How the popup is triggered. The hotkey works in every mode except `Off`.
-/// `Icon` shows a floating icon after a selection; `Auto` is not implemented yet.
+/// `Icon` shows a floating icon after a selection; `Auto` opens the popup itself when it can read
+/// the selection, and falls back to the icon when it cannot.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TriggerMode {
@@ -163,11 +165,27 @@ impl Settings {
         }
     }
 
-    /// Whether ToneSnap must never read text from this process (a lower-case `name.exe`).
+    /// How long Auto mode waits after a selection, kept to the range Settings offers.
+    pub fn auto_delay(&self) -> Duration {
+        Duration::from_millis(self.auto_delay_ms.clamp(100, 3000).into())
+    }
+
+    /// The shortest selection Auto mode opens the popup for, kept to the range Settings offers.
+    pub fn auto_min_chars(&self) -> usize {
+        self.auto_min_chars.clamp(1, 200) as usize
+    }
+
+    /// Whether ToneSnap must never read text from this process (a lower-case `name.exe`; macOS
+    /// executables have no extension, so `.exe` is ignored on both sides).
     pub fn is_blocked_app(&self, process: &str) -> bool {
-        self.blocked_apps
-            .iter()
-            .any(|b| b.eq_ignore_ascii_case(process))
+        let bare = |name: &str| {
+            let name = name.to_ascii_lowercase();
+            name.strip_suffix(".exe")
+                .map(str::to_string)
+                .unwrap_or(name)
+        };
+        let process = bare(process);
+        self.blocked_apps.iter().any(|b| bare(b) == process)
     }
 }
 
@@ -485,10 +503,46 @@ mod tests {
     }
 
     #[test]
+    fn the_auto_delay_stays_within_what_settings_offers() {
+        let delay = |ms| {
+            Settings {
+                auto_delay_ms: ms,
+                ..Settings::default()
+            }
+            .auto_delay()
+        };
+        assert_eq!(delay(400), Duration::from_millis(400));
+        assert_eq!(delay(0), Duration::from_millis(100));
+        assert_eq!(delay(60_000), Duration::from_millis(3000));
+    }
+
+    #[test]
+    fn the_auto_minimum_length_stays_within_what_settings_offers() {
+        let min = |chars| {
+            Settings {
+                auto_min_chars: chars,
+                ..Settings::default()
+            }
+            .auto_min_chars()
+        };
+        assert_eq!(min(8), 8);
+        assert_eq!(min(0), 1);
+        assert_eq!(min(5000), 200);
+    }
+
+    #[test]
     fn blocked_apps_match_case_insensitively() {
         let settings = Settings::default();
         assert!(settings.is_blocked_app("KeePass.exe"));
         assert!(!settings.is_blocked_app("notepad.exe"));
+    }
+
+    #[test]
+    fn blocked_apps_match_macos_executables_without_the_extension() {
+        let settings = Settings::default();
+        assert!(settings.is_blocked_app("1password"));
+        assert!(settings.is_blocked_app("KeePassXC"));
+        assert!(!settings.is_blocked_app("pages"));
     }
 
     #[test]

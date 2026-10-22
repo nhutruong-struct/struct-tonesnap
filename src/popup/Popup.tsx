@@ -28,7 +28,13 @@ export default function Popup() {
 
   const redactions = session?.redactions ?? [];
   const readOnly = session?.editable === false;
-  const variants = toVariants(session?.payload.tones ?? [], suggestions, phase === "done", redactions);
+  const variants = toVariants(
+    session?.payload.tones ?? [],
+    suggestions,
+    phase === "done",
+    redactions,
+    session?.payload.selection ?? "",
+  );
 
   const copy = (i: number) => {
     if (variants[i]?.ready) void api.copyText(variants[i].text);
@@ -51,7 +57,9 @@ export default function Popup() {
   };
   const apply = (i: number) => {
     if (!variants[i]?.ready) return;
-    void (readOnly ? api.copyText(variants[i].text) : api.applyText(variants[i].text));
+    if (readOnly) void api.copyText(variants[i].text);
+    // A variant that lost a masked value is never pasted straight in; the user copies it and checks.
+    else if (variants[i].missing.length === 0) void api.applyText(variants[i].text);
   };
 
   useWindowKeydown((e) => {

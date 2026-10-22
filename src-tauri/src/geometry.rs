@@ -40,6 +40,13 @@ impl Rect {
     }
 
     /// The smallest rectangle holding both.
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "only the Windows capture uses it; macOS names apps itself and keeps no window rectangles"
+        )
+    )]
     pub fn union(self, other: Self) -> Self {
         Self {
             left: self.left.min(other.left),
@@ -49,6 +56,13 @@ impl Rect {
         }
     }
 
+    #[cfg_attr(
+        not(windows),
+        allow(
+            dead_code,
+            reason = "only the Windows capture uses it; macOS names apps itself and keeps no window rectangles"
+        )
+    )]
     pub fn contains(&self, x: i32, y: i32) -> bool {
         x >= self.left && x < self.right && y >= self.top && y < self.bottom
     }

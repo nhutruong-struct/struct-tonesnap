@@ -23,9 +23,11 @@ describe("parseSuggestions", () => {
 });
 
 describe("toVariants", () => {
+  const selection = "pls review my PR, [EMAIL_1]";
+
   test("a variant is ready once the next one has started", () => {
     const partial = parseSuggestions(ANSWER.slice(0, ANSWER.indexOf('"formal"') + 12));
-    const [concise, formal] = toVariants(["concise", "formal"], partial, false, redactions);
+    const [concise, formal] = toVariants(["concise", "formal"], partial, false, redactions, selection);
     expect(concise.ready).toBe(true);
     expect(concise.text).toBe("Please review my PR, an@corp.vn.");
     expect(formal.ready).toBe(false);
@@ -33,12 +35,19 @@ describe("toVariants", () => {
 
   test("the last variant is ready only once the request has finished", () => {
     const whole = parseSuggestions(ANSWER);
-    expect(toVariants(["concise", "formal"], whole, false, redactions)[1].ready).toBe(false);
-    expect(toVariants(["concise", "formal"], whole, true, redactions)[1].ready).toBe(true);
+    expect(toVariants(["concise", "formal"], whole, false, redactions, selection)[1].ready).toBe(false);
+    expect(toVariants(["concise", "formal"], whole, true, redactions, selection)[1].ready).toBe(true);
   });
 
   test("a variant without text is never ready", () => {
-    const [concise] = toVariants(["concise"], {}, true, []);
-    expect(concise).toEqual({ tone: "concise", text: "", ready: false });
+    const [concise] = toVariants(["concise"], {}, true, [], "");
+    expect(concise).toEqual({ tone: "concise", text: "", ready: false, missing: [] });
+  });
+
+  test("a final variant names the masked values it lost", () => {
+    const lost = { variants: { concise: { text: "Please review my PR." } } };
+    expect(toVariants(["concise"], lost, true, redactions, selection)[0].missing).toEqual(["an@corp.vn"]);
+    // Still being written: nothing is judged yet.
+    expect(toVariants(["concise"], lost, false, redactions, selection)[0].missing).toEqual([]);
   });
 });

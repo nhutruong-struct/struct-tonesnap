@@ -1,19 +1,21 @@
 // Writes latest.json, the manifest the in-app updater reads (src-tauri/src/update.rs), for a release
 // built by .github/workflows/release.yml. Usage:
 //   node scripts/release/updater-manifest.mjs <version> <release dir> <notes file> <owner/repo>
-// The release dir holds the installers and the `.sig` files the Tauri bundler wrote next to them.
+// The release dir holds the installers, the macOS update archive and the `.sig` file of each.
 
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 /**
- * The manifest for one Windows release. The updater looks for `windows-x86_64-<installer>` first,
- * so an MSI install stays an MSI install; `windows-x86_64` is the fallback for anything else.
+ * The manifest for one release. The updater looks for `windows-x86_64-<installer>` first, so an MSI
+ * install stays an MSI install; `windows-x86_64` is the fallback for anything else. macOS (Apple
+ * Silicon) updates from the signed `.app.tar.gz`; `darwin-aarch64-app` is the key for that bundle type.
  */
-export function updaterManifest({ version, repo, notes, pubDate, nsis, msi }) {
+export function updaterManifest({ version, repo, notes, pubDate, nsis, msi, mac }) {
   const asset = (file) => `https://github.com/${repo}/releases/download/v${version}/${encodeURIComponent(file)}`;
   const nsisEntry = { signature: nsis.signature, url: asset(nsis.file) };
+  const macEntry = { signature: mac.signature, url: asset(mac.file) };
   return {
     version,
     notes,
@@ -22,13 +24,15 @@ export function updaterManifest({ version, repo, notes, pubDate, nsis, msi }) {
       "windows-x86_64": nsisEntry,
       "windows-x86_64-nsis": nsisEntry,
       "windows-x86_64-msi": { signature: msi.signature, url: asset(msi.file) },
+      "darwin-aarch64": macEntry,
+      "darwin-aarch64-app": macEntry,
     },
   };
 }
 
 /** The one installer in `files` whose name ends with `suffix`, and its signature. */
 export function signedInstaller(dir, files, version, suffix) {
-  const matches = files.filter((f) => f.endsWith(suffix) && f.includes(`_${version}_`));
+  const matches = files.filter((f) => f.endsWith(suffix) && f.includes(`_v${version}_`));
   if (matches.length !== 1) {
     throw new Error(`expected one ${suffix} for ${version} in ${dir}, found ${matches.length}`);
   }
@@ -49,6 +53,7 @@ function main([version, dir, notesFile, repo]) {
     pubDate: new Date().toISOString(),
     nsis: signedInstaller(dir, files, version, "-setup.exe"),
     msi: signedInstaller(dir, files, version, ".msi"),
+    mac: signedInstaller(dir, files, version, ".app.tar.gz"),
   });
   writeFileSync(join(dir, "latest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
 }

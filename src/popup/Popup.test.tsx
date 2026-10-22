@@ -49,6 +49,26 @@ describe("suggestions", () => {
     expect(backend.callsTo("apply_text")).toEqual([{ text: "Could you please review my PR, an@corp.vn?" }]);
   });
 
+  test("a variant that lost a masked value can be copied but not applied", async () => {
+    const lost = JSON.stringify({
+      variants: {
+        concise: { text: "Please review my PR." },
+        formal: { text: "Could you please review my PR, [email 1]?" },
+      },
+    });
+    await answered({}, lost);
+    expect(screen.getByText("The AI lost: an@corp.vn. Copy it and check it yourself before using it.")).toBeTruthy();
+    // The reworded placeholder is still restored.
+    expect(screen.getByText("Could you please review my PR, an@corp.vn?")).toBeTruthy();
+    const [first, second] = screen.getAllByText<HTMLButtonElement>("Apply");
+    expect(first.disabled).toBe(true);
+    expect(second.disabled).toBe(false);
+    key({ key: "1", code: "Digit1" });
+    expect(backend.callsTo("apply_text")).toEqual([]);
+    key({ key: "!", code: "Digit1", shiftKey: true });
+    expect(backend.callsTo("copy_text")).toEqual([{ text: "Please review my PR." }]);
+  });
+
   test("a read-only field offers Copy only, and number keys copy", async () => {
     await answered({ editable: false });
     expect(screen.queryByText("Apply")).toBeNull();
@@ -311,6 +331,15 @@ describe("more errors", () => {
     await failedWith({ errorKind: "max_tokens" });
     expect(screen.getByText("The result was too long and got cut off")).toBeTruthy();
     expect(screen.getByText("Select a shorter passage and try again.")).toBeTruthy();
+  });
+
+  test("an answer cut off by the connection offers no version", async () => {
+    await sendEvent("session", session());
+    await sendEvent("request-started", requestEvent());
+    await sendEvent("request-delta", requestEvent({ text: ANSWER.slice(0, 50) }));
+    await sendEvent("request-failed", requestEvent({ errorKind: "incomplete" }));
+    expect(screen.getByText("The connection dropped while the AI was answering")).toBeTruthy();
+    expect(document.querySelector(".variants")).toBeNull();
   });
 
   test("retrying starts from a clean slate", async () => {

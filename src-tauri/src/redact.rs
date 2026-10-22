@@ -51,6 +51,8 @@ fn looks_like_token(candidate: &str) -> bool {
 
 /// Ordered by priority. When matches overlap, the one that starts first wins; for matches that
 /// start at the same place, the rule listed first wins (custom terms come before all of these).
+/// Kinds are upper-case letters only: the popup recognizes placeholders by that shape
+/// (`src/lib/redaction.ts`).
 static RULES: LazyLock<Vec<Rule>> = LazyLock::new(|| {
     let rule = |kind, pattern: &str, accept| Rule {
         kind,
@@ -264,6 +266,17 @@ mod tests {
     }
 
     #[test]
+    fn kinds_are_letters_only_as_the_popup_expects() {
+        let kinds = RULES.iter().map(|rule| rule.kind).chain(["TERM"]);
+        for kind in kinds {
+            assert!(
+                !kind.is_empty() && kind.chars().all(|c| c.is_ascii_uppercase()),
+                "{kind}"
+            );
+        }
+    }
+
+    #[test]
     fn placeholders_are_numbered_per_kind() {
         let mut r = Redactor::new(&[]);
         r.apply("a@x.vn b@x.vn 10.0.0.1");
@@ -328,5 +341,32 @@ mod tests {
     fn blank_custom_terms_are_ignored() {
         let mut r = Redactor::new(&["  ".to_string(), String::new()]);
         assert_eq!(r.apply("nothing to hide"), "nothing to hide");
+    }
+
+    /// The evaluation set holds realistic work text: the `sensitive-` cases must lose their values
+    /// before they reach a provider, and ordinary text must reach it unchanged.
+    #[test]
+    fn bench_cases_are_redacted_only_where_they_hold_sensitive_data() {
+        let cases: Vec<serde_json::Value> =
+            serde_json::from_str(include_str!("../../scripts/bench-cases.json"))
+                .expect("bench-cases.json is a JSON array");
+        let mut ids = std::collections::HashSet::new();
+        for case in &cases {
+            let id = case["id"].as_str().expect("every case has an id");
+            assert!(ids.insert(id), "duplicate case id {id}");
+            let mut r = Redactor::new(&[]);
+            for field in ["contextBefore", "selection", "contextAfter"] {
+                let text = case[field]
+                    .as_str()
+                    .expect("every case has its text fields");
+                r.apply(text);
+            }
+            assert_eq!(
+                !r.entries.is_empty(),
+                id.starts_with("sensitive-"),
+                "case {id}: {:?}",
+                r.entries
+            );
+        }
     }
 }

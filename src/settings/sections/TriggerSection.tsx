@@ -3,12 +3,7 @@ import type { CommandError, TriggerMode } from "../../lib/api";
 import { formatHotkey, hotkeyConflict, normalizeHotkey } from "../../lib/hotkey";
 import { Card, Field, RadioField, Section, type SectionProps } from "../fields";
 
-const TRIGGERS: { id: TriggerMode; ready: boolean }[] = [
-  { id: "hotkey", ready: true },
-  { id: "icon", ready: true },
-  { id: "auto", ready: false },
-  { id: "off", ready: true },
-];
+const TRIGGERS: TriggerMode[] = ["hotkey", "icon", "auto", "off"];
 
 const MODIFIER_KEYS = ["Control", "Alt", "Shift", "Meta"];
 
@@ -35,14 +30,12 @@ export function TriggerSection({
   return (
     <Section title={t("section.trigger")} description={t("section.trigger.desc")}>
       <Card>
-        {TRIGGERS.map(({ id, ready }) => (
+        {TRIGGERS.map((id) => (
           <RadioField
             key={id}
             name="trigger"
             label={t(`trigger.${id}`)}
             hint={t(`trigger.${id}.hint`)}
-            badge={!ready && <em className="soon">{t("trigger.soon")}</em>}
-            disabled={!ready}
             checked={settings.triggerMode === id}
             onSelect={() => update("triggerMode", id)}
           />
@@ -80,6 +73,16 @@ export function TriggerSection({
             disabled={settings.triggerMode !== "auto"}
             value={settings.autoDelayMs}
             onChange={(e) => update("autoDelayMs", Number(e.target.value))}
+          />
+        </Field>
+        <Field label={t("autoMinChars.label")} hint={<small>{t("autoMinChars.hint")}</small>}>
+          <input
+            type="number"
+            min={1}
+            max={200}
+            disabled={settings.triggerMode !== "auto"}
+            value={settings.autoMinChars}
+            onChange={(e) => update("autoMinChars", Number(e.target.value))}
           />
         </Field>
       </Card>

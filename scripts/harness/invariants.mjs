@@ -1,7 +1,7 @@
 // Project rules that compilers cannot see.
 //
 // Per-file rules (language, privacy, code, network, secrets, whitespace, suppress) judge one file at a time, so the
-// hooks can also run them on a single edit. Cross-file rules (tones, settings, commands,
+// hooks can also run them on a single edit. Cross-file rules (tones, shapes, enums, commands,
 // events, capabilities, setup) check the contracts between the Rust core and the React UI.
 // Each rule yields errors (fail the check) and warnings (reported only).
 //
@@ -14,6 +14,7 @@ import {
   ALLOWED_HOSTS,
   BROWSER_LINK_HOSTS,
   CONTENT_IDENTIFIERS,
+  ENUMS,
   GENERATED,
   INVOKE_FILE,
   MAX_FILE_LINES,
@@ -21,15 +22,27 @@ import {
   REQUIRED_PERMISSIONS,
   ROOT,
   SECRET_PATTERNS,
+  SHAPES,
   TEXT_EXTENSIONS,
   TEXT_NAMES,
   UNSAFE_ALLOWED,
   VIETNAMESE_ALLOWED,
 } from "./config.mjs";
+import {
+  camel,
+  differences,
+  rustCommandArgs,
+  rustEnumVariants,
+  rustStructFields,
+  tsFieldUnion,
+  tsInterfaceFields,
+  tsInvokeArgs,
+  tsTaggedKinds,
+  tsUnion,
+} from "./contracts.mjs";
 import { listFiles, repoFiles } from "./state.mjs";
 
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
-const camel = (snake) => snake.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
 const lineOf = (text, index) => text.slice(0, index).split("\n").length;
 const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
 
@@ -165,7 +178,8 @@ const FILE_RULES = {
     }
     if (isWeb(file)) {
       text.split("\n").forEach((raw, i) => {
-        const line = stripLineComment(raw);
+        // Lines of a block comment are prose, not code.
+        const line = /^\s*(\/\*|\*)/.test(raw) ? "" : stripLineComment(raw);
         if (/(:\s*any\b|\bas\s+any\b|<any>|any\[\])/.test(line)) {
           out.push({ line: i + 1, message: "`any` is not allowed; use a precise type or `unknown`" });
         }
@@ -295,48 +309,6 @@ export function scannedFiles() {
 // ---------------------------------------------------------------------------------------------
 // Cross-file rules: () → { errors, warnings }
 
-/** Members of a TS string-literal union, e.g. `export type ToneId = "a" | "b"`. */
-function tsUnion(source, name) {
-  const m = new RegExp(`type\\s+${name}\\s*=\\s*([^;]+);`).exec(source);
-  return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : null;
-}
-
-function tsInterfaceBlock(source, name) {
-  return new RegExp(`interface\\s+${name}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(source)?.[1] ?? null;
-}
-
-/** Field names of a TS interface (top level only). */
-function tsInterfaceFields(source, name) {
-  const block = tsInterfaceBlock(source, name);
-  return block === null ? null : [...block.matchAll(/^\s+(\w+)\??\s*:/gm)].map((x) => x[1]);
-}
-
-/** Field names of a Rust struct, skipping `#[serde(skip)]` fields. */
-function rustStructFields(source, name) {
-  const m = new RegExp(`pub struct ${name}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(source);
-  if (!m) return null;
-  const fields = [];
-  let skip = false;
-  for (const line of m[1].split("\n")) {
-    if (/#\[serde\([^)]*\bskip\b/.test(line)) skip = true;
-    const f = /^\s*pub\s+(\w+)\s*:/.exec(line) ?? /^\s*(\w+)\s*:/.exec(line);
-    if (f && !line.trim().startsWith("//")) {
-      if (!skip) fields.push(f[1]);
-      skip = false;
-    }
-  }
-  return fields;
-}
-
-/** Variants of a Rust enum, snake_cased the way `#[serde(rename_all = "snake_case")]` does. */
-function rustEnumVariants(source, name) {
-  const m = new RegExp(`pub enum ${name}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(source);
-  if (!m) return null;
-  return [...m[1].matchAll(/^\s*([A-Z]\w*)\s*[,{(]/gm)].map((x) =>
-    x[1].replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase(),
-  );
-}
-
 const CROSS_RULES = {
   /** The tone ids are listed in Rust, in the TS union and in the TS display order. */
   tones() {
@@ -356,40 +328,42 @@ const CROSS_RULES = {
     return { errors };
   },
 
-  /** `Settings` is serialized with camelCase; both sides must name the same fields and enum values. */
-  settings() {
-    const errors = [];
-    const rs = read("src-tauri/src/settings.rs");
-    const ts = read("src/lib/api.ts");
-    const rustFields = rustStructFields(rs, "Settings")?.map(camel);
-    const tsFields = tsInterfaceFields(ts, "Settings");
-    if (!rustFields || !tsFields) return { errors: ["could not parse Settings in settings.rs or api.ts"] };
-    const missingTs = rustFields.filter((f) => !tsFields.includes(f));
-    const missingRust = tsFields.filter((f) => !rustFields.includes(f));
-    if (missingTs.length) errors.push(`api.ts Settings is missing: ${missingTs.join(", ")}`);
-    if (missingRust.length) errors.push(`settings.rs Settings is missing: ${missingRust.join(", ")}`);
-
-    const trigger = rustEnumVariants(rs, "TriggerMode");
-    const tsTrigger = tsUnion(ts, "TriggerMode");
-    if (trigger && tsTrigger && !sameSet(trigger, tsTrigger)) {
-      errors.push(`TriggerMode differs: Rust [${trigger}] vs TS [${tsTrigger}]`);
-    }
-    const provider = rustEnumVariants(rs, "ProviderKind");
-    const tsProvider = /\bprovider:\s*([^;]+);/.exec(tsInterfaceBlock(ts, "Settings") ?? "");
-    // The field is either an inline union of literals or the name of a union type.
-    const providerType = tsProvider?.[1].trim();
-    const tsProviders = !providerType
-      ? null
-      : /^\w+$/.test(providerType)
-        ? tsUnion(ts, providerType)
-        : [...providerType.matchAll(/"([^"]+)"/g)].map((x) => x[1]);
-    if (provider && tsProviders && !sameSet(provider, tsProviders)) {
-      errors.push(`ProviderKind differs: Rust [${provider}] vs TS Settings.provider [${tsProviders}]`);
-    }
-    return { errors };
+  /** Structs Rust sends to the UI (`SHAPES`) have the same camelCase field names as their api.ts interfaces. */
+  shapes() {
+    const ts = read(INVOKE_FILE);
+    return {
+      errors: SHAPES.flatMap(({ rust, name }) => {
+        const rustFields = rustStructFields(read(rust), name)?.map(camel);
+        const tsFields = tsInterfaceFields(ts, name);
+        if (!rustFields || !tsFields)
+          return [`could not find struct ${name} in ${rust} or interface ${name} in api.ts`];
+        return differences(name, rust, rustFields, INVOKE_FILE, tsFields);
+      }),
+    };
   },
 
-  /** Every `invoke("x")` has a `#[tauri::command] fn x` that is registered in generate_handler!. */
+  /** Enums shared with the UI (`ENUMS`) have the same snake_case values as their api.ts unions. */
+  enums() {
+    const ts = read(INVOKE_FILE);
+    return {
+      errors: ENUMS.flatMap(({ rust, name, ts: tsName, tagged }) => {
+        const variants = rustEnumVariants(read(rust), name);
+        const [iface, field] = tsName.split(".");
+        const values = tagged
+          ? tsTaggedKinds(ts, tsName)
+          : field
+            ? tsFieldUnion(ts, iface, field)
+            : tsUnion(ts, tsName);
+        if (!variants || !values) return [`could not find enum ${name} in ${rust} or ${tsName} in api.ts`];
+        return differences(`${name} ⇄ ${tsName}`, rust, variants, INVOKE_FILE, values);
+      }),
+    };
+  },
+
+  /**
+   * Every `invoke("x")` has a `#[tauri::command] fn x` that is registered in generate_handler!, and the
+   * typed wrapper in api.ts passes exactly the arguments the command takes.
+   */
   commands() {
     const errors = [];
     const warnings = [];
@@ -412,6 +386,12 @@ const CROSS_RULES = {
     for (const name of defined) {
       if (!registered.includes(name)) errors.push(`#[tauri::command] fn ${name} is not listed in generate_handler!`);
       else if (!invoked.has(name)) warnings.push(`command ${name} is registered but never invoked from the UI`);
+    }
+    const takes = rustCommandArgs(rust);
+    for (const [name, passed] of tsInvokeArgs(read(INVOKE_FILE))) {
+      const expected = takes.get(name);
+      if (expected)
+        errors.push(...differences(`arguments of ${name}`, "the Rust command", expected, INVOKE_FILE, passed));
     }
     return { errors, warnings };
   },

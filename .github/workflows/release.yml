@@ -1,21 +1,25 @@
 name: Release
 
-# Builds the Windows installers in GitHub Actions, never on a personal machine. A pull request that changes
+# Builds the Windows installers and the macOS app (Apple Silicon) in GitHub Actions, never on a personal machine. A pull request that changes
 # this file only builds them (as a check); a push to master (the merge of a release PR) builds them, attests
 # their provenance and publishes the GitHub release `v<version>` with the notes from CHANGELOG.md, which also
 # creates the tag. A push whose version already has a release (a merge without a version bump) builds nothing.
-# Releases are immutable once published. The tag ruleset lets only admins and this workflow create `v*` tags.
+# Releases are immutable once published. The tag ruleset lets only admins and the release GitHub App create
+# `v*` tags (the workflow's own token cannot). The app's credentials are the RELEASE_APP_CLIENT_ID variable and
+# RELEASE_APP_PRIVATE_KEY secret of the `release` environment; only the final publish command uses its token.
 #
 # A release also carries what the in-app updater needs (src-tauri/src/update.rs): a minisign `.sig` for each
 # installer and `latest.json`, which the app reads from releases/latest/download/. The signing key is the
 # TAURI_SIGNING_PRIVATE_KEY secret of the `release` environment (deployable from master only). Only the `sign`
 # job sees it, in one step that runs nothing but the Tauri CLI, so no build script or dependency of the build
-# ever has it.
+# ever has it. The macOS app is built without any secret, then the `sign-macos` job (also in the `release`
+# environment, running nothing but scripts/release/sign-macos.sh) signs it with the Developer ID certificate,
+# notarizes it with Apple and packages the disk image and the update archive.
 on:
   push:
     branches: [master]
   pull_request:
-    paths: [".github/workflows/release.yml", "src-tauri/tauri.conf.json"]
+    paths: [".github/workflows/release.yml", "src-tauri/tauri.conf.json", "src-tauri/Info.plist"]
   workflow_dispatch:
 
 permissions:
@@ -57,8 +61,8 @@ jobs:
             echo "release=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! grep -q "^## \[${version}\]" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md has no section for ${version}"
+          if ! grep -q "^## \[v${version}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no section [v${version}]"
             exit 1
           fi
           pubkey="$(node -p "require('./src-tauri/tauri.conf.json').plugins.updater.pubkey")"
@@ -99,12 +103,20 @@ jobs:
       - name: Build the installers
         run: pnpm tauri build
 
+      # Tauri names the files ToneSnap_<version>_…; a release names them with its tag, ToneSnap_v<version>_….
       - name: Collect the installers and checksums
         shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           mkdir -p release
-          cp src-tauri/target/release/bundle/nsis/*.exe release/
-          cp src-tauri/target/release/bundle/msi/*.msi release/
+          for installer in src-tauri/target/release/bundle/nsis/*.exe src-tauri/target/release/bundle/msi/*.msi; do
+            name="$(basename "$installer")"
+            case "$name" in
+              "ToneSnap_${VERSION}_"*) cp "$installer" "release/ToneSnap_v${name#ToneSnap_}" ;;
+              *) echo "::error::${name} is not named ToneSnap_${VERSION}_…"; exit 1 ;;
+            esac
+          done
           cd release
           sha256sum -- * > SHA256SUMS.txt
           cat SHA256SUMS.txt
@@ -116,10 +128,100 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # The macOS app, unsigned and built without any secret (like the Windows installers). On a pull request this
+  # proves that the bundle still builds; on a release the next job signs and notarizes it.
+  build-macos:
+    name: build macOS app
+    needs: plan
+    if: github.event_name == 'pull_request' || needs.plan.outputs.release == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 10
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # No build cache, for the same reason as the Windows build.
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the app bundle
+        run: pnpm tauri build --bundles app
+
+      # A tar keeps the bundle's permissions and links through the artifact upload.
+      - name: Pack the app
+        run: tar -czf ToneSnap-unsigned.app.tar.gz -C src-tauri/target/release/bundle/macos ToneSnap.app
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-app
+          path: ToneSnap-unsigned.app.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  # Signs and notarizes the app. Only this job and the publish job see the Apple credentials, and it runs
+  # nothing but the signing script and Apple's tools.
+  sign-macos:
+    name: sign and notarize macOS app
+    if: needs.plan.outputs.release == 'true'
+    needs: [plan, build-macos]
+    runs-on: macos-latest
+    environment: release
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-app
+          path: unsigned
+
+      - name: Sign, notarize and package
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          for name in APPLE_CERTIFICATE APPLE_SIGNING_IDENTITY APPLE_API_KEY_ID APPLE_API_ISSUER_ID APPLE_API_KEY_P8; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is not set in the release environment (see docs/MAINTAINING.md, macOS)"
+              exit 1
+            fi
+          done
+          mkdir app
+          tar -xzf unsigned/ToneSnap-unsigned.app.tar.gz -C app
+          scripts/release/sign-macos.sh app/ToneSnap.app "${VERSION}" macos
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-release
+          path: macos/
+          if-no-files-found: error
+          retention-days: 14
+
   sign:
     name: sign for the updater
     if: needs.plan.outputs.release == 'true'
-    needs: [plan, build]
+    needs: [plan, build, sign-macos]
     runs-on: ubuntu-latest
     environment: release
     timeout-minutes: 15
@@ -145,6 +247,11 @@ jobs:
           name: installers
           path: release
 
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-release
+          path: release
+
       # The signature names the version, which the app requires (`requireSignedVersion`).
       - name: Sign the installers
         env:
@@ -157,7 +264,7 @@ jobs:
             exit 1
           fi
           mkdir signatures
-          for installer in release/*.exe release/*.msi; do
+          for installer in release/*.exe release/*.msi release/*.app.tar.gz; do
             node_modules/.bin/tauri signer sign --app-version "${VERSION}" "$installer"
             mv "$installer.sig" signatures/
           done
@@ -172,7 +279,7 @@ jobs:
   publish:
     name: publish release
     if: needs.plan.outputs.release == 'true'
-    needs: [plan, build, sign]
+    needs: [plan, build, build-macos, sign-macos, sign]
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -191,14 +298,39 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          name: macos-release
+          path: release
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
           name: signatures
           path: release
+
+      # The build job listed the Windows files only; the list now covers everything attached to the release.
+      - name: Write the checksums
+        working-directory: release
+        run: |
+          rm -f SHA256SUMS.txt
+          sha256sum -- *.exe *.msi *.dmg *.app.tar.gz > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
             release/*.exe
             release/*.msi
+            release/*.dmg
+            release/*.app.tar.gz
+
+      # Publishing creates the tag, which the tag ruleset allows only the release app to do. The token is
+      # limited to this repository and to contents, and expires with the job.
+      - name: Get the release app token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
 
       # Notes are the CHANGELOG.md section of this version. The release is created as a draft, the files
       # are attached, and only then is it published (which creates the tag on this commit), because a
@@ -206,17 +338,18 @@ jobs:
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          APP_TOKEN: ${{ steps.app.outputs.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           version="${VERSION}"
           TAG="v${version}"
-          awk -v v="$version" '
+          awk -v v="$TAG" '
             $0 ~ "^## \\[" v "\\]" { on = 1; next }
             on && /^## \[/ { exit }
             on { print }
           ' CHANGELOG.md > notes.md
           if [ ! -s notes.md ]; then
-            echo "::error::CHANGELOG.md has no section for ${version}"
+            echo "::error::CHANGELOG.md has no section [${TAG}]"
             exit 1
           fi
           # The manifest the in-app updater reads; it fails when an installer has no signature.
@@ -241,6 +374,6 @@ jobs:
           if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null)" = "true" ]; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
           fi
-          gh release create "$TAG" release/*.exe release/*.msi release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
+          gh release create "$TAG" release/*.exe release/*.msi release/*.dmg release/*.app.tar.gz release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${TAG}" \
             --notes-file notes.md --target "$GITHUB_SHA" --draft
-          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          GH_TOKEN="${APP_TOKEN}" gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest

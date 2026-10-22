@@ -26,3 +26,6 @@ dist-ssr
 # Claude Code: harness runtime state and personal settings
 .claude/.state/
 .claude/settings.local.json
+
+# Superpowers plugin: working specs and plans (the record lives in docs/PLAN.md and docs/specs/)
+docs/superpowers/

@@ -110,6 +110,8 @@ async fn run(app: &AppHandle, settings: &Settings, session: &Session, request_id
         ..ids
     };
     match result {
+        // A newer request or a dismissed popup replaced it; nothing on screen waits for it.
+        Ok(outcome) if outcome.cancelled => {}
         Ok(outcome) => {
             let ev = RequestEvent {
                 stop_reason: outcome.stop_reason,
