@@ -121,6 +121,10 @@ Trigger (hotkey / floating icon / automatic popup)
 - [x] Settings: the model is a combobox with suggestions (any model name can be typed), and *Get Key* opens the selected provider's key page in the browser (see Decisions; UI-15, SET-04)
 - [x] Output quality and structure review (2026-10-22): a stream cut before its stop reason, a stalled response and an unreadable body are errors instead of a finished answer; reworded placeholders are restored and a version that lost one is Copy-only; the harness compares every shared Rust ⇄ TS type, enum and command argument; capture and paste run once over the platform facade (see Decisions)
 
+## Phase 1 progress
+
+- [x] Evaluation set of 100 cases in `scripts/bench-cases.json` (issue #15): chat, email, tickets and code review with mistakes typical of Vietnamese speakers, Vietnamese input with and without diacritics, text that is already fine, multi-line text with spaces and tabs, and fake sensitive data. A `redact.rs` test checks that every `sensitive-` case is redacted and no other case is
+
 ## Phase 3 progress
 
 Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issues/22).

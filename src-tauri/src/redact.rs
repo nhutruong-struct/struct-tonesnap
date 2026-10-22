@@ -342,4 +342,31 @@ mod tests {
         let mut r = Redactor::new(&["  ".to_string(), String::new()]);
         assert_eq!(r.apply("nothing to hide"), "nothing to hide");
     }
+
+    /// The evaluation set holds realistic work text: the `sensitive-` cases must lose their values
+    /// before they reach a provider, and ordinary text must reach it unchanged.
+    #[test]
+    fn bench_cases_are_redacted_only_where_they_hold_sensitive_data() {
+        let cases: Vec<serde_json::Value> =
+            serde_json::from_str(include_str!("../../scripts/bench-cases.json"))
+                .expect("bench-cases.json is a JSON array");
+        let mut ids = std::collections::HashSet::new();
+        for case in &cases {
+            let id = case["id"].as_str().expect("every case has an id");
+            assert!(ids.insert(id), "duplicate case id {id}");
+            let mut r = Redactor::new(&[]);
+            for field in ["contextBefore", "selection", "contextAfter"] {
+                let text = case[field]
+                    .as_str()
+                    .expect("every case has its text fields");
+                r.apply(text);
+            }
+            assert_eq!(
+                !r.entries.is_empty(),
+                id.starts_with("sensitive-"),
+                "case {id}: {:?}",
+                r.entries
+            );
+        }
+    }
 }

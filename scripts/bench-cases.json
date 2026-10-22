@@ -75,5 +75,628 @@
     "contextBefore": "Project Closing Report\n\n5. Conclusion",
     "selection": "Thank you for your support during the project. Hope we can cooperate in the future project.",
     "contextAfter": ""
+  },
+  {
+    "id": "slack-standup-late",
+    "app": "Slack",
+    "contextBefore": "Lan: Standup in 5 mins!",
+    "selection": "Sorry team, today I will join standup late 15 minutes because my internet have problem.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-ask-help",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Anyone free can help me check this error? I try many ways but still not work.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-half-day-leave",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Hi anh, today I feel not well so I want to take leave half day afternoon.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-discuss-about",
+    "app": "Slack",
+    "contextBefore": "Designer: The new mockups are in Figma.",
+    "selection": "Let's discuss about the new design in the meeting tomorrow.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-already-done",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "I already done the task you assign yesterday, please check.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-cannot-open-file",
+    "app": "Microsoft Teams",
+    "contextBefore": "Hoa: Here is the contract draft (contract_v2.docx)",
+    "selection": "Can you send me the file again? I cannot open it, it say file is corrupted.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-informations",
+    "app": "Slack",
+    "contextBefore": "PM: Can you estimate the reporting feature?",
+    "selection": "Please give me more informations about the requirement so I can estimate.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-tight-deadline",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "The deadline is too tight, I'm afraid we cannot finish all feature before Friday.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-no-invitation",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Where is the meeting link? I don't receive the invitation.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-thanks-support",
+    "app": "Slack",
+    "contextBefore": "Hung: Try clearing the build cache, that fixed it for me last time.",
+    "selection": "Thank you so much for your support, without you I cannot fix it.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-same-issue",
+    "app": "Slack",
+    "contextBefore": "Mai: The build fails on Windows with a path too long error.",
+    "selection": "I also meet the same issue like you when build on Windows.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-overtime",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Tonight I need to OT to finish the release, so maybe I reply late.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-confirm-again",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Can you confirm again the time of the demo? I'm not sure 2pm or 3pm.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-blunt-no",
+    "app": "Slack",
+    "contextBefore": "Junior dev: I pushed the new validation, can you take a look?",
+    "selection": "No, this way is wrong. Do again.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-wfh",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Tomorrow I work from home because my son is sick.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-vpn-down",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "VPN is down from morning, I can't access to the server.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-estimate",
+    "app": "Slack",
+    "contextBefore": "PM: How long for the sync ticket?",
+    "selection": "For this ticket I estimate about 3 days, maybe more if API not ready.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-review-ping",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Hi, did you have time to review my code? It is blocking the QA team.",
+    "contextAfter": ""
+  },
+  {
+    "id": "teams-deploy-mistake",
+    "app": "Microsoft Teams",
+    "contextBefore": "Lead: Why is the old checkout page back on production?",
+    "selection": "I'm sorry, it is my mistake. I deployed wrong branch to production.",
+    "contextAfter": ""
+  },
+  {
+    "id": "slack-congratulation",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Congratulation team, the release is success!",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-request-quote",
+    "app": "Outlook",
+    "contextBefore": "Dear Ms. Johnson,",
+    "selection": "We would like to request the quotation for 50 licenses. Please send to us at the earliest.",
+    "contextAfter": "Best regards,\nHoa"
+  },
+  {
+    "id": "outlook-follow-up",
+    "app": "Outlook",
+    "contextBefore": "Hi David,",
+    "selection": "I just want to follow up my email last week about the contract. Do you have any update?",
+    "contextAfter": "Thanks,\nTuan"
+  },
+  {
+    "id": "outlook-inconvenient",
+    "app": "Outlook",
+    "contextBefore": "Dear valued customer,",
+    "selection": "We are sorry for this inconvenient and we will try our best to fix it soon.",
+    "contextAfter": "Sincerely,\nSupport Team"
+  },
+  {
+    "id": "outlook-noted",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Noted with thanks. I will revert you by end of day.",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-attached-report",
+    "app": "Outlook",
+    "contextBefore": "Dear all,",
+    "selection": "Please find the attached file for the report of this month.",
+    "contextAfter": "Best regards,\nLan"
+  },
+  {
+    "id": "outlook-reschedule",
+    "app": "Outlook",
+    "contextBefore": "Hi Emma,",
+    "selection": "Because of the holiday, I would like to move our meeting to next Tuesday if you are convenient.",
+    "contextAfter": ""
+  },
+  {
+    "id": "gmail-self-intro",
+    "app": "Gmail",
+    "contextBefore": "Hi Mark,",
+    "selection": "My name is Tuan, I am working as a backend developer at the company for 3 years.",
+    "contextAfter": "I'm reaching out about the open platform engineer role."
+  },
+  {
+    "id": "outlook-invoice-unpaid",
+    "app": "Outlook",
+    "contextBefore": "Dear Accounts Payable team,",
+    "selection": "Until now we still not receive the payment for invoice of September. Please check and advise.",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-interview-thanks",
+    "app": "Outlook",
+    "contextBefore": "Dear Ms. Lee,",
+    "selection": "Thank you for give me the chance to interview. I hope to hear the good news from you.",
+    "contextAfter": "Kind regards,\nMai"
+  },
+  {
+    "id": "outlook-escalate",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "This issue is happen many times and affect our customers very much. We need your team support urgently.",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-out-of-office",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "I will be out of office from 2 to 5 May. For urgent matter please contact my colleague.",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-decline-price",
+    "app": "Outlook",
+    "contextBefore": "Dear Mr. Brown,\nThank you for your offer.",
+    "selection": "Unfortunately we cannot accept this price because it is over our budget.",
+    "contextAfter": ""
+  },
+  {
+    "id": "gmail-ask-feedback",
+    "app": "Gmail",
+    "contextBefore": "Hi Anna,\nI've shared the proposal with you on Drive.",
+    "selection": "Could you give me feedback about the proposal? If any point not clear, feel free to ask me.",
+    "contextAfter": ""
+  },
+  {
+    "id": "outlook-new-member",
+    "app": "Outlook",
+    "contextBefore": "Hi team,",
+    "selection": "I would like to introduce Mai, she is new member of our team from today.",
+    "contextAfter": "Please give her a warm welcome!"
+  },
+  {
+    "id": "outlook-shipment-late",
+    "app": "Outlook",
+    "contextBefore": "Dear Mr. Kim,",
+    "selection": "The shipment will be late about one week due to the supplier have problem with material.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-login-freeze",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: Login button not responding\nDescription:",
+    "selection": "When user click login button many times, the app is freeze and not show any error.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-expected-actual",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: No message for a wrong password",
+    "selection": "Expected: system should show the message when password is wrong. Actual: nothing happen.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-feature-request",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: Export filtered report",
+    "selection": "Customer want to export the report to excel file with the filter they choose.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-cannot-reproduce",
+    "app": "Google Chrome",
+    "contextBefore": "",
+    "selection": "I cannot reproduce this bug on my local. Can you provide more detail about environment?",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-root-cause",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: Menu shows the old language",
+    "selection": "Root cause is the cache not clear after user change the language.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-blocked",
+    "app": "Google Chrome",
+    "contextBefore": "",
+    "selection": "This ticket is blocked by backend, waiting API from other team.",
+    "contextAfter": ""
+  },
+  {
+    "id": "linear-verify",
+    "app": "Linear",
+    "contextBefore": "",
+    "selection": "Fixed and deployed on staging. QA please help to verify.",
+    "contextAfter": ""
+  },
+  {
+    "id": "jira-raise-priority",
+    "app": "Google Chrome",
+    "contextBefore": "",
+    "selection": "Please increase priority of this ticket, the customer complain a lot.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-naming",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/utils/date.ts line 18:",
+    "selection": "This variable name is not clear, should rename to something meaning.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-nit-console-log",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/api/client.ts line 77:",
+    "selection": "Nit: no need this console.log, please remove before merge.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-two-calls",
+    "app": "Microsoft Edge",
+    "contextBefore": "Review comment on src/orders/sync.ts line 31:",
+    "selection": "Why we need to call API two times here? I think one time is enough.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-approve",
+    "app": "Google Chrome",
+    "contextBefore": "",
+    "selection": "LGTM, only small comment. You can merge after fix.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-missing-test",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/cart/total.ts line 54:",
+    "selection": "Please add unit test for this case, otherwise we don't know it work or not.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-slow-loop",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/search/filter.ts line 12:",
+    "selection": "This loop will be slow when the list have many items, consider to use a map.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-reply-defend",
+    "app": "Google Chrome",
+    "contextBefore": "Reviewer: Why not use the paginated endpoint here?",
+    "selection": "I did it like this because the old API not support pagination, we can refactor later.",
+    "contextAfter": ""
+  },
+  {
+    "id": "review-blunt",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/legacy/report.ts line 1:",
+    "selection": "This code is very bad, nobody can maintain it.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-day-off",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Chị ơi, thứ 6 này em xin nghỉ phép một ngày để về quê ạ.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-no-diacritics",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "toi se gui file bao cao cho anh truoc 5h chieu nay nhe",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-maintenance-notice",
+    "app": "Outlook",
+    "contextBefore": "Kính gửi Quý khách,",
+    "selection": "Chúng tôi xin thông báo hệ thống sẽ bảo trì từ 22h đến 24h tối thứ Bảy. Mong Quý khách thông cảm.",
+    "contextAfter": "Trân trọng,"
+  },
+  {
+    "id": "vi-chat-abbreviations",
+    "app": "Slack",
+    "contextBefore": "Lead: Em check lại bản build mới giúp anh nhé",
+    "selection": "ok a, e check r, ko co loi gi dau a",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-meeting-moved",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Cuộc họp chiều nay dời sang 4h nhé mọi người, phòng họp tầng 3.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-thank-team",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Cảm ơn cả team đã cố gắng hết mình trong đợt release vừa rồi, mọi người vất vả rồi!",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-bug-report",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: Logged out after changing the password",
+    "selection": "Khi người dùng đổi mật khẩu xong thì bị đăng xuất nhưng không có thông báo gì.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-ask-deadline",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Anh cho em hỏi deadline của task này là khi nào ạ? Em đang làm song song 2 task.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-waiting-reply",
+    "app": "Outlook",
+    "contextBefore": "Dear Ms. Johnson,",
+    "selection": "Bên em đã chờ phản hồi hơn một tuần rồi mà chưa thấy anh chị cập nhật gì ạ.",
+    "contextAfter": "Best regards,\nHoa"
+  },
+  {
+    "id": "vi-code-review",
+    "app": "Google Chrome",
+    "contextBefore": "Review comment on src/payment/refund.ts line 88:",
+    "selection": "Đoạn này nên tách ra thành hàm riêng cho dễ test, với lại tên biến hơi khó hiểu.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-approve-leave",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Anh ơi, anh approve giúp em leave request trên hệ thống với ạ, em cảm ơn anh.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-mixed-rebase",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Em đã merge PR vào branch develop rồi, anh rebase lại rồi test giúp em nhé.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-wrong-file",
+    "app": "Microsoft Teams",
+    "contextBefore": "Lead: Khách báo file hôm qua không đúng phiên bản?",
+    "selection": "Em xin lỗi, hôm qua em gửi nhầm file cho khách, em đã gửi lại bản đúng rồi ạ.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-formal-proposal",
+    "app": "Microsoft Word",
+    "contextBefore": "4. Đề xuất",
+    "selection": "Chúng tôi đề xuất triển khai giai đoạn hai vào quý tới, sau khi hoàn tất đánh giá giai đoạn một.",
+    "contextAfter": ""
+  },
+  {
+    "id": "vi-invoice-question",
+    "app": "Zalo",
+    "contextBefore": "",
+    "selection": "Dạ cho em hỏi anh muốn nhận hóa đơn qua email hay bản giấy ạ?",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-standup",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Yesterday I finished the payment refactor. Today I'm working on the retry logic, and I have no blockers.",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-email-thanks",
+    "app": "Outlook",
+    "contextBefore": "Hi Peter,",
+    "selection": "Thank you for the quick turnaround. The updated figures look good to me.",
+    "contextAfter": "Best,\nLan"
+  },
+  {
+    "id": "fine-short-ack",
+    "app": "Slack",
+    "contextBefore": "Mai: I'll send the slides after lunch.",
+    "selection": "Sounds good, thanks!",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-pr-description",
+    "app": "Google Chrome",
+    "contextBefore": "",
+    "selection": "This change moves the date helpers into a shared module and adds tests for leap years.",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-polite-request",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Would you mind sharing the slides after the meeting? I'd like to go through them again.",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-ticket",
+    "app": "Google Chrome",
+    "contextBefore": "Summary: Large report export fails",
+    "selection": "The export fails for reports with more than 10,000 rows. Smaller reports work as expected.",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-vi",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Cảm ơn anh, em đã nhận được tài liệu và sẽ phản hồi trước thứ Năm.",
+    "contextAfter": ""
+  },
+  {
+    "id": "fine-one-word",
+    "app": "Slack",
+    "contextBefore": "Lead: Is the hotfix merged?",
+    "selection": "Done.",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-standup",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Yesterday:\n  - Fix login bug\n  - Review PR of Hung\nToday:\n  - Continue the export feature\n  - Meeting with customer at 3pm\nBlocker: none",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-audit-items",
+    "app": "Outlook",
+    "contextBefore": "Dear team,",
+    "selection": "Please help to prepare below items before the audit:\n1. List of user accounts\n2. Access log of last 3 months\n   - Only for production server\n3. Backup report",
+    "contextAfter": "Thank you,\nHoa"
+  },
+  {
+    "id": "multiline-code-block",
+    "app": "Slack",
+    "contextBefore": "Hung: Users say their profile changes are not saved.",
+    "selection": "I think the problem is here:\n```\nif (user == null) {\n    return;\n}\nsaveUser(user);\n```\nWe return early so the data never save.",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-release-notes",
+    "app": "Microsoft Word",
+    "contextBefore": "",
+    "selection": "Release 2.3:\n- Add dark mode\n- Fix crash when open setting\n    * only happen on Windows 10\n- Improve speed of search",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-vi-plan",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "Kế hoạch tuần này:\n- Hoàn thành màn hình đăng nhập\n    + Thêm kiểm tra mật khẩu\n    + Hiển thị lỗi rõ ràng\n- Viết test cho API thanh toán",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-tab-indent",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Agenda for tomorrow:\n\t1. Review last sprint\n\t2. Plan next sprint\n\t\t- Capacity of each member\n\t\t- Priority of the backlog",
+    "contextAfter": ""
+  },
+  {
+    "id": "multiline-blank-lines",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Hi team,\n\nThe server will restart tonight at 11pm.\n\nPlease save your work before that time and don't run any job.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-email-phone",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Please contact me at tuan.nguyen@example.com or 0912 345 678 if you have any question.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-card",
+    "app": "Slack",
+    "contextBefore": "Support: Ticket from the shop owner",
+    "selection": "Customer said the card 4111 1111 1111 1111 was charged two times, please refund one.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-api-key",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "I put the key sk-test-4f8a1c9e2b7d6a5f3e0c9b8a in the config but it still say unauthorized.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-ip",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "Server 10.20.30.40 is not response since morning, can someone check?",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-id-number",
+    "app": "Zalo",
+    "contextBefore": "",
+    "selection": "Số CCCD của khách là 001099012345, em cập nhật vào hồ sơ giúp chị nhé.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-jwt",
+    "app": "Slack",
+    "contextBefore": "",
+    "selection": "When I call API with token eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXIifQ.c2lnbmF0dXJlLWZvci10ZXN0 it return 401.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-internal-url",
+    "app": "Microsoft Teams",
+    "contextBefore": "",
+    "selection": "The admin page https://staging.internal.example.com/admin is not working, it show error 502.",
+    "contextAfter": ""
+  },
+  {
+    "id": "sensitive-intl-phone",
+    "app": "Outlook",
+    "contextBefore": "",
+    "selection": "Our office in Singapore is +65 6123 4567, please call before 5pm their time.",
+    "contextAfter": ""
   }
 ]
