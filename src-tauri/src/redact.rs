@@ -51,6 +51,8 @@ fn looks_like_token(candidate: &str) -> bool {
 
 /// Ordered by priority. When matches overlap, the one that starts first wins; for matches that
 /// start at the same place, the rule listed first wins (custom terms come before all of these).
+/// Kinds are upper-case letters only: the popup recognizes placeholders by that shape
+/// (`src/lib/redaction.ts`).
 static RULES: LazyLock<Vec<Rule>> = LazyLock::new(|| {
     let rule = |kind, pattern: &str, accept| Rule {
         kind,
@@ -261,6 +263,17 @@ mod tests {
         // At the same start, custom terms come before the built-in rules.
         let mut r = Redactor::new(&["Falcon-2026".to_string()]);
         assert_eq!(r.apply("Falcon-2026"), "[TERM_1]");
+    }
+
+    #[test]
+    fn kinds_are_letters_only_as_the_popup_expects() {
+        let kinds = RULES.iter().map(|rule| rule.kind).chain(["TERM"]);
+        for kind in kinds {
+            assert!(
+                !kind.is_empty() && kind.chars().all(|c| c.is_ascii_uppercase()),
+                "{kind}"
+            );
+        }
     }
 
     #[test]

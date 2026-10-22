@@ -166,7 +166,7 @@ pub fn cursor() -> (i32, i32) {
 pub fn monitor_at(x: i32, y: i32) -> Monitor {
     screen_at_physical(&screens(), x, y)
         .map(|s| s.monitor())
-        .unwrap_or_else(|| super::super::stub::monitor_at(x, y))
+        .unwrap_or_else(super::super::fallback_monitor)
 }
 
 /// The app in front of the others.

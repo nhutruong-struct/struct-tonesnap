@@ -173,6 +173,23 @@ pub struct Monitor {
     pub scale: f64,
 }
 
+/// A 1920 × 1080 screen at scale 1, for when the OS names no monitor (macOS between display
+/// changes) or the platform has no OS layer.
+#[cfg(not(windows))]
+fn fallback_monitor() -> Monitor {
+    let screen = Rect {
+        left: 0,
+        top: 0,
+        right: 1920,
+        bottom: 1080,
+    };
+    Monitor {
+        work: screen,
+        bounds: screen,
+        scale: 1.0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

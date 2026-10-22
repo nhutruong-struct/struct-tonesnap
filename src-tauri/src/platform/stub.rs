@@ -10,17 +10,7 @@ pub fn cursor() -> (i32, i32) {
 }
 
 pub fn monitor_at(_x: i32, _y: i32) -> Monitor {
-    let screen = Rect {
-        left: 0,
-        top: 0,
-        right: 1920,
-        bottom: 1080,
-    };
-    Monitor {
-        work: screen,
-        bounds: screen,
-        scale: 1.0,
-    }
+    super::fallback_monitor()
 }
 
 pub fn own_window_in_front() -> Option<bool> {
