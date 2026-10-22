@@ -1,5 +1,7 @@
 //! One use of ToneSnap: capture the selection, redact it, show the popup, then ask the model.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
@@ -36,6 +38,8 @@ pub struct Session {
 /// Handles the hotkey or a click on the floating icon. The capture runs on its own thread
 /// because it waits on the keyboard, the clipboard and UI Automation.
 pub fn on_trigger(app: AppHandle) {
+    // The hotkey and the icon click arrive on the main thread, the one place the layout can be read.
+    platform::refresh();
     platform::selection_icon::hide();
     let Some(capturing) = CaptureInProgress::begin(&app) else {
         return;
@@ -55,8 +59,23 @@ pub fn on_trigger(app: AppHandle) {
             Err(CaptureError::BlockedApp(name)) => {
                 window::show_notice(&app, NoticeKind::BlockedApp, name)
             }
+            Err(CaptureError::AccessibilityDenied) => {
+                ask_for_accessibility_once();
+                window::show_notice(&app, NoticeKind::AccessibilityDenied, String::new())
+            }
         }
     });
+}
+
+/// Shows the system's Accessibility prompt, once per run: at startup when the permission is
+/// missing, or at the first capture that needs it. The prompt also adds ToneSnap to the list in
+/// System Settings and has a button that opens it. Later refusals only show the notice, and
+/// Settings has the buttons for the rest.
+pub fn ask_for_accessibility_once() {
+    static ASKED: AtomicBool = AtomicBool::new(false);
+    if !ASKED.swap(true, Ordering::SeqCst) {
+        platform::request_permission(platform::Permission::Accessibility);
+    }
 }
 
 /// Ignores triggers while a capture is running, and clears that flag however the capture ends.

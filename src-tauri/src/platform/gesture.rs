@@ -1,9 +1,9 @@
 //! Tells a selection gesture (a drag, or a double/triple click, over text) apart from an
-//! ordinary click, from the raw left-button events the mouse hook sees.
+//! ordinary click, from the raw left-button events the mouse hook (Windows) or event monitor (macOS) sees.
 
 use std::time::{Duration, Instant};
 
-/// Mouse travel (physical px) that counts as a drag-selection rather than a click.
+/// Mouse travel (physical px on Windows, points on macOS) that counts as a drag-selection rather than a click.
 const DRAG_DISTANCE: i32 = 6;
 
 /// The system's double-click limits: the longest pause and the largest move between clicks.

@@ -161,6 +161,24 @@ pub fn copy_text(app: AppHandle, text: String) {
     std::thread::spawn(move || platform::copy_text(&text));
 }
 
+/// Where the OS permissions stand; Settings polls it while the user grants them.
+#[tauri::command]
+pub fn get_permissions() -> platform::Permissions {
+    platform::permissions()
+}
+
+/// Shows the system prompt for a permission. Off the main thread: the system call can wait on
+/// the user's session.
+#[tauri::command]
+pub async fn request_permission(permission: platform::Permission) {
+    platform::request_permission(permission);
+}
+
+#[tauri::command]
+pub async fn open_permission_settings(permission: platform::Permission) {
+    platform::open_permission_settings(permission);
+}
+
 #[tauri::command]
 pub fn hide_popup(app: AppHandle) {
     window::dismiss_popup(&app);

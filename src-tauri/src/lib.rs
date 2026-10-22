@@ -60,6 +60,9 @@ pub fn run() {
             commands::send_request,
             commands::apply_text,
             commands::copy_text,
+            commands::get_permissions,
+            commands::request_permission,
+            commands::open_permission_settings,
             commands::hide_popup,
             commands::open_settings,
             commands::update_info,
@@ -84,6 +87,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let settings_need_attention = issue.is_some();
     app.manage(AppState::new(settings.clone(), issue));
     app.manage(update::Updates::default());
+    platform::init(&handle);
+    if let Some(popup) = app.get_webview_window(window::POPUP) {
+        platform::prepare_popup(&popup);
+    }
     tray::build(app, &settings)?;
     trigger::init_icon(&handle)?;
     trigger::apply_icon_mode(&settings);
@@ -92,7 +99,12 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         window::show_settings(&handle);
     }
     let missing_key = secrets::api_key(settings.provider).is_none();
-    if settings_need_attention || missing_key {
+    let permissions = platform::permissions();
+    let missing_permission = permissions.required && !permissions.accessibility;
+    if missing_permission {
+        session::ask_for_accessibility_once();
+    }
+    if settings_need_attention || missing_key || missing_permission {
         window::show_settings(&handle);
     }
     update::start(&handle);

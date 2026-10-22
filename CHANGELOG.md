@@ -6,6 +6,13 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- macOS support when built from source (macOS 14 or later): reading the selection through the Accessibility API, a menu-bar
+  app with a floating-icon mode, copy and paste with ⌘C and ⌘V, on-device OCR with Vision, a Permissions section in
+  Settings, and keys in the Keychain. Releases include a signed and notarized `.dmg` for Apple Silicon and update
+  the app in place, and the website has a Mac download button.
+
 ## [1.1.4] - 2026-10-21
 
 ### Install

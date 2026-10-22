@@ -54,7 +54,7 @@ export interface RequestEvent {
   errorMessage?: string | null;
 }
 
-export type NoticeKind = "no_selection" | "password_field" | "blocked_app" | "apply_failed";
+export type NoticeKind = "no_selection" | "password_field" | "blocked_app" | "apply_failed" | "accessibility_denied";
 
 export interface Notice {
   kind: NoticeKind;
@@ -110,6 +110,15 @@ export interface CommandError {
 export type SettingsIssue =
   { kind: "invalid_fields"; fields: string[] } | { kind: "broken"; backup: string } | { kind: "unreadable" };
 
+export type PermissionKind = "accessibility" | "screen_recording";
+
+/** Where the OS permissions stand (macOS); `required` is false where there is nothing to grant. */
+export interface Permissions {
+  required: boolean;
+  accessibility: boolean;
+  screenRecording: boolean;
+}
+
 /** Where updating stands (`update.rs`). */
 export type UpdateStatus =
   | { kind: "idle" }
@@ -140,6 +149,10 @@ export const api = {
   sendRequest: (options: RequestOptions) => invoke<void>("send_request", { ...options }),
   applyText: (text: string) => invoke<void>("apply_text", { text }),
   copyText: (text: string) => invoke<void>("copy_text", { text }),
+  permissions: () => invoke<Permissions>("get_permissions"),
+  /** Shows the system prompt; once refused, only System Settings can grant it. */
+  requestPermission: (permission: PermissionKind) => invoke<void>("request_permission", { permission }),
+  openPermissionSettings: (permission: PermissionKind) => invoke<void>("open_permission_settings", { permission }),
   hidePopup: () => invoke<void>("hide_popup"),
   openSettings: () => invoke<void>("open_settings"),
   updateInfo: () => invoke<UpdateInfo>("update_info"),

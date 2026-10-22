@@ -1,7 +1,7 @@
 # Triggers
 
 > **Status:** Hotkey, Icon and Off modes implemented (Phase 0). Auto mode not implemented.
-> **Source:** `src-tauri/src/trigger.rs`, `session.rs` (`on_trigger`), `platform/win/selection_icon/`, `src/lib/hotkey.ts`, `src/settings/sections/TriggerSection.tsx`.
+> **Source:** `src-tauri/src/trigger.rs`, `session.rs` (`on_trigger`), `platform/win/selection_icon/`, `platform/gesture.rs`, `platform/mac/selection_icon.rs`, `src/lib/hotkey.ts`, `src/settings/sections/TriggerSection.tsx`.
 
 A trigger starts one use of ToneSnap: capture the selection, then show the popup. There are two triggers, the global hotkey and a click on the floating icon, and both do exactly the same thing.
 
@@ -49,6 +49,13 @@ The icon lets mouse users open ToneSnap without the keyboard. Only the mouse is 
 - **TRG-24** The icon hides when: the user presses the left button elsewhere, presses the right or middle button, or scrolls (except over the icon); the foreground window changes away from the app that owned the selection; it has been shown for 6 seconds without the pointer over it; any trigger fires.
 - **TRG-25** The hook callback returns immediately and posts work elsewhere, because Windows removes low-level hooks that stall input.
 - **TRG-26** Saving settings starts or stops the icon to match the mode. The blocked-app list is read at every selection, so changes apply without a restart.
+
+## Floating icon on macOS
+
+- **TRG-30** A global `NSEvent` monitor watches mouse events only (left press and release, right and other presses, scroll), which needs no permission; the keyboard is never watched. Gestures are told apart by the same `gesture.rs` as on Windows, in points: a drag of more than 6 points, or two clicks within the system double-click interval and 4 points.
+- **TRG-31** After a gesture ToneSnap waits 120 ms, then asks the Accessibility API (`selection_state`): a non-empty `AXSelectedText` or selected range shows the icon; a password field or an empty selection inside the focused control's frame does not; when the app does not say, the icon shows only if the pointer was the text I-beam on release. The I-beam is read from the system cursor (`NSCursor.currentSystemCursor`, deprecated by Apple): if a future macOS stops reporting it, only apps that report their selection get the icon, and the hotkey still works. Our own windows and apps in `blockedApps` never get the icon.
+- **TRG-32** The icon is a borderless non-activating `NSPanel` of 26 points at the status window level, on every Space and over full-screen apps, placed 10 points right and 14 below where the mouse was released and kept inside the screen's visible area. It never becomes the key window, so the app keeps its selection. Its click is seen by a local monitor, hides the icon and triggers the capture like the hotkey (TRG-23).
+- **TRG-33** The icon hides on a press elsewhere, a right or other button press, a scroll, when another app comes to the front, or after 6 s unhovered, checked every 150 ms.
 
 **Verified by:** `state.rs` test (only one capture at a time, TRG-03), `src/lib/hotkey.test.ts` (normalizing, display, known conflicts), `src/settings/SettingsPage.test.tsx` (capturing a new hotkey, the conflict warning, a taken hotkey keeps the window open), `selection_icon/gesture.rs` tests (drag, single click, double click within the system limits, presses on the icon), `uia.rs` integration test (a gesture outside the focused element is not judged by it), `selection_icon/paint.rs` tests (resampling). Registering the global hotkey and the mouse hook in other apps are checked by hand (`/smoke-test`).
 

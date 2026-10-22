@@ -47,8 +47,21 @@ pub enum CaptureError {
     NoSelection,
     PasswordField,
     BlockedApp(String),
+    /// The Accessibility permission is missing (macOS).
+    #[cfg_attr(
+        not(target_os = "macos"),
+        allow(dead_code, reason = "only macOS asks the user for a permission")
+    )]
+    AccessibilityDenied,
 }
 
+#[cfg_attr(
+    not(windows),
+    allow(
+        dead_code,
+        reason = "only the Windows capture uses it; macOS names apps itself and keeps no window rectangles"
+    )
+)]
 pub fn friendly_app_name(process: &str) -> String {
     let name = match process {
         "winword.exe" => "Microsoft Word",
@@ -199,9 +212,78 @@ pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
     Ok(captured)
 }
 
-#[cfg(not(windows))]
+/// The selection and its context: the Accessibility API first, then the clipboard (Cmd+C) for
+/// the selection, and on-device OCR for context when the app does not give any.
+#[cfg(target_os = "macos")]
+pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
+    use std::time::Duration;
+
+    use crate::platform::mac::{self, clipboard, input};
+
+    if !mac::is_trusted() {
+        return Err(CaptureError::AccessibilityDenied);
+    }
+    let front = mac::frontmost().ok_or(CaptureError::NoSelection)?;
+    // The popup does not make ToneSnap the active app, so ask who holds the keyboard too.
+    if front.is_own() || mac::own_window_in_front() == Some(true) {
+        return Err(CaptureError::OwnWindow);
+    }
+    if settings.is_blocked_app(&front.process) {
+        return Err(CaptureError::BlockedApp(front.name));
+    }
+    input::wait_modifiers_released(Duration::from_millis(600));
+    let cursor = mac::cursor();
+    let n = settings.context_chars as usize;
+
+    let ax = mac::capture(front.pid, n);
+    if ax.is_password {
+        return Err(CaptureError::PasswordField);
+    }
+    let (selection, source) = if !ax.selection.trim().is_empty() {
+        (ax.selection.clone(), SelectionSource::Uia)
+    } else {
+        match clipboard::copy_selection() {
+            Some(text) => (text, SelectionSource::Clipboard),
+            None => return Err(CaptureError::NoSelection),
+        }
+    };
+
+    let mut captured = Captured {
+        // The process id plays the part of Windows' window handle.
+        hwnd: front.pid as isize,
+        app: front.name,
+        selection,
+        before: String::new(),
+        after: String::new(),
+        screen_text: String::new(),
+        editable: ax.editable,
+        bounds: ax.bounds,
+        cursor,
+        // `Uia` stands for the platform's accessibility API on both systems.
+        source,
+        context_source: ContextSource::None,
+    };
+    let ax_has_context = !(ax.before.trim().is_empty() && ax.after.trim().is_empty());
+    if source == SelectionSource::Uia && ax_has_context {
+        captured.before = last_chars(&ax.before, n);
+        captured.after = first_chars(&ax.after, n);
+        captured.context_source = ContextSource::Uia;
+    } else if settings.ocr_fallback {
+        let monitor = mac::monitor_at(cursor.0, cursor.1);
+        let area = ocr_area(ax.bounds, cursor, monitor.bounds, monitor.scale);
+        if let Some(lines) = mac::ocr::recognize(area, monitor.scale) {
+            let text = focus_screen_text(&lines, &captured.selection, n);
+            if !text.trim().is_empty() {
+                captured.screen_text = text;
+                captured.context_source = ContextSource::Ocr;
+            }
+        }
+    }
+    Ok(captured)
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn capture(_settings: &Settings) -> Result<Captured, CaptureError> {
-    // macOS (Accessibility API + Vision OCR) is Phase 3.
     Err(CaptureError::NoSelection)
 }
 

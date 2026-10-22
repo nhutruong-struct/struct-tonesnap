@@ -42,6 +42,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "Productivity",
+    "macOS": {
+      "minimumSystemVersion": "14.0"
+    },
     "windows": {
       "nsis": {
         "installerHooks": "windows/hooks.nsh",

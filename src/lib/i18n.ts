@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, events, unsubscribeAll } from "./api";
+import { isMac } from "./platform";
 
 export type Lang = "vi" | "en";
 
@@ -114,6 +115,18 @@ const vi = {
   "terms.placeholder": "Tên khách hàng\nMã dự án",
   "blocked.label": "App bị chặn (tên tiến trình, mỗi dòng một app)",
 
+  "section.permissions": "Quyền truy cập",
+  "section.permissions.desc": "macOS chỉ cho ToneSnap đọc văn bản đã chọn và gửi phím khi bạn cho phép.",
+  "permission.accessibility.label": "Trợ năng (Accessibility)",
+  "permission.accessibility.hint":
+    "Cần để đọc đoạn văn bản bôi đen, sao chép và dán lại vào app gốc. Bấm Mở Cài đặt hệ thống rồi bật ToneSnap trong danh sách; trạng thái ở đây tự cập nhật.",
+  "permission.screen_recording.label": "Ghi màn hình (Screen Recording)",
+  "permission.screen_recording.hint":
+    "Chỉ cần để đọc ngữ cảnh quanh đoạn văn bản bằng OCR trên máy. Có thể bỏ qua; sau khi cho phép, hãy mở lại ToneSnap.",
+  "permission.allowed": "Đã cho phép",
+  "permission.denied": "Chưa cho phép",
+  "permission.allow": "Cho phép…",
+  "permission.openSettings": "Mở Cài đặt hệ thống",
   "section.updates": "Cập nhật",
   "section.updates.desc": "Phiên bản mới của ToneSnap trên GitHub và cách cài đặt chúng.",
   "updates.current": "Phiên bản hiện tại: {version}",
@@ -149,6 +162,8 @@ const vi = {
   "notice.no_selection": "Chưa có đoạn văn nào được chọn. Hãy bôi đen đoạn cần dịch hoặc viết lại rồi nhấn phím tắt.",
   "notice.password_field": "ToneSnap không đọc nội dung trong ô mật khẩu.",
   "notice.blocked_app": "ToneSnap đang tắt trong {app} (danh sách app bị chặn trong Cài đặt).",
+  "notice.accessibility_denied":
+    "ToneSnap chưa được cấp quyền Trợ năng nên không đọc được văn bản đã chọn. Mở Cài đặt của ToneSnap, mục Quyền truy cập.",
   "notice.apply_failed": "Không đưa được nội dung về app gốc. Đã copy sẵn, bạn nhấn Ctrl+V để dán.",
 
   "popup.empty": "Bôi đen một đoạn văn rồi nhấn phím tắt.",
@@ -312,6 +327,18 @@ const en: Record<Key, string> = {
   "terms.placeholder": "Client name\nProject code",
   "blocked.label": "Blocked apps (process name, one per line)",
 
+  "section.permissions": "Permissions",
+  "section.permissions.desc": "macOS lets ToneSnap read selected text and send key presses only when you allow it.",
+  "permission.accessibility.label": "Accessibility",
+  "permission.accessibility.hint":
+    "Needed to read the selected text, copy it and paste the result back into the original app. Click Open System Settings and turn ToneSnap on in the list; this status updates by itself.",
+  "permission.screen_recording.label": "Screen Recording",
+  "permission.screen_recording.hint":
+    "Only needed to read the text around the selection with on-device OCR. You can skip it; after allowing it, reopen ToneSnap.",
+  "permission.allowed": "Allowed",
+  "permission.denied": "Not allowed",
+  "permission.allow": "Allow…",
+  "permission.openSettings": "Open System Settings",
   "section.updates": "Updates",
   "section.updates.desc": "New versions of ToneSnap on GitHub, and how they are installed.",
   "updates.current": "Current version: {version}",
@@ -348,6 +375,8 @@ const en: Record<Key, string> = {
     "Nothing is selected. Select the text you want to translate or rewrite, then press the hotkey.",
   "notice.password_field": "ToneSnap never reads password fields.",
   "notice.blocked_app": "ToneSnap is turned off in {app} (blocked apps in Settings).",
+  "notice.accessibility_denied":
+    "ToneSnap does not have the Accessibility permission, so it cannot read the selected text. Open ToneSnap Settings, Permissions.",
   "notice.apply_failed": "Could not put the text back into the app. It is on your clipboard; press Ctrl+V to paste.",
 
   "popup.empty": "Select some text, then press the hotkey.",
@@ -399,6 +428,37 @@ const en: Record<Key, string> = {
 
 const DICTIONARIES: Record<Lang, Record<Key, string>> = { vi, en };
 
+/** The strings that name Windows, its keys or its credential store, worded for macOS. */
+const MAC_OVERRIDES: Record<Lang, Partial<Record<Key, string>>> = {
+  vi: {
+    "section.interface.desc": "Ngôn ngữ hiển thị và việc khởi động cùng macOS.",
+    "uiLanguage.auto": "Tự động (theo macOS)",
+    "launchAtLogin.label": "Khởi động ToneSnap khi đăng nhập macOS",
+    "launchAtLogin.help": "ToneSnap chờ sẵn ở thanh menu để dùng được ngay.",
+    "launchAtLogin.failed": "Đã lưu cài đặt, nhưng không đổi được việc khởi động cùng macOS: {detail}",
+    "apiKey.help":
+      "Key được lưu trong Keychain của macOS, không ghi ra file. Nội dung chỉ gửi thẳng tới nhà cung cấp bạn chọn.",
+    "apiKey.saved": "Đã lưu API key vào Keychain.",
+    "hotkey.help": "Bấm vào ô rồi nhấn tổ hợp phím mới (cần ít nhất một phím ⌃/⌥/⇧/⌘).",
+    "ocr.help": "Ảnh chỉ xử lý trên máy bằng Vision, không gửi đi. Chỉ phần chữ (đã che) được gửi.",
+    "notice.apply_failed": "Không đưa được nội dung về app gốc. Đã copy sẵn, bạn nhấn ⌘V để dán.",
+  },
+  en: {
+    "section.interface.desc": "Display language and starting with macOS.",
+    "uiLanguage.auto": "Automatic (follow macOS)",
+    "launchAtLogin.label": "Start ToneSnap when I log in to macOS",
+    "launchAtLogin.help": "ToneSnap waits in the menu bar so it is ready at once.",
+    "launchAtLogin.failed": "Settings were saved, but starting with macOS could not be changed: {detail}",
+    "apiKey.help":
+      "The key is stored in the macOS Keychain, never in a file. Text is sent only to the provider you choose.",
+    "apiKey.saved": "API key saved to the Keychain.",
+    "hotkey.help": "Click the box and press a new key combination (with at least one of ⌃/⌥/⇧/⌘).",
+    "ocr.help":
+      "The image is processed on this Mac with Vision and never sent. Only the recognized text, masked, is sent.",
+    "notice.apply_failed": "Could not put the text back into the app. It is on your clipboard; press ⌘V to paste.",
+  },
+};
+
 export const KEYS = Object.keys(vi) as Key[];
 
 export function resolveLang(setting: string | undefined): Lang {
@@ -408,11 +468,12 @@ export function resolveLang(setting: string | undefined): Lang {
 
 export type Translate = (key: Key, params?: Record<string, string | number>) => string;
 
-export function translator(lang: Lang): Translate {
+export function translator(lang: Lang, mac: boolean = isMac()): Translate {
+  const strings = mac ? { ...DICTIONARIES[lang], ...MAC_OVERRIDES[lang] } : DICTIONARIES[lang];
   return (key, params) =>
     Object.entries(params ?? {}).reduce(
       (text, [name, value]) => text.split(`{${name}}`).join(String(value)),
-      DICTIONARIES[lang][key],
+      strings[key],
     );
 }
 

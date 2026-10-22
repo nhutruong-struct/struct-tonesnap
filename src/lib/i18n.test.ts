@@ -20,13 +20,28 @@ describe("dictionaries", () => {
     }
   });
 
+  test("the macOS wording keeps every placeholder and names no Windows feature", () => {
+    for (const lang of ["vi", "en"] as const) {
+      const base = translator(lang, false);
+      const mac = translator(lang, true);
+      const changed = KEYS.filter((key) => mac(key) !== base(key));
+      expect(changed.length).toBeGreaterThan(5);
+      for (const key of changed) {
+        expect(placeholders(mac(key)), key).toEqual(placeholders(base(key)));
+        expect(mac(key), key).not.toMatch(/Windows|Ctrl|Credential/);
+      }
+    }
+  });
+
   test("every tone, trigger and notice the app can show has a label", () => {
     const required = [
       ...["concise", "natural", "formal"].map((t) => `tone.${t}`),
       ...["vi", "en", "ja"].map((l) => `target.${l}`),
       ...["translate", "rewrite"].flatMap((m) => [`mode.${m}`, `mode.${m}.hint`]),
       ...["hotkey", "icon", "auto", "off"].map((t) => `trigger.${t}`),
-      ...["no_selection", "password_field", "blocked_app", "apply_failed"].map((n) => `notice.${n}`),
+      ...["no_selection", "password_field", "blocked_app", "apply_failed", "accessibility_denied"].map(
+        (n) => `notice.${n}`,
+      ),
       ...["uia", "clipboard"].map((s) => `popup.source.${s}`),
       ...["uia", "ocr", "none"].map((s) => `popup.context.${s}`),
       ...["no_api_key", "authentication_error", "permission_error", "not_found_error", "rate_limit_error"].map(

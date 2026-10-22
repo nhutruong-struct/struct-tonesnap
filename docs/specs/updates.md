@@ -1,8 +1,8 @@
 # Updates
 
-> **Status:** implemented (Phase 5), Windows. The first release that can update itself is the one after 1.0.0:
+> **Status:** implemented (Phase 5), Windows and macOS (Apple Silicon). The first release that can update itself is the one after 1.0.0:
 > 1.0.0 has no updater, so its users install the next version by hand once.
-> **Source:** `src-tauri/src/update.rs`, `tray.rs`, `commands.rs` (`update_info`, `check_for_updates`, `install_update`), `src-tauri/tauri.conf.json` (`plugins.updater`), `src/settings/sections/UpdatesSection.tsx`, `.github/workflows/release.yml`, `scripts/release/updater-manifest.mjs`.
+> **Source:** `src-tauri/src/update.rs`, `tray.rs`, `commands.rs` (`update_info`, `check_for_updates`, `install_update`), `src-tauri/tauri.conf.json` (`plugins.updater`), `src/settings/sections/UpdatesSection.tsx`, `.github/workflows/release.yml`, `scripts/release/updater-manifest.mjs`, `scripts/release/sign-macos.sh`.
 
 ToneSnap installs new versions from the GitHub releases of `nhutruong-struct/struct-tonesnap` with the official Tauri updater plugin, driven from Rust (no JavaScript API and no capability).
 
@@ -41,5 +41,6 @@ The `updateMode` setting ([settings.md](settings.md)) decides what happens once 
 - **UPD-40** The tray menu starts with *Update to {version} & Restart* while a version can be installed (found, or downloaded and waiting), in the interface language ([app-shell.md](app-shell.md) APP-10).
 - **UPD-41** Settings has an *Updates* section: the two modes, the running version, the status (not checked yet, checking, up to date, available, downloading, downloaded and when it will be installed, installing, what failed with the error), a note for MSI installs (UPD-24), *Check for Updates* (disabled while working) and *Update & Restart* when a version can be installed. The buttons act at once; the mode is saved with *Save Settings*.
 - **UPD-42** Every status change reaches Settings through the `update-status` event ([contracts.md](contracts.md)).
+- **UPD-50** On macOS (Apple Silicon) the updater downloads the signed `ToneSnap_<version>_aarch64.app.tar.gz` listed under `darwin-aarch64` in `latest.json`, replaces the app bundle in place, and ToneSnap restarts itself (`update.rs` `install`); Windows hands the installer over and exits. The signature, the modes and the schedule are the same as above.
 
 **Verified by:** `update.rs` tests (auto downloads at once and installs only when idle, manual waits for the user even when idle, a user's request downloads and installs in either mode, nothing to do without a release, an MSI install always waits for the user, a failed check is retried sooner but a failed download is not, what idle means, which status the tray offers, one run at a time, the status JSON), `settings.rs` tests (`updateMode` camelCase JSON, an unknown mode falls back), `src/settings/sections/UpdatesSection.test.tsx` (version and status shown, the mode is saved with the settings, Check for Updates and its disabled state, Update & Restart, the downloaded text follows the chosen mode, status events, the MSI note, an event is not overwritten by the first answer), `scripts/release/updater-manifest.test.mjs` (manifest keys and URLs, missing signatures), the harness `network` rule (the updater endpoints in `tauri.conf.json`). Installing a real update needs two signed releases and is tested by hand (see the pull request that added this page).
