@@ -1,21 +1,11 @@
 //! Claude Messages API over raw HTTP with SSE streaming (Rust has no official SDK).
 
-use std::sync::LazyLock;
-use std::time::Duration;
-
 use serde_json::{json, Value};
 
-use super::{read_frames, Error, Outcome, Prompt, Result};
+use super::{error_body, read_frames, Error, Outcome, Prompt, Read, Result, CLIENT};
 
 const API_URL: &str = "https://api.anthropic.com/v1/messages";
 const FALLBACK_BETA: &str = "server-side-fallback-2026-07-01";
-
-static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
-    reqwest::Client::builder()
-        .connect_timeout(Duration::from_secs(10))
-        .build()
-        .expect("http client")
-});
 
 /// Haiku 4.5 rejects `effort`; every newer model accepts it.
 fn supports_effort(model: &str) -> bool {
@@ -90,20 +80,17 @@ async fn stream_to(
     let status = resp.status();
     if !status.is_success() {
         let raw = resp.text().await.unwrap_or_default();
-        let parsed: Value = serde_json::from_str(&raw).unwrap_or(Value::Null);
+        let (kind, message) = error_body(&raw);
         return Err(Error::api(
             status.as_u16(),
-            parsed["error"]["type"].as_str().unwrap_or("http_error"),
-            parsed["error"]["message"]
-                .as_str()
-                .map(str::to_string)
-                .unwrap_or(raw),
+            kind.as_deref().unwrap_or("http_error"),
+            message,
         ));
     }
 
     let mut outcome = Outcome::default();
     // SSE events are separated by a blank line.
-    read_frames(resp, b"\n\n", cancelled, |event| {
+    let read = read_frames(resp, b"\n\n", cancelled, |event| {
         for line in event.lines() {
             let Some(data) = line.strip_prefix("data:") else {
                 continue;
@@ -114,6 +101,7 @@ async fn stream_to(
         Ok(())
     })
     .await?;
+    outcome.cancelled = read == Read::Cancelled;
     Ok(outcome)
 }
 
@@ -325,7 +313,35 @@ mod tests {
         )]);
         let (result, deltas) = run(&server.url, "claude-opus-5-5", true);
         assert!(deltas.is_empty());
-        assert_eq!(result.unwrap().text, "");
+        let outcome = result.unwrap();
+        assert_eq!(outcome.text, "");
+        assert!(outcome.cancelled);
+    }
+
+    #[test]
+    fn a_stream_cut_before_the_stop_reason_has_none() {
+        let server = TestServer::start(vec![Reply::stream(
+            "text/event-stream",
+            &sse(&[text_delta("{\"variants\":{\"formal\":")]),
+        )]);
+        let (result, _) = run(&server.url, "claude-opus-5-5", false);
+        let outcome = result.unwrap();
+        assert_eq!(outcome.stop_reason, None);
+        assert!(!outcome.cancelled);
+        assert!(matches!(
+            super::super::finish(outcome),
+            Err(Error::Incomplete)
+        ));
+    }
+
+    #[test]
+    fn a_body_that_is_not_json_is_a_bad_response() {
+        let server = TestServer::start(vec![Reply::stream(
+            "text/event-stream",
+            "data: <html>proxy login</html>\n\n",
+        )]);
+        let (result, _) = run(&server.url, "claude-opus-5-5", false);
+        assert_eq!(result.unwrap_err().kind(), "bad_response");
     }
 
     #[test]

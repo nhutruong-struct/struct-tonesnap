@@ -7,10 +7,38 @@ mod openai_compat;
 #[cfg(test)]
 mod test_server;
 
+use std::sync::LazyLock;
+use std::time::Duration;
+
 use futures_util::StreamExt;
 use serde_json::Value;
 
 pub use openai_compat::{Endpoint, GEMINI, GROQ, OPENROUTER};
+
+/// How long a response may send nothing before it counts as stalled. Thinking models stay well
+/// under it: Claude sends pings while it thinks, and the other providers get a low reasoning
+/// effort.
+const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// One client for every provider, so connections and TLS sessions are reused.
+static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
+    reqwest::Client::builder()
+        .connect_timeout(Duration::from_secs(10))
+        .read_timeout(IDLE_TIMEOUT)
+        .build()
+        .expect("http client")
+});
+
+/// Error details from a provider's error body: Claude, OpenAI, OpenRouter and Gemini (which
+/// wraps the error in an array) all put them under `error`. `message` falls back to the raw body.
+fn error_body(raw: &str) -> (Option<String>, String) {
+    let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
+    let error = &parsed.get(0).unwrap_or(&parsed)["error"];
+    let message = error["message"]
+        .as_str()
+        .map_or_else(|| raw.to_string(), str::to_string);
+    (error["type"].as_str().map(str::to_string), message)
+}
 
 pub enum Provider<'a> {
     Claude {
@@ -39,6 +67,8 @@ pub struct Outcome {
     /// Normalized to the Claude vocabulary: "end_turn", "max_tokens", "refusal".
     pub stop_reason: Option<String>,
     pub usage: Value,
+    /// The caller cancelled the request before the answer ended.
+    pub cancelled: bool,
 }
 
 /// Why a request failed. `kind()` is the code the UI translates.
@@ -55,6 +85,13 @@ pub enum Error {
     Refusal,
     /// The output hit the token limit and is incomplete.
     MaxTokens,
+    /// The stream ended before the model finished its answer, e.g. a proxy closed the
+    /// connection.
+    Incomplete,
+    /// The provider could not be reached in time, or stopped sending in the middle.
+    Timeout,
+    /// The provider sent something that is not the JSON its API promises.
+    BadResponse(String),
     /// The connection failed or the stream could not be read.
     Network(String),
 }
@@ -73,6 +110,9 @@ impl Error {
             Self::Api { kind, .. } => kind,
             Self::Refusal => "refusal",
             Self::MaxTokens => "max_tokens",
+            Self::Incomplete => "incomplete",
+            Self::Timeout => "timeout",
+            Self::BadResponse(_) => "bad_response",
             Self::Network(_) => "network",
         }
     }
@@ -100,7 +140,7 @@ impl std::fmt::Display for Error {
                 kind,
                 message,
             } => write!(f, "{status} ({kind}): {message}"),
-            Self::Network(message) => f.write_str(message),
+            Self::Network(message) | Self::BadResponse(message) => f.write_str(message),
             other => f.write_str(other.kind()),
         }
     }
@@ -110,21 +150,26 @@ impl std::error::Error for Error {}
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
-        Self::Network(err.to_string())
+        if err.is_timeout() {
+            Self::Timeout
+        } else {
+            Self::Network(err.to_string())
+        }
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
-        Self::Network(err.to_string())
+        Self::BadResponse(err.to_string())
     }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Streams the response, calling `on_text` for every text delta. Stops early (returning
-/// what was received so far) when `cancelled()` turns true. A refusal or truncated output is
-/// an error, so a successful outcome is always complete.
+/// what was received so far, marked `cancelled`) when `cancelled()` turns true. A refusal, a
+/// truncated output or a stream that ends early is an error, so a successful outcome that was
+/// not cancelled is always complete.
 pub async fn stream(
     provider: Provider<'_>,
     prompt: Prompt,
@@ -146,13 +191,28 @@ pub async fn stream(
     finish(outcome)
 }
 
-/// Turns a refusal or a truncated answer into an error.
+/// Turns a refusal, a truncated answer or an answer without an end into an error. Only the
+/// provider's stop reason proves the answer is whole: a connection can also close cleanly in
+/// the middle of it.
 fn finish(outcome: Outcome) -> Result<Outcome> {
+    if outcome.cancelled {
+        return Ok(outcome);
+    }
     match outcome.stop_reason.as_deref() {
         Some("refusal") => Err(Error::Refusal),
         Some("max_tokens") => Err(Error::MaxTokens),
-        _ => Ok(outcome),
+        Some(_) => Ok(outcome),
+        None => Err(Error::Incomplete),
     }
+}
+
+/// How reading a streamed body ended.
+#[derive(Debug, PartialEq, Eq)]
+enum Read {
+    /// The server closed the stream.
+    Ended,
+    /// `cancelled()` turned true first.
+    Cancelled,
 }
 
 /// Reads a streamed response body and hands each complete `separator`-terminated frame to
@@ -162,19 +222,19 @@ async fn read_frames(
     separator: &[u8],
     cancelled: impl Fn() -> bool,
     mut on_frame: impl FnMut(&str) -> Result<()>,
-) -> Result<()> {
+) -> Result<Read> {
     let mut bytes = resp.bytes_stream();
     let mut buf: Vec<u8> = Vec::new();
     while let Some(chunk) = bytes.next().await {
         if cancelled() {
-            return Ok(());
+            return Ok(Read::Cancelled);
         }
         buf.extend_from_slice(&chunk?);
         while let Some(frame) = next_frame(&mut buf, separator) {
             on_frame(&frame)?;
         }
     }
-    Ok(())
+    Ok(Read::Ended)
 }
 
 /// Removes the first complete frame (with its separator) from `buf`. Frames are split on
@@ -223,8 +283,32 @@ mod tests {
             Err(Error::MaxTokens)
         ));
         assert!(finish(stopped(Some("end_turn"))).is_ok());
-        // A cancelled stream has no stop reason and is not an error.
-        assert!(finish(stopped(None)).is_ok());
+    }
+
+    #[test]
+    fn a_stream_that_ends_without_a_stop_reason_is_incomplete() {
+        assert!(matches!(finish(stopped(None)), Err(Error::Incomplete)));
+    }
+
+    #[test]
+    fn a_cancelled_stream_is_not_an_error() {
+        let cancelled = Outcome {
+            cancelled: true,
+            ..Default::default()
+        };
+        assert!(finish(cancelled).is_ok());
+    }
+
+    #[test]
+    fn error_bodies_give_their_type_and_message() {
+        let claude = r#"{"type":"error","error":{"type":"overloaded_error","message":"busy"}}"#;
+        assert_eq!(
+            error_body(claude),
+            (Some("overloaded_error".into()), "busy".into())
+        );
+        let gemini = r#"[{"error":{"code":400,"message":"API key not valid"}}]"#;
+        assert_eq!(error_body(gemini), (None, "API key not valid".into()));
+        assert_eq!(error_body("Bad Gateway"), (None, "Bad Gateway".into()));
     }
 
     #[test]
@@ -237,5 +321,9 @@ mod tests {
         assert_eq!(Error::Refusal.message(), "refusal");
         assert_eq!(Error::Network("reset".into()).message(), "reset");
         assert_eq!(Error::MaxTokens.status(), None);
+        assert_eq!(Error::Incomplete.kind(), "incomplete");
+        assert_eq!(Error::Timeout.kind(), "timeout");
+        let bad = Error::from(serde_json::from_str::<Value>("{").unwrap_err());
+        assert_eq!(bad.kind(), "bad_response");
     }
 }
