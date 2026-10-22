@@ -21,7 +21,7 @@ export function VariantList({ variants, readOnly, onApply, onCopy, t }: VariantL
             <span className="tone">{toneLabel(t, v.tone)}</span>
             <span className="spacer" />
             {!readOnly && (
-              <button className="primary small" disabled={!v.ready} onClick={() => onApply(i)}>
+              <button className="primary small" disabled={!v.ready || v.missing.length > 0} onClick={() => onApply(i)}>
                 {t("popup.apply")}
               </button>
             )}
@@ -30,6 +30,11 @@ export function VariantList({ variants, readOnly, onApply, onCopy, t }: VariantL
             </button>
           </div>
           {v.text ? <p className="variant-text">{v.text}</p> : <div className="skeleton" />}
+          {v.missing.length > 0 && (
+            <p className="variant-warning" role="alert">
+              {t("popup.missingRedacted", { values: v.missing.join(", ") })}
+            </p>
+          )}
         </li>
       ))}
     </ol>
