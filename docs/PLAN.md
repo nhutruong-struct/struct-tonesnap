@@ -153,7 +153,7 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 
 | App | Reads selection | Reads context | Knows if editable | Apply | Notes |
 |---|---|---|---|---|---|
-| Word | | | | | |
+| Word | ✓ Word COM (CAP-24) | ✓ Word COM (`contextChars` on each side) | Apply offered in the document pane | ✓ edited in place, formatting kept, one Ctrl+Z (APL-40 to APL-42) | Word 16 with the hotkey: bold phrase and link kept, 2026-10-22 |
 | Outlook | | | | | |
 | Slack | ✓ UIA (indentation kept by the paragraph read, CAP-17) | ✓ UIA (surrounding text) | Apply offered (editable or unknown, not told apart) | ✓ | Message composer, 2026-10-08 |
 | Chrome (textarea / contenteditable) | | | | | |
