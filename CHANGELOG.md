@@ -6,15 +6,50 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-22
+
+### Install
+
+On Windows, download `ToneSnap_1.2.0_x64-setup.exe` (installer) or `ToneSnap_1.2.0_x64_en-US.msi` (for managed
+deployment) below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks
+first, if you chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot
+update itself. The Windows installers are still **not code-signed**, so your browser and Windows SmartScreen ask
+first: keep the file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file
+came from this page.
+
+On a Mac (macOS 14 or later, Apple Silicon), download `ToneSnap_1.2.0_aarch64.dmg`, open it and drag ToneSnap to
+Applications. It is signed and notarized. At first start, the **Permissions** section of Settings asks for
+**Accessibility** and, optionally, **Screen Recording** (on-device OCR context).
+
+You can check that a file was built by this repository's GitHub Actions from this tag:
+
+```
+gh attestation verify ToneSnap_1.2.0_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+```
+
+and compare its SHA-256 with `SHA256SUMS.txt`.
+
 ### Added
 
-- macOS support when built from source (macOS 14 or later): reading the selection through the Accessibility API, a menu-bar
+- macOS support (macOS 14 or later, Apple Silicon): reading the selection through the Accessibility API, a menu-bar
   app with a floating-icon mode, copy and paste with ⌘C and ⌘V, on-device OCR with Vision, a Permissions section in
-  Settings, and keys in the Keychain. Releases include a signed and notarized `.dmg` for Apple Silicon and update
-  the app in place, and the website has a Mac download button.
+  Settings, and keys in the Keychain. Releases include a signed and notarized `.dmg` and update the app in place, and
+  the website has a Mac download button.
+- **Auto** trigger mode: selecting text with the mouse opens the popup by itself after a short wait, with no click on
+  the icon. It reads the selection only through the accessibility API and shows the icon instead when it cannot.
+  Keyboard selections are not seen.
+
+### Changed
+
+- In Word, **Apply** edits the document in place and changes only the words that differ, so bold, italics, links and
+  styles inside the selection are kept, and one Ctrl+Z undoes it.
 
 ### Fixed
 
+- An answer cut off by the network or the provider is now an error instead of a version you could apply; a provider
+  that stays silent for 60 seconds times out.
+- A version that lost a masked value of the selection (an email address, for example) says which one and offers Copy
+  only.
 - The Windows uninstaller shows the ToneSnap icon instead of the generic installer icon.
 
 ## [1.1.4] - 2026-10-21
@@ -205,7 +240,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   [app compatibility report](https://github.com/nhutruong-struct/struct-tonesnap/issues/new?template=app_compatibility.yml).
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
-[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.4...develop
+[Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.2.0...develop
+[1.2.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.4...v1.2.0
 [1.1.4]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...v1.1.2
