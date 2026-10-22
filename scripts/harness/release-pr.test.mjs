@@ -49,6 +49,8 @@ test("release pr: each rule is reported", () => {
 test("release pr: comments and CRLF line ends are not content", () => {
   const body = filled.replace(/\n/g, "\r\n") + "\r\n<!-- - [ ] vX.Y.Z #… -->\r\n";
   assert.deepEqual(releaseProblems({ title: "Release v1.2.0", body, version: "1.2.0" }), []);
+  const unclosed = filled + "\n<!-- - [ ] vX.Y.Z\n- [ ] hidden too\n";
+  assert.deepEqual(releaseProblems({ title: "Release v1.2.0", body: unclosed, version: "1.2.0" }), []);
 });
 
 test("changelog: every version in CHANGELOG.md is written as its tag", () => {

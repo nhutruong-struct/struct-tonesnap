@@ -27,6 +27,20 @@ export function changelogProblems(text) {
   return problems;
 }
 
+/** `text` without its HTML comments; an unclosed one hides the rest, as GitHub renders it. */
+function withoutComments(text) {
+  let kept = "";
+  let from = 0;
+  for (;;) {
+    const start = text.indexOf("<!--", from);
+    if (start < 0) return kept + text.slice(from);
+    kept += text.slice(from, start);
+    const end = text.indexOf("-->", start + 4);
+    if (end < 0) return kept;
+    from = end + 3;
+  }
+}
+
 /** Problems with a release PR, as sentences the maintainer can act on; empty when it is ready to merge. */
 export function releaseProblems({ title, body, version, changelog }) {
   const problems = [];
@@ -38,10 +52,7 @@ export function releaseProblems({ title, body, version, changelog }) {
   const expected = `Release v${version}`;
   if ((title ?? "").trim() !== expected) problems.push(`title it "${expected}" (the version in tauri.conf.json)`);
   // The template's comments are guidance, not content.
-  const lines = (body ?? "")
-    .replace(/\r\n/g, "\n")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .split("\n");
+  const lines = withoutComments((body ?? "").replace(/\r\n/g, "\n")).split("\n");
   const missing = RELEASE_SECTIONS.filter((heading) => !lines.some((line) => line.trim() === heading));
   if (missing.length > 0)
     problems.push(
