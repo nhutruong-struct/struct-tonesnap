@@ -4,7 +4,7 @@
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
-use crate::commands::CommandError;
+use crate::error::CommandError;
 use crate::platform::selection_icon;
 use crate::session;
 use crate::settings::{Settings, TriggerMode};

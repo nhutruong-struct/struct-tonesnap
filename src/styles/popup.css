@@ -173,6 +173,15 @@ html[data-window="popup"] #root {
   user-select: text;
 }
 
+.variant-warning {
+  margin-top: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--s-1);
+  color: var(--warn);
+  background: var(--warn-bg);
+  font-size: var(--fs-small);
+}
+
 .skeleton {
   height: 14px;
   width: 88%;

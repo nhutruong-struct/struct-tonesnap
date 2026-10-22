@@ -1,23 +1,17 @@
 //! The OS integration behind one platform-neutral surface. Orchestration code calls these
 //! functions; on Windows they forward to `win`, on macOS to `mac`, elsewhere to inert stubs.
+//! `win` and `mac` are private, so nothing outside this module can bypass the surface.
 //! A function returning `Option` answers `None` where the platform cannot tell, so the caller
 //! falls back to what Tauri knows.
 
 #[cfg(any(windows, target_os = "macos"))]
 mod gesture;
 #[cfg(target_os = "macos")]
-pub mod mac;
-#[cfg(not(windows))]
-#[cfg_attr(
-    target_os = "macos",
-    allow(
-        dead_code,
-        reason = "macOS borrows only the stubs its Phase 3 steps have not replaced"
-    )
-)]
+mod mac;
+#[cfg(not(any(windows, target_os = "macos")))]
 mod stub;
 #[cfg(windows)]
-pub mod win;
+mod win;
 
 #[cfg(target_os = "macos")]
 use mac as imp;
@@ -26,7 +20,13 @@ use stub as imp;
 #[cfg(windows)]
 use win as imp;
 
-pub use imp::{copy_text, cursor, monitor_at, own_window_in_front, paste_into, selection_icon};
+use std::thread::sleep;
+use std::time::{Duration, Instant};
+
+pub use imp::{
+    copy_selection, cursor, foreground, has_accessibility, monitor_at, own_window_in_front,
+    read_focused, recognize_text, selection_icon, wait_modifiers_released,
+};
 #[cfg(target_os = "macos")]
 pub use mac::{focus_popup, init, prepare_popup, refresh};
 
@@ -51,6 +51,69 @@ pub fn focus_popup(_window: &tauri::WebviewWindow) -> bool {
 use serde::{Deserialize, Serialize};
 
 use crate::geometry::Rect;
+
+/// The app a capture reads from and Apply pastes back into: a window handle on Windows, a
+/// process id on macOS. Only the platform layer looks inside.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Target(isize);
+
+/// The app in front when ToneSnap was triggered.
+#[derive(Debug)]
+pub struct Foreground {
+    pub target: Target,
+    /// Lower-case executable name, e.g. `winword.exe` or `1password`; what `blockedApps` matches.
+    pub process: String,
+    /// What the user knows the app as, where the OS says (macOS); otherwise the caller names it.
+    pub name: Option<String>,
+    /// ToneSnap itself: one of its windows is in front or holds the keyboard.
+    pub own: bool,
+}
+
+/// What the accessibility API (UI Automation, the macOS Accessibility API) tells about the
+/// focused control. Empty fields mean it did not say.
+#[derive(Debug, Default)]
+pub struct Accessible {
+    pub selection: String,
+    pub before: String,
+    pub after: String,
+    /// `None` when the control does not say.
+    pub editable: Option<bool>,
+    /// The selection's rectangle, in physical screen pixels.
+    pub bounds: Option<Rect>,
+    pub is_password: bool,
+}
+
+/// Puts `text` on the clipboard for the user to paste wherever they like.
+pub fn copy_text(text: &str) {
+    imp::clipboard::set_text(text, false);
+}
+
+/// Brings `target` back to the front and pastes `text` over its selection, then restores the
+/// user's clipboard. False when the target could not be brought forward or the clipboard could
+/// not be written.
+pub fn paste_into(target: Target, text: &str) -> bool {
+    let start = Instant::now();
+    while !imp::is_in_front(target) {
+        if start.elapsed() > Duration::from_millis(800) {
+            return false;
+        }
+        imp::bring_forward(target);
+        sleep(Duration::from_millis(40));
+    }
+    // Give the app a moment to restore its caret and selection.
+    sleep(Duration::from_millis(80));
+
+    let snapshot = imp::clipboard::snapshot();
+    if !imp::clipboard::set_text(text, true) {
+        return false;
+    }
+    imp::wait_modifiers_released(Duration::from_millis(400));
+    imp::send_paste();
+    // Electron apps read the clipboard asynchronously; restoring too early pastes the old content.
+    sleep(Duration::from_millis(500));
+    imp::clipboard::restore(&snapshot);
+    true
+}
 
 /// A permission the OS makes the user grant before ToneSnap can work (macOS only).
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -108,6 +171,23 @@ pub struct Monitor {
     pub bounds: Rect,
     /// Effective DPI scale: 1.0 at 96 DPI.
     pub scale: f64,
+}
+
+/// A 1920 × 1080 screen at scale 1, for when the OS names no monitor (macOS between display
+/// changes) or the platform has no OS layer.
+#[cfg(not(windows))]
+fn fallback_monitor() -> Monitor {
+    let screen = Rect {
+        left: 0,
+        top: 0,
+        right: 1920,
+        bottom: 1080,
+    };
+    Monitor {
+        work: screen,
+        bounds: screen,
+        scale: 1.0,
+    }
 }
 
 #[cfg(test)]

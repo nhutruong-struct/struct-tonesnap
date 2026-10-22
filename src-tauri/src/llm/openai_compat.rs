@@ -2,12 +2,9 @@
 //! dialect: Gemini, Groq and OpenRouter. They differ only in the endpoint and in how they can be
 //! told to answer with JSON.
 
-use std::sync::LazyLock;
-use std::time::Duration;
-
 use serde_json::{json, Value};
 
-use super::{read_frames, Error, Outcome, Prompt, Result};
+use super::{error_body, read_frames, Error, Outcome, Prompt, Read, Result, CLIENT};
 
 /// How the provider is asked to answer with JSON that matches the output schema.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,13 +42,6 @@ pub static OPENROUTER: Endpoint = Endpoint {
     json_mode: JsonMode::Object,
     reasoning_effort: None,
 };
-
-static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
-    reqwest::Client::builder()
-        .connect_timeout(Duration::from_secs(10))
-        .build()
-        .expect("http client")
-});
 
 fn body(endpoint: &Endpoint, model: &str, prompt: &Prompt) -> Value {
     let mut system = prompt.system.to_string();
@@ -131,30 +121,27 @@ async fn stream_to(
 
     let mut outcome = Outcome::default();
     // Servers end lines with "\n" or "\r\n"; every `data:` line holds one complete JSON chunk.
-    read_frames(resp, b"\n", cancelled, |line| {
+    let read = read_frames(resp, b"\n", cancelled, |line| {
         let Some(data) = line.trim().strip_prefix("data:") else {
             return Ok(());
         };
         let data = data.trim();
         if data == "[DONE]" {
+            // The end marker also proves the answer is whole when no chunk named a reason.
+            outcome.stop_reason.get_or_insert_with(|| "end_turn".into());
             return Ok(());
         }
         handle_chunk(&serde_json::from_str(data)?, &mut outcome, &mut on_text)
     })
     .await?;
+    outcome.cancelled = read == Read::Cancelled;
     Ok(outcome)
 }
 
 /// Maps an error response onto the codes the popup translates (the Claude vocabulary), since
 /// these providers each name their errors differently.
 fn http_error(status: u16, raw: &str) -> Error {
-    let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
-    // Gemini wraps its error in an array.
-    let error = parsed.get(0).unwrap_or(&parsed)["error"].clone();
-    let message = error["message"]
-        .as_str()
-        .map(str::to_string)
-        .unwrap_or_else(|| raw.to_string());
+    let (_, message) = error_body(raw);
     let kind = match status {
         // Gemini answers a wrong key with 400.
         400 if message.contains("API key not valid") => "authentication_error",
@@ -424,7 +411,34 @@ mod tests {
         )]);
         let (result, deltas) = run(&GEMINI, &server.url, true);
         assert!(deltas.is_empty());
-        assert_eq!(result.unwrap().text, "");
+        let outcome = result.unwrap();
+        assert_eq!(outcome.text, "");
+        assert!(outcome.cancelled);
+    }
+
+    #[test]
+    fn the_done_marker_ends_an_answer_without_a_finish_reason() {
+        let server = TestServer::start(vec![Reply::stream(
+            "text/event-stream",
+            &sse(&[delta("{}")]),
+        )]);
+        let (result, _) = run(&GROQ, &server.url, false);
+        assert_eq!(result.unwrap().stop_reason.as_deref(), Some("end_turn"));
+    }
+
+    #[test]
+    fn a_stream_cut_before_the_end_has_no_stop_reason() {
+        let server = TestServer::start(vec![Reply::stream(
+            "text/event-stream",
+            &format!("data: {}\n\n", delta("{\"variants\":")),
+        )]);
+        let (result, _) = run(&GEMINI, &server.url, false);
+        let outcome = result.unwrap();
+        assert_eq!(outcome.stop_reason, None);
+        assert!(matches!(
+            super::super::finish(outcome),
+            Err(Error::Incomplete)
+        ));
     }
 
     #[test]

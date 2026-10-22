@@ -1,7 +1,7 @@
 # Rust ⇄ TypeScript contracts
 
-> **Status:** implemented (Phase 0). Checked by the harness (`tones`, `settings`, `commands`, `events`, `capabilities` rules in `scripts/harness/invariants.mjs`) and by JSON-shape tests on the Rust side.
-> **Source:** `src-tauri/src/commands.rs`, `lib.rs` (`generate_handler!`), `session.rs`, `request.rs`, `window.rs`, `settings.rs`, `prompt.rs`, `update.rs`, `src/lib/api.ts`, `src/lib/tones.ts`.
+> **Status:** implemented (Phase 0). Checked by the harness (`tones`, `shapes`, `enums`, `commands`, `events`, `capabilities` rules in `scripts/harness/invariants.mjs`; the types and enums compared are listed in `SHAPES` and `ENUMS` of `scripts/harness/config.mjs`) and by JSON-shape tests on the Rust side.
+> **Source:** `src-tauri/src/commands.rs`, `error.rs` (`CommandError`), `lib.rs` (`generate_handler!`), `session.rs`, `request.rs`, `window.rs`, `settings.rs`, `prompt.rs`, `update.rs`, `platform/mod.rs` (`Permissions`, `Permission`), `src/lib/api.ts`, `src/lib/tones.ts`.
 
 The two windows talk to the Rust core only through the commands and events below. Components never call `invoke` or `listen` directly: they use the typed wrappers `api.*` and `events.*` in `src/lib/api.ts`.
 
@@ -107,7 +107,7 @@ See [settings.md](settings.md). Enum values: `uiLanguage` `auto|vi|en`, `trigger
 
 ## Request error codes
 
-- **CON-50** `errorKind` values the popup knows how to explain ([popup.md](popup.md) POP-60): `no_api_key`, `authentication_error`, `permission_error`, `not_found_error`, `rate_limit_error`, `overloaded_error`, `refusal`, `max_tokens`, `network`. Any other value (`http_error`, `stream_error`, other API error types) gets the generic "Error {status}" with the raw message.
-- **CON-51** `errorStatus` is the HTTP status, `0` when there was none (an error inside the stream), and `null` for `refusal`, `max_tokens`, `network` and `no_api_key`.
+- **CON-50** `errorKind` values the popup knows how to explain ([popup.md](popup.md) POP-60): `no_api_key`, `authentication_error`, `permission_error`, `not_found_error`, `rate_limit_error`, `overloaded_error`, `refusal`, `max_tokens`, `incomplete`, `timeout`, `bad_response`, `network`. Any other value (`http_error`, `stream_error`, other API error types) gets the generic "Error {status}" with the raw message.
+- **CON-51** `errorStatus` is the HTTP status, `0` when there was none (an error inside the stream), and `null` for `refusal`, `max_tokens`, `incomplete`, `timeout`, `bad_response`, `network` and `no_api_key`.
 
-**Verified by:** Rust JSON-shape tests: `session.rs` (Session keys and enum values), `request.rs` (RequestEvent field names, error fields), `window.rs` (Notice), `commands.rs` (CommandError), `settings.rs` (SettingsIssue, Settings casing), `update.rs` (UpdateInfo); the harness cross-file rules; `src/test/fixtures.ts` mirrors the Rust defaults for the UI tests.
+**Verified by:** Rust JSON-shape tests: `session.rs` (Session keys and enum values), `request.rs` (RequestEvent field names, error fields), `window.rs` (Notice), `error.rs` (CommandError), `settings.rs` (SettingsIssue, Settings casing), `update.rs` (UpdateInfo); the harness cross-file rules (every struct field, enum value and command argument against `api.ts`, with the parsers tested in `scripts/harness/contracts.test.mjs`); `src/test/fixtures.ts` mirrors the Rust defaults for the UI tests.

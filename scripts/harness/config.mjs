@@ -145,6 +145,40 @@ export const REQUIRED_PERMISSIONS = [
 ];
 
 /**
+ * Rust structs the UI receives (serialized with camelCase field names) and their interfaces of the
+ * same name in `src/lib/api.ts`: the `shapes` rule keeps the field names in step.
+ */
+export const SHAPES = [
+  { rust: "src-tauri/src/settings.rs", name: "Settings" },
+  { rust: "src-tauri/src/session.rs", name: "Session" },
+  { rust: "src-tauri/src/prompt.rs", name: "Payload" },
+  { rust: "src-tauri/src/request.rs", name: "RequestEvent" },
+  { rust: "src-tauri/src/window.rs", name: "Notice" },
+  { rust: "src-tauri/src/error.rs", name: "CommandError" },
+  { rust: "src-tauri/src/update.rs", name: "UpdateInfo" },
+  { rust: "src-tauri/src/platform/mod.rs", name: "Permissions" },
+];
+
+/**
+ * Rust enums the UI sends or receives (snake_case values) and their TypeScript twins in `src/lib/api.ts`:
+ * a union type, `Interface.field` for a field's union, or with `tagged` the `kind` of each member of
+ * a discriminated union. The `enums` rule keeps the values in step.
+ */
+export const ENUMS = [
+  { rust: "src-tauri/src/settings.rs", name: "TriggerMode", ts: "Settings.triggerMode" },
+  { rust: "src-tauri/src/settings.rs", name: "ProviderKind", ts: "Settings.provider" },
+  { rust: "src-tauri/src/settings.rs", name: "TargetLanguage", ts: "Settings.targetLanguage" },
+  { rust: "src-tauri/src/settings.rs", name: "Mode", ts: "Settings.mode" },
+  { rust: "src-tauri/src/settings.rs", name: "UpdateMode", ts: "Settings.updateMode" },
+  { rust: "src-tauri/src/settings.rs", name: "SettingsIssue", ts: "SettingsIssue", tagged: true },
+  { rust: "src-tauri/src/capture.rs", name: "SelectionSource", ts: "Session.source" },
+  { rust: "src-tauri/src/capture.rs", name: "ContextSource", ts: "Session.contextSource" },
+  { rust: "src-tauri/src/window.rs", name: "NoticeKind", ts: "Notice.kind" },
+  { rust: "src-tauri/src/update.rs", name: "UpdateStatus", ts: "UpdateStatus", tagged: true },
+  { rust: "src-tauri/src/platform/mod.rs", name: "Permission", ts: "PermissionKind" },
+];
+
+/**
  * Text files the per-file rules scan: every file in the repository (tracked, or untracked and not
  * ignored) with one of these extensions or names. Generated lockfiles are skipped by the rules
  * that cannot apply to them.

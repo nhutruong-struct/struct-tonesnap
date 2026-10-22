@@ -35,9 +35,9 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | `src-tauri/src/lib.rs` | App setup only: plugins, managed state, window events, the command list |
 | `src-tauri/src/session.rs`, `request.rs` | Trigger → capture → redacted `Session` → popup; streaming a request into `request-*` events |
 | `src-tauri/src/window.rs`, `tray.rs`, `trigger.rs` | Popup/Settings windows and placement; tray menu; hotkey and floating icon |
-| `src-tauri/src/commands.rs`, `state.rs` | Every `#[tauri::command]` and `CommandError`; `AppState` (settings, session, request cancellation) |
-| `src-tauri/src/capture.rs` | Selection and context: UIA → clipboard → OCR |
-| `src-tauri/src/platform/` | `mod.rs` is the platform-neutral facade (stubs in `stub.rs`); `gesture.rs` is the selection-gesture logic shared by both icons; `mac/` holds the macOS layer (`ax` Accessibility reads, `window` pointer, monitors and frontmost app, `cf` Core Foundation, `clipboard`, `input`, `panel`, `selection_icon`); `win/` holds all Win32/COM: `uia`, `clipboard`, `input`, `ocr`, `window`, `com` (MTA threads), `selection_icon` (floating icon + mouse hook) |
+| `src-tauri/src/commands.rs`, `error.rs`, `state.rs` | Every `#[tauri::command]`; `CommandError`; `AppState` (settings, session, request cancellation) |
+| `src-tauri/src/capture.rs` | Selection and context: accessibility API → clipboard → OCR, the same steps on every platform (tested against a fake `Desktop`) |
+| `src-tauri/src/platform/` | `mod.rs` is the platform-neutral facade (`Target`, `Foreground`, `Accessible`, the shared `paste_into`; `win` and `mac` are private behind it, other platforms get `stub.rs`); `gesture.rs` is the selection-gesture logic shared by both icons; `mac/` holds the macOS layer (`ax` Accessibility reads, `window` pointer, monitors and frontmost app, `cf` Core Foundation, `clipboard`, `input`, `panel`, `selection_icon`); `win/` holds all Win32/COM: `uia`, `clipboard`, `input`, `ocr`, `window`, `com` (MTA threads), `selection_icon` (floating icon + mouse hook) |
 | `src-tauri/src/geometry.rs` | `Rect` in physical pixels, shared by capture, placement and the platform layer |
 | `src-tauri/src/redact.rs` | Reversible redaction of sensitive data |
 | `src-tauri/src/prompt.rs` + `src-tauri/prompts/` | System prompt, output JSON schema, user turn |
@@ -178,8 +178,9 @@ The PostToolUse hook runs rustfmt or Prettier on every edited file, so formattin
 | Rule | Catches |
 |---|---|
 | `tones` | Tone lists that differ between `prompt.rs`, `api.ts` and `tones.ts` |
-| `settings` | `Settings` fields or enum values that differ between Rust and TS |
-| `commands` | `invoke("x")` without a matching command, or a command missing from `generate_handler!` |
+| `shapes` | Field names that differ between a Rust struct the UI receives and its `api.ts` interface (`SHAPES` in `config.mjs`: `Settings`, `Session`, `Payload`, `RequestEvent`, `Notice`, `CommandError`, `UpdateInfo`, `Permissions`) |
+| `enums` | Values that differ between a Rust enum and its `api.ts` union, a field's union or the kinds of a tagged union (`ENUMS` in `config.mjs`) |
+| `commands` | `invoke("x")` without a matching command, a command missing from `generate_handler!`, or a typed wrapper in `api.ts` passing other arguments than the command takes |
 | `events` | The UI listening for an event Rust never emits |
 | `capabilities` | A window or plugin API used without its permission; a capability naming a window that does not exist |
 | `setup` | `reqwest` switched to rustls (breaks behind TLS-inspecting proxies); the `windows` crate drifting from Tauri's version; dev port mismatch between Tauri and Vite |
@@ -228,9 +229,10 @@ In Claude Code:
 
 - **Exceptions** (protected paths, allowed hosts, language allowlist, permission map): edit `scripts/harness/config.mjs`.
 - **A per-file rule**: add a function to `FILE_RULES` in `invariants.mjs`, returning `[{ line, message, severity? }]`.
-- **A cross-file rule**: add a function to `CROSS_RULES`, returning `{ errors, warnings }`.
+- **A cross-file rule**: add a function to `CROSS_RULES`, returning `{ errors, warnings }`. Its parsers belong in `scripts/harness/contracts.mjs`, tested in `contracts.test.mjs`.
+- **A new type or enum the UI shares with Rust**: add it to `SHAPES` or `ENUMS` in `config.mjs`.
 - **A gate**: add it to `GATES` in `check.mjs` and map it to a source group in `GATES_FOR_GROUP` (`config.mjs`).
-- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs`, the hooks' path handling (worktrees included) in `scripts/harness/hooks.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the cross-file rules by planting a violation in a copy of the repository.
+- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs`, the hooks' path handling (worktrees included) in `scripts/harness/hooks.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the contract parsers in `scripts/harness/contracts.test.mjs`, and every cross-file rule by planting a violation in a copy of the repository.
 
 ## Troubleshooting
 

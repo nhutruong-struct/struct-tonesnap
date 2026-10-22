@@ -8,45 +8,62 @@ mod test_window;
 pub mod uia;
 pub mod window;
 
-use std::thread::sleep;
-use std::time::{Duration, Instant};
-
+pub use clipboard::copy_selection;
+pub use input::wait_modifiers_released;
 pub use window::{cursor, monitor_at};
+
+use super::{Accessible, Foreground, Target};
+use crate::geometry::Rect;
 
 /// Whether the foreground window belongs to ToneSnap (the popup or Settings).
 pub fn own_window_in_front() -> Option<bool> {
     Some(window::is_own_window(window::foreground()))
 }
 
-/// Puts `text` on the clipboard for the user to paste wherever they like.
-pub fn copy_text(text: &str) {
-    clipboard::set_text(text, false);
+/// UI Automation needs no permission on Windows.
+pub fn has_accessibility() -> bool {
+    true
 }
 
-/// Brings `hwnd` back to the foreground and pastes `text` over its selection, then restores
-/// the user's clipboard. Returns false when the target window could not be focused.
-pub fn paste_into(hwnd: isize, text: &str) -> bool {
-    let start = Instant::now();
-    while window::foreground() != hwnd {
-        if start.elapsed() > Duration::from_millis(800) {
-            return false;
-        }
-        window::focus(hwnd);
-        sleep(Duration::from_millis(40));
-    }
-    // Give the app a moment to restore its caret and selection.
-    sleep(Duration::from_millis(80));
+/// The foreground window. Windows names no app, so the caller derives the name from the process.
+pub fn foreground() -> Option<Foreground> {
+    let hwnd = window::foreground();
+    Some(Foreground {
+        target: Target(hwnd),
+        process: window::process_name(hwnd).unwrap_or_default(),
+        name: None,
+        own: window::is_own_window(hwnd),
+    })
+}
 
-    let snapshot = clipboard::snapshot();
-    if !clipboard::set_text(text, true) {
-        return false;
+/// The focused control as UI Automation sees it, whichever window holds it.
+pub fn read_focused(_target: Target, context_chars: usize) -> Accessible {
+    let ui = uia::capture(context_chars as i32);
+    Accessible {
+        selection: ui.selection,
+        before: ui.before,
+        after: ui.after,
+        editable: ui.editable,
+        bounds: ui.bounds,
+        is_password: ui.is_password,
     }
-    input::wait_modifiers_released(Duration::from_millis(400));
+}
+
+/// Windows' OCR works in physical pixels, so the scale is not needed.
+pub fn recognize_text(area: Rect, _scale: f64) -> Option<Vec<String>> {
+    ocr::recognize(area).ok()
+}
+
+pub(super) fn is_in_front(target: Target) -> bool {
+    window::foreground() == target.0
+}
+
+pub(super) fn bring_forward(target: Target) {
+    window::focus(target.0);
+}
+
+pub(super) fn send_paste() {
     input::send_ctrl(input::VK_V);
-    // Electron apps read the clipboard asynchronously; restoring too early pastes the old content.
-    sleep(Duration::from_millis(500));
-    clipboard::restore(&snapshot);
-    true
 }
 
 /// Tests that send real key presses and move focus. They run only on request
@@ -58,8 +75,11 @@ pub fn paste_into(hwnd: isize, text: &str) -> bool {
 /// reveal what another app had selected.
 #[cfg(test)]
 mod input_tests {
+    use std::time::Duration;
+
     use super::test_window::{Options, TestWindow};
     use super::*;
+    use crate::platform::paste_into;
 
     /// Puts the user's clipboard back however the test ends.
     struct KeepUserClipboard(clipboard::Snapshot);
@@ -118,7 +138,10 @@ mod input_tests {
         );
 
         still_in_front(&window);
-        assert!(paste_into(window.hwnd, "there"), "paste_into failed");
+        assert!(
+            paste_into(Target(window.hwnd), "there"),
+            "paste_into failed"
+        );
         assert!(
             window.text() == "Hello there",
             "Ctrl+V did not replace the selection"

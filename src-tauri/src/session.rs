@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::capture::{self, CaptureError, Captured, ContextSource, SelectionSource};
-use crate::platform;
+use crate::platform::{self, Target};
 use crate::prompt::{self, Payload};
 use crate::redact::Redactor;
 use crate::request;
@@ -18,9 +18,9 @@ use crate::window::{self, NoticeKind, POPUP};
 #[serde(rename_all = "camelCase")]
 pub struct Session {
     pub id: u64,
-    /// The window Apply pastes into.
+    /// The app Apply pastes into.
     #[serde(skip)]
-    pub hwnd: isize,
+    pub target: Target,
     pub app: String,
     pub source: SelectionSource,
     pub context_source: ContextSource,
@@ -97,7 +97,7 @@ fn start(app: &AppHandle, settings: &Settings, captured: Captured) {
     let (payload, redactions) = redacted_payload(settings, &captured);
     let session = Session {
         id: state(app).next_session_id(),
-        hwnd: captured.hwnd,
+        target: captured.target,
         app: captured.app,
         source: captured.source,
         context_source: captured.context_source,
@@ -148,7 +148,7 @@ mod tests {
 
     fn captured(selection: &str, before: &str) -> Captured {
         Captured {
-            hwnd: 0,
+            target: Target::default(),
             app: "Slack".into(),
             selection: selection.into(),
             before: before.into(),
@@ -215,7 +215,7 @@ mod tests {
         let (payload, redactions) = redacted_payload(&settings, &captured);
         let session = Session {
             id: 4,
-            hwnd: 1234,
+            target: Target::default(),
             app: captured.app.clone(),
             source: SelectionSource::Clipboard,
             context_source: ContextSource::None,

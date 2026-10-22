@@ -4,48 +4,14 @@
 //! that waits (files, the credential store, the network, the clipboard) is an async command or
 //! hands off to its own thread.
 
-use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
+use crate::error::CommandError;
 use crate::settings::{self, Mode, ProviderKind, Settings, SettingsIssue, TargetLanguage};
 use crate::state::state;
 use crate::update::{self, UpdateInfo};
 use crate::window::{self, NoticeKind};
 use crate::{platform, request, secrets, tray, trigger};
-
-/// Error codes the UI translates; `detail` carries the raw message.
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CommandError {
-    kind: &'static str,
-    /// The hotkey the error is about, for the hotkey errors.
-    pub hotkey: String,
-    detail: String,
-}
-
-impl CommandError {
-    pub fn hotkey(kind: &'static str, hotkey: &str, detail: String) -> Self {
-        Self {
-            kind,
-            hotkey: hotkey.to_string(),
-            detail,
-        }
-    }
-
-    fn save_failed(detail: String) -> Self {
-        Self {
-            kind: "save_failed",
-            hotkey: String::new(),
-            detail,
-        }
-    }
-}
-
-impl std::fmt::Display for CommandError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({})", self.kind, self.detail)
-    }
-}
 
 /// Runs `f` on the main thread and waits for its result. The wait is short: the main thread
 /// only runs `f`.
@@ -143,10 +109,13 @@ pub fn send_request(app: AppHandle, target_language: TargetLanguage, mode: Mode)
 
 #[tauri::command]
 pub fn apply_text(app: AppHandle, text: String) -> Result<(), String> {
-    let hwnd = state(&app).session().map(|s| s.hwnd).ok_or("no session")?;
+    let target = state(&app)
+        .session()
+        .map(|s| s.target)
+        .ok_or("no session")?;
     window::dismiss_popup(&app);
     std::thread::spawn(move || {
-        if !platform::paste_into(hwnd, &text) {
+        if !platform::paste_into(target, &text) {
             platform::copy_text(&text);
             window::show_notice(&app, NoticeKind::ApplyFailed, String::new());
         }
@@ -209,24 +178,7 @@ pub async fn install_update(app: AppHandle) {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
-
     use super::*;
-
-    #[test]
-    fn errors_serialize_like_the_typescript_type() {
-        let taken = CommandError::hotkey("hotkey_taken", "ctrl+alt+e", "in use".into());
-        assert_eq!(
-            serde_json::to_value(&taken).unwrap(),
-            json!({ "kind": "hotkey_taken", "hotkey": "ctrl+alt+e", "detail": "in use" })
-        );
-        let failed = CommandError::save_failed("disk full".into());
-        assert_eq!(
-            serde_json::to_value(&failed).unwrap(),
-            json!({ "kind": "save_failed", "hotkey": "", "detail": "disk full" })
-        );
-        assert_eq!(taken.to_string(), "hotkey_taken (in use)");
-    }
 
     /// Runs `switch_then_write` with steps that record themselves in order.
     fn save_steps(
