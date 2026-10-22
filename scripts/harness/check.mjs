@@ -190,7 +190,8 @@ const GATES = [
     run: () => {
       if (process.env.PR_BASE !== "master") return { ok: true };
       const { version } = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
-      const problems = releaseProblems({ title: process.env.PR_TITLE, body: process.env.PR_BODY, version });
+      const changelog = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
+      const problems = releaseProblems({ title: process.env.PR_TITLE, body: process.env.PR_BODY, version, changelog });
       return { ok: problems.length === 0, details: problems };
     },
   },

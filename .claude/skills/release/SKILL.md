@@ -18,8 +18,8 @@ commenting on an issue, editing the project, posting a discussion. Show the exac
    `CHANGELOG.md`. If `$ARGUMENTS` names a newer version, or `Unreleased` is not empty, prepare it on a
    `chore/release-x.y.z` branch from `origin/develop`: bump `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json`, run `cargo update --manifest-path src-tauri/Cargo.toml -p tonesnap --offline`, move
-   `Unreleased` into a `## [x.y.z] - date` section with the **Install** notes of the previous release (new file
-   names, new platforms), check it against `git log vPREV..origin/develop` so no user-visible PR is missing, add the
+   `Unreleased` into a `## [vx.y.z] - date` section with the **Install** notes of the previous release (new file
+   names, new platforms; every version is written as its tag, with the `v`), check it against `git log vPREV..origin/develop` so no user-visible PR is missing, add the
    compare links at the end, and update `docs/PLAN.md`. Run `node scripts/harness/check.mjs --full`, commit, and
    offer a PR into `develop`. The release PR waits until it is merged.
 2. **README.** Read `README.md` against the new `CHANGELOG.md` section: features, supported platforms, install,
@@ -35,7 +35,7 @@ commenting on an issue, editing the project, posting a discussion. Show the exac
 5. **Project.** On the **ToneSnap Roadmap** project (`gh project item-list 2 --owner nhutruong-struct`), set the
    shipped issues' **Status** to **Done** (`gh project field-list 2 --owner nhutruong-struct` gives the field and
    option ids for `gh project item-edit`), and look for **Done** items whose issue is still open.
-6. **Announcement.** Draft the Discussions post, titled "ToneSnap x.y.z is released" like the earlier ones in
+6. **Announcement.** Draft the Discussions post, titled "ToneSnap vx.y.z is released" like the earlier ones in
    Announcements: two or three sentences on what is new, the download link
    (`https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/vx.y.z`) and who updates by themselves. It goes
    into the PR body; it is posted only after the release is published (step 8).

@@ -98,7 +98,10 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
 
 1. On a `chore/release-x.y.z` branch, bump the version in `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json` (let cargo update `Cargo.lock`), move the `Unreleased` entries of
-   `CHANGELOG.md` into a section for the new version, update `docs/PLAN.md`, and merge it into `develop` as usual.
+   `CHANGELOG.md` into a `## [vX.Y.Z] - date` section, update `docs/PLAN.md`, and merge it into `develop` as usual.
+   A version is always written as its tag, with the `v`: the changelog headings and links, the PR title, the
+   release title (`ToneSnap vX.Y.Z`) and the announcement. The `harness` gate fails on a changelog version
+   without it.
 2. Bring the README and the website up to date with the release. Read `README.md` and `site/index.html`
    against the new `CHANGELOG.md` section: features, supported platforms, tones, languages, the mock popup,
    default settings, install, update and uninstall steps, file names, and the intro video in `site/media/`
@@ -110,7 +113,7 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
      answers) gets a comment naming the release and is closed; partly done ones say what is left and stay open.
      The issue forms still offer the right platforms and versions.
    - **Project:** on the **ToneSnap Roadmap** project, the shipped issues are **Done**.
-   - **Announcement:** draft the post for Discussions → Announcements ("ToneSnap X.Y.Z is released").
+   - **Announcement:** draft the post for Discussions → Announcements ("ToneSnap vX.Y.Z is released").
 4. Open a pull request from `develop` into `master` titled `Release vX.Y.Z` with the release template
    (`gh pr create --base master --head develop --template release.md`, or `?template=release.md` on the compare
    page). Fill in the version PR, the site PR (or why the site needed no change), the shipped issues and the
@@ -118,8 +121,8 @@ There are no hotfix branches yet: fixes land in `develop` and ship with the next
    does not match the version in `tauri.conf.json`, a box is unticked or a placeholder is left (the `release-pr`
    gate, `scripts/harness/release-pr.mjs`). When it is green, merge it with **Create a merge commit**.
 5. The merge starts `.github/workflows/release.yml` on `master`. There is no tag to push: the workflow reads
-   the version from `src-tauri/tauri.conf.json`, checks that `CHANGELOG.md` has a section for it, builds the
-   installers, attests their provenance and publishes the release `vX.Y.Z` with that section as notes, which
+   the version from `src-tauri/tauri.conf.json`, checks that `CHANGELOG.md` has a `## [vX.Y.Z]` section, builds the
+   installers, attests their provenance and publishes the release `vX.Y.Z`, titled `ToneSnap vX.Y.Z`, with that section as notes, which
    creates the tag on the merge commit. The notes end with a **Contributors** list: the GitHub accounts that
    authored a commit since the previous release, bots excluded. A merge into `master` whose version already has a release (the version
    was not bumped) builds nothing and says so in the run's summary.

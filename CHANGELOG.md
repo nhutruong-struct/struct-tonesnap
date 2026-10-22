@@ -2,11 +2,11 @@
 
 All notable changes to ToneSnap are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
-[Semantic Versioning](https://semver.org/).
+[Semantic Versioning](https://semver.org/). A version is written with the `v` of its tag (`v1.2.0`).
 
 ## [Unreleased]
 
-## [1.2.0] - 2026-10-22
+## [v1.2.0] - 2026-10-22
 
 ### Install
 
@@ -52,7 +52,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
   only.
 - The Windows uninstaller shows the ToneSnap icon instead of the generic installer icon.
 
-## [1.1.4] - 2026-10-21
+## [v1.1.4] - 2026-10-21
 
 ### Install
 
@@ -74,7 +74,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 - No change to the app. Releases are now published automatically when a version is merged into `master`, and their
   notes list the contributors.
 
-## [1.1.3] - 2026-10-21
+## [v1.1.3] - 2026-10-21
 
 ### Install
 
@@ -95,7 +95,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 
 - The `.exe` installer, its window and the uninstaller show the ToneSnap icon instead of the generic installer icon.
 
-## [1.1.2] - 2026-10-21
+## [v1.1.2] - 2026-10-21
 
 ### Install
 
@@ -119,7 +119,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 - The release lists only the installer, the MSI, `SHA256SUMS.txt` and `latest.json`; the `.sig` files are no longer
   attached, because `latest.json` carries the signatures.
 
-## [1.1.1] - 2026-10-20
+## [v1.1.1] - 2026-10-20
 
 ### Install
 
@@ -146,7 +146,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 - A settings file edited by hand that lists a tone twice no longer makes the provider reject the request: each
   tone is requested once, in the usual order.
 
-## [1.1.0] - 2026-10-20
+## [v1.1.0] - 2026-10-20
 
 ### Install
 
@@ -194,7 +194,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 - Apply is no longer offered for selected text on web pages that cannot be edited (Chrome, Edge): the popup shows
   Copy only.
 
-## [1.0.0] - 2026-10-20
+## [v1.0.0] - 2026-10-20
 
 The first public release of ToneSnap for Windows 10 and 11.
 
@@ -241,10 +241,10 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 - Free tiers have daily limits, and the provider may use what you send to improve its products.
 
 [Unreleased]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.2.0...develop
-[1.2.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.4...v1.2.0
-[1.1.4]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.3...v1.1.4
-[1.1.3]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...v1.1.3
-[1.1.2]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...v1.1.2
-[1.1.1]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/v1.0.0
+[v1.2.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.4...v1.2.0
+[v1.1.4]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.3...v1.1.4
+[v1.1.3]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.2...v1.1.3
+[v1.1.2]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.1...v1.1.2
+[v1.1.1]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.1.0...v1.1.1
+[v1.1.0]: https://github.com/nhutruong-struct/struct-tonesnap/compare/v1.0.0...v1.1.0
+[v1.0.0]: https://github.com/nhutruong-struct/struct-tonesnap/releases/tag/v1.0.0

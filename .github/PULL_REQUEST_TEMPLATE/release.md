@@ -35,8 +35,8 @@ Shipped: #… <!-- every issue this release resolves, or "none" -->
 
 ## Announcement
 
-- [ ] The post for Discussions → Announcements ("ToneSnap X.Y.Z is released") is drafted below; it goes up once
-      the release is published.
+- [ ] The post for Discussions → Announcements, titled with the tag like "ToneSnap v1.1.4 is released", is drafted
+      below; it goes up once the release is published.
 
 <details><summary>Draft</summary>
 

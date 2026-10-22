@@ -10,9 +10,31 @@ export const RELEASE_SECTIONS = ["## Version", "## README", "## Website", "## Is
 /** Placeholders of the template that must be replaced: the version and issue or PR numbers. */
 const PLACEHOLDER = /vX\.Y\.Z|#…/;
 
-/** Problems with a release PR, as sentences the maintainer can act on; empty when it is ready to merge. */
-export function releaseProblems({ title, body, version }) {
+/**
+ * Problems with the version headings and links of CHANGELOG.md. A version is written as its tag (`v1.2.0`), the
+ * same in the release PR title, the GitHub release and the announcement; release.yml finds the notes by it.
+ */
+export function changelogProblems(text) {
   const problems = [];
+  (text ?? "").split(/\r?\n/).forEach((line, i) => {
+    const heading = /^## \[([^\]]+)\]/.exec(line);
+    if (heading && heading[1] !== "Unreleased" && !/^v\d+\.\d+\.\d+$/.test(heading[1]))
+      problems.push(`CHANGELOG.md:${i + 1}: write the version as its tag, "## [v${heading[1].replace(/^v/, "")}]"`);
+    const link = /^\[([^\]]+)\]: /.exec(line);
+    if (link && link[1] !== "Unreleased" && /^\d/.test(link[1]))
+      problems.push(`CHANGELOG.md:${i + 1}: name the link "[v${link[1]}]"`);
+  });
+  return problems;
+}
+
+/** Problems with a release PR, as sentences the maintainer can act on; empty when it is ready to merge. */
+export function releaseProblems({ title, body, version, changelog }) {
+  const problems = [];
+  if (changelog !== undefined) {
+    problems.push(...changelogProblems(changelog));
+    if (!changelog.split(/\r?\n/).some((line) => line.startsWith(`## [v${version}] - `)))
+      problems.push(`CHANGELOG.md has no "## [v${version}] - date" section`);
+  }
   const expected = `Release v${version}`;
   if ((title ?? "").trim() !== expected) problems.push(`title it "${expected}" (the version in tauri.conf.json)`);
   // The template's comments are guidance, not content.

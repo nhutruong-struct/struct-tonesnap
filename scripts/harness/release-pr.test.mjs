@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { ROOT } from "./config.mjs";
-import { RELEASE_SECTIONS, releaseProblems } from "./release-pr.mjs";
+import { RELEASE_SECTIONS, changelogProblems, releaseProblems } from "./release-pr.mjs";
 
 const TEMPLATE = readFileSync(join(ROOT, ".github/PULL_REQUEST_TEMPLATE/release.md"), "utf8");
 
@@ -49,4 +49,24 @@ test("release pr: each rule is reported", () => {
 test("release pr: comments and CRLF line ends are not content", () => {
   const body = filled.replace(/\n/g, "\r\n") + "\r\n<!-- - [ ] vX.Y.Z #… -->\r\n";
   assert.deepEqual(releaseProblems({ title: "Release v1.2.0", body, version: "1.2.0" }), []);
+});
+
+test("changelog: every version in CHANGELOG.md is written as its tag", () => {
+  assert.deepEqual(changelogProblems(readFileSync(join(ROOT, "CHANGELOG.md"), "utf8")), []);
+});
+
+test("changelog: a version without its v is reported", () => {
+  const text = "## [Unreleased]\n\n## [1.2.0] - 2026-10-22\n\n[Unreleased]: a\n[1.2.0]: b\n[v1.1.4]: c\n";
+  assert.deepEqual(
+    changelogProblems(text).map((p) => p.split(":")[1]),
+    ["3", "6"],
+  );
+});
+
+test("release pr: the changelog must have the release's section", () => {
+  const input = { title: "Release v1.2.0", body: filled, version: "1.2.0" };
+  assert.deepEqual(releaseProblems({ ...input, changelog: "## [v1.2.0] - 2026-10-22\n" }), []);
+  assert.ok(
+    releaseProblems({ ...input, changelog: "## [1.2.0] - 2026-10-22\n" }).some((p) => /no "## \[v1\.2\.0\]/.test(p)),
+  );
 });

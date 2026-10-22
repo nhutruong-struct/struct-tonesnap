@@ -61,8 +61,8 @@ jobs:
             echo "release=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! grep -q "^## \[${version}\]" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md has no section for ${version}"
+          if ! grep -q "^## \[v${version}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no section [v${version}]"
             exit 1
           fi
           pubkey="$(node -p "require('./src-tauri/tauri.conf.json').plugins.updater.pubkey")"
@@ -335,13 +335,13 @@ jobs:
         run: |
           version="${VERSION}"
           TAG="v${version}"
-          awk -v v="$version" '
+          awk -v v="$TAG" '
             $0 ~ "^## \\[" v "\\]" { on = 1; next }
             on && /^## \[/ { exit }
             on { print }
           ' CHANGELOG.md > notes.md
           if [ ! -s notes.md ]; then
-            echo "::error::CHANGELOG.md has no section for ${version}"
+            echo "::error::CHANGELOG.md has no section [${TAG}]"
             exit 1
           fi
           # The manifest the in-app updater reads; it fails when an installer has no signature.
@@ -366,6 +366,6 @@ jobs:
           if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null)" = "true" ]; then
             gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
           fi
-          gh release create "$TAG" release/*.exe release/*.msi release/*.dmg release/*.app.tar.gz release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${version}" \
+          gh release create "$TAG" release/*.exe release/*.msi release/*.dmg release/*.app.tar.gz release/SHA256SUMS.txt release/latest.json --repo "$GITHUB_REPOSITORY" --title "ToneSnap ${TAG}" \
             --notes-file notes.md --target "$GITHUB_SHA" --draft
           GH_TOKEN="${APP_TOKEN}" gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
