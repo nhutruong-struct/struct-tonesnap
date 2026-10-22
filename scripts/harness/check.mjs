@@ -22,8 +22,13 @@ import { changedGroups, fingerprints, readState, writeState } from "./state.mjs"
 const PRETTIER = join(ROOT, "node_modules/prettier/bin/prettier.cjs");
 const ESLINT = join(ROOT, "node_modules/eslint/bin/eslint.js");
 // pnpm through the corepack that ships with Node, so terminals without npm's folder on PATH
-// (those hosted by MSIX apps) still find it.
-const PNPM = join(dirname(process.execPath), "node_modules/corepack/dist/pnpm.js");
+// (those hosted by MSIX apps) still find it. Windows keeps node_modules next to node.exe; macOS and
+// Linux keep it in lib/ beside bin/.
+const PNPM = join(
+  dirname(process.execPath),
+  process.platform === "win32" ? "" : "../lib",
+  "node_modules/corepack/dist/pnpm.js",
+);
 
 const args = new Set(process.argv.slice(2).filter((a) => !a.startsWith("--only=")));
 const only = process.argv
