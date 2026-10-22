@@ -19,7 +19,7 @@ pub use input::wait_modifiers_released;
 use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
 
-use super::{Accessible, Foreground, Target};
+use super::{Accessible, Anchor, Foreground, InPlace, Target};
 use crate::geometry::Rect;
 
 /// Whether ToneSnap's popup or Settings is in front. The popup never makes ToneSnap the active
@@ -93,6 +93,7 @@ pub fn read_focused(target: Target, context_chars: usize) -> Accessible {
         editable: ax.editable,
         bounds: ax.bounds,
         is_password: ax.is_password,
+        anchor: None,
     }
 }
 
@@ -114,6 +115,11 @@ pub(super) fn bring_forward(target: Target) {
 
 pub(super) fn send_paste() {
     input::send_command(input::key_v());
+}
+
+/// No app is edited in place on macOS, so no anchor exists.
+pub(super) fn edit_in_place(anchor: &Anchor, _text: &str) -> InPlace {
+    match *anchor {}
 }
 
 /// Tests that send real key presses and move focus. They run only on request

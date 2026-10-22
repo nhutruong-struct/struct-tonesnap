@@ -1,5 +1,6 @@
 pub mod clipboard;
 mod com;
+mod dispatch;
 pub mod input;
 pub mod ocr;
 pub mod selection_icon;
@@ -7,12 +8,13 @@ pub mod selection_icon;
 mod test_window;
 pub mod uia;
 pub mod window;
+pub mod word;
 
 pub use clipboard::copy_selection;
 pub use input::wait_modifiers_released;
 pub use window::{cursor, monitor_at};
 
-use super::{Accessible, Foreground, Target};
+use super::{Accessible, Anchor, Foreground, InPlace, Target};
 use crate::geometry::Rect;
 
 /// Whether the foreground window belongs to ToneSnap (the popup or Settings).
@@ -36,17 +38,29 @@ pub fn foreground() -> Option<Foreground> {
     })
 }
 
-/// The focused control as UI Automation sees it, whichever window holds it.
-pub fn read_focused(_target: Target, context_chars: usize) -> Accessible {
+/// The focused control as UI Automation sees it, whichever window holds it. In a Word
+/// document, the selection and its context come from Word itself, with the anchor Apply needs
+/// to edit in place; the bounds still come from UI Automation.
+pub fn read_focused(target: Target, context_chars: usize) -> Accessible {
     let ui = uia::capture(context_chars as i32);
-    Accessible {
+    let mut focused = Accessible {
         selection: ui.selection,
         before: ui.before,
         after: ui.after,
         editable: ui.editable,
         bounds: ui.bounds,
         is_password: ui.is_password,
+        anchor: None,
+    };
+    if window::process_name(target.0).as_deref() == Some("winword.exe") {
+        if let Some(read) = word::read(target.0, context_chars) {
+            focused.selection = read.selection().to_string();
+            focused.before = read.before;
+            focused.after = read.after;
+            focused.anchor = Some(read.anchor);
+        }
     }
+    focused
 }
 
 /// Windows' OCR works in physical pixels, so the scale is not needed.
@@ -60,6 +74,14 @@ pub(super) fn is_in_front(target: Target) -> bool {
 
 pub(super) fn bring_forward(target: Target) {
     window::focus(target.0);
+}
+
+pub(super) fn edit_in_place(anchor: &Anchor, text: &str) -> InPlace {
+    match word::replace(anchor, text) {
+        word::Outcome::Edited => InPlace::Edited,
+        word::Outcome::Failed => InPlace::Failed,
+        word::Outcome::Untouched => InPlace::Paste(anchor.pasted(text)),
+    }
 }
 
 pub(super) fn send_paste() {

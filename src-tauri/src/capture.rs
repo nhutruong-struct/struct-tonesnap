@@ -8,7 +8,7 @@ use std::time::Duration;
 use serde::Serialize;
 
 use crate::geometry::Rect;
-use crate::platform::{self, Accessible, Foreground, Monitor, Target};
+use crate::platform::{self, Accessible, Anchor, Foreground, Monitor, Target};
 use crate::settings::Settings;
 
 /// Where the selected text came from.
@@ -44,6 +44,8 @@ pub struct Captured {
     pub cursor: (i32, i32),
     pub source: SelectionSource,
     pub context_source: ContextSource,
+    /// Where the app itself held the selection, for Apply to edit it in place.
+    pub anchor: Option<Anchor>,
 }
 
 /// What started the capture, which decides how far it may go to read the selection.
@@ -225,7 +227,7 @@ fn capture_from(
     let cursor = desktop.cursor();
     let n = settings.context_chars as usize;
 
-    let focused = desktop.read_focused(front.target, n);
+    let mut focused = desktop.read_focused(front.target, n);
     if focused.is_password {
         return Err(CaptureError::PasswordField);
     }
@@ -256,6 +258,12 @@ fn capture_from(
         cursor,
         source,
         context_source: ContextSource::None,
+        // The anchor belongs to the text the app gave, not to whatever Ctrl+C copied.
+        anchor: if source == SelectionSource::Uia {
+            focused.anchor.take()
+        } else {
+            None
+        },
     };
 
     let has_context = !(focused.before.trim().is_empty() && focused.after.trim().is_empty());
@@ -372,6 +380,24 @@ mod tests {
             !desktop.recognized.get(),
             "no OCR when the app gave context"
         );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn the_anchor_follows_the_text_the_app_gave_and_never_a_copy() {
+        let read = desktop();
+        read.focused.borrow_mut().anchor = Some(Anchor::example());
+        let captured = capture_from(&read, &Settings::default(), Trigger::Asked).unwrap();
+        assert!(captured.anchor.is_some());
+
+        // Only spaces selected: Ctrl+C reads the selection, so the anchor is not for its text.
+        let mut desktop = silent(desktop());
+        desktop.focused.borrow_mut().selection = "  ".into();
+        desktop.focused.borrow_mut().anchor = Some(Anchor::example());
+        desktop.clipboard = Some("pls check my PR".into());
+        let captured = capture_from(&desktop, &Settings::default(), Trigger::Asked).unwrap();
+        assert_eq!(captured.source, SelectionSource::Clipboard);
+        assert!(captured.anchor.is_none());
     }
 
     #[test]
