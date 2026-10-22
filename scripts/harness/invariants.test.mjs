@@ -83,6 +83,13 @@ test("secrets: a real-looking key is rejected in any file, lockfiles aside", () 
   assert.deepEqual(rules("pnpm-lock.yaml", `key: ${key}\n`, ["secrets"]), []);
 });
 
+test("code: `any` is rejected in code but not in the prose of a block comment", () => {
+  const anyType = ": " + "any";
+  assert.equal(rules("src/a.ts", `let x${anyType} = 1;\n`, ["code"]).length, 1);
+  const doc = `${BLOCK}*\n * Accepts it${anyType} case works.\n */\nexport const x = 1;\n`;
+  assert.deepEqual(rules("src/a.ts", doc, ["code"]), []);
+});
+
 test("language: Vietnamese prose is rejected in any file outside the allowlist", () => {
   assert.equal(rules("CONTRIBUTING.md", `${VIETNAMESE}\n`, ["language"]).length, 1);
   assert.equal(rules(".github/a.yml", `name: ${VIETNAMESE}\n`, ["language"]).length, 1);
