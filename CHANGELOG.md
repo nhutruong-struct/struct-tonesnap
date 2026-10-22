@@ -13,6 +13,10 @@ All notable changes to ToneSnap are listed here. The format follows
   Settings, and keys in the Keychain. Releases include a signed and notarized `.dmg` for Apple Silicon and update
   the app in place, and the website has a Mac download button.
 
+### Fixed
+
+- The Windows uninstaller shows the ToneSnap icon instead of the generic installer icon.
+
 ## [1.1.4] - 2026-10-21
 
 ### Install

@@ -50,7 +50,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Installing
 
-- **APP-39** The `.exe` installer file, its window and the uninstaller carry the ToneSnap icon (`bundle.windows.nsis.installerIcon` in `tauri.conf.json`). Without that key NSIS falls back to its own generic icon.
+- **APP-39** The `.exe` installer file, its window and the uninstaller carry the ToneSnap icon (`bundle.windows.nsis.installerIcon` and `uninstallerIcon` in `tauri.conf.json`). Each key covers only its own side: without one, that side falls back to NSIS's generic icon.
 
 ## Uninstalling
 
