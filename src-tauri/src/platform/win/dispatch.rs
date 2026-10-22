@@ -44,6 +44,18 @@ impl Value {
     }
 
     #[cfg(test)]
+    pub fn object(object: &Object) -> Self {
+        let mut v = VARIANT::default();
+        // SAFETY: as in `int`; the VARIANT holds its own reference, released by `VariantClear`.
+        unsafe {
+            let inner = &mut *v.Anonymous.Anonymous;
+            inner.vt = VT_DISPATCH;
+            inner.Anonymous.pdispVal = ManuallyDrop::new(Some(object.0.clone()));
+        }
+        Self(v)
+    }
+
+    #[cfg(test)]
     pub fn flag(on: bool) -> Self {
         let mut v = VARIANT::default();
         // SAFETY: as in `int`.

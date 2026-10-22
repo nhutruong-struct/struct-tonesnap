@@ -20,6 +20,10 @@ use super::com;
 use super::dispatch::{retry, unexpected, Object, Value};
 use crate::edits;
 
+mod text;
+
+use text::{Field, Mapped};
+
 /// How long a capture waits for Word before it goes on without it.
 const READ_LIMIT: Duration = Duration::from_millis(1500);
 /// How long Apply waits for Word to start editing before it reports a failure.
@@ -38,7 +42,7 @@ pub struct Anchor {
     pane: isize,
     start: i32,
     end: i32,
-    /// The paragraph marks the user selected after `end`, left out of the text (`selection_text`).
+    /// The paragraph marks the user selected after `end`, left out of the text (`text::map`).
     marks: usize,
     /// The selection as the model got it.
     text: String,
@@ -168,28 +172,38 @@ fn utf16_len(text: &str) -> i32 {
     text.encode_utf16().count() as i32
 }
 
-/// Word's text of the range `start..end` as the model gets it, with the end it maps to.
-/// Paragraph marks and line breaks become `\n`, one unit for one, so offsets into the text are
-/// Word's offsets. Paragraph marks at the end stay out, so Apply never merges paragraphs.
-/// `None` when the offsets do not map to the text one to one (fields, pictures, table cells,
-/// hidden text) or nothing is left.
-fn selection_text(start: i32, end: i32, raw: &str) -> Option<(i32, String)> {
-    if utf16_len(raw) != end - start
-        || raw
-            .chars()
-            .any(|c| c < ' ' && !matches!(c, '\t' | '\r' | '\u{b}'))
-    {
-        return None;
+/// The fields inside `range` (a link is one), by position. `None` when one shows its code
+/// instead of its result, so the text would not be what the user reads.
+fn fields(range: &Object) -> windows::core::Result<Option<Vec<Field>>> {
+    let fields = range.object("Fields")?;
+    let mut out = Vec::new();
+    for i in 1..=fields.int("Count")? {
+        let field = fields
+            .call("Item", vec![Value::int(i)])?
+            .as_object()
+            .ok_or_else(unexpected)?;
+        if field.flag("ShowCodes")? {
+            return Ok(None);
+        }
+        let code = field.object("Code")?;
+        out.push(Field {
+            // The opening mark sits just before the code, the separator just after it.
+            start: code.int("Start")? - 1,
+            separator: code.int("End")?,
+            end: field.object("Result")?.int("End")?,
+        });
     }
-    let kept = raw.trim_end_matches(['\r', '\u{b}']);
-    if kept.is_empty() {
-        return None;
+    Ok(Some(out))
+}
+
+/// The text of `start..end` mapped to its positions (`text::map`).
+fn mapped(doc: &Object, start: i32, end: i32) -> windows::core::Result<Option<Mapped>> {
+    let selected = range(doc, start, end)?;
+    if has_revisions(&selected)? {
+        return Ok(None);
     }
-    let text = kept
-        .chars()
-        .map(|c| if c == '\r' || c == '\u{b}' { '\n' } else { c })
-        .collect();
-    Some((start + utf16_len(kept), text))
+    let raw = selected.text("Text")?;
+    Ok(fields(&selected)?.and_then(|fields| text::map(start, end, &raw, fields)))
 }
 
 /// Word's text around the selection, as context: nothing has to map back to offsets.
@@ -265,23 +279,19 @@ fn read_selection(
     {
         return Ok(None);
     }
-    let (start, selected_end) = (selection.int("Start")?, selection.int("End")?);
-    let selected = range(doc, start, selected_end)?;
-    if has_revisions(&selected)? {
-        return Ok(None);
-    }
-    let raw = selected.text("Text")?;
-    let Some((end, text)) = selection_text(start, selected_end, &raw) else {
+    let start = selection.int("Start")?;
+    let Some(mapped) = mapped(doc, start, selection.int("End")?)? else {
         return Ok(None);
     };
+    let end = mapped.end;
     let last = doc.object("Content")?.int("End")?;
     let before = range(doc, start.saturating_sub(n).max(0), start)?.text("Text")?;
     let after = range(doc, end, end.saturating_add(n).min(last))?.text("Text")?;
     Ok(Some(Selected {
         start,
         end,
-        marks: (selected_end - end) as usize,
-        text,
+        marks: mapped.marks,
+        text: mapped.text,
         before: context_text(&before),
         after: context_text(&after),
     }))
@@ -337,16 +347,15 @@ fn replace_in(
     step: &AtomicU8,
 ) -> windows::core::Result<Outcome> {
     let Anchor { start, end, .. } = *anchor;
-    let selected = range(doc, start, end)?;
-    let raw = selected.text("Text")?;
-    if has_revisions(&selected)?
-        || selection_text(start, end, &raw) != Some((end, anchor.text.clone()))
-    {
+    let Some(mapped) = mapped(doc, start, end)?.filter(|m| m.end == end && m.text == anchor.text)
+    else {
         return Ok(Outcome::Untouched);
-    }
+    };
     // The model may answer with Windows line breaks; Word gets one paragraph mark for each.
     let text = text.replace("\r\n", "\n").replace('\r', "\n");
-    let edits = edits::edits(&anchor.text, &text);
+    let Some(changes) = mapped.changes(&edits::edits(&anchor.text, &text)) else {
+        return Ok(Outcome::Untouched);
+    };
     let tracking = doc.flag("TrackRevisions").unwrap_or(false);
 
     // One undo step for the whole Apply (Word 2010 and later).
@@ -372,11 +381,9 @@ fn replace_in(
     // From the end, so the offsets of the edits still to come stay valid.
     let mut applied = 0;
     let mut failed = false;
-    for edit in edits.iter().rev() {
-        let from = start + edit.start as i32;
-        let to = from + edit.len as i32;
-        let new = word_text(&edit.text);
-        match retry(|| range(doc, from, to)?.put("Text", Value::text(&new))) {
+    for change in changes.iter().rev() {
+        let new = word_text(&change.text);
+        match retry(|| range(doc, change.from, change.to)?.put("Text", Value::text(&new))) {
             Ok(()) => applied += 1,
             Err(_) => {
                 failed = true;
@@ -396,9 +403,9 @@ fn replace_in(
 
     // The caret after the new text, as after a paste. Tracked deletions stay in the document,
     // so then the selection only grows by what was inserted.
-    let grown: i32 = edits
+    let grown: i32 = changes
         .iter()
-        .map(|e| utf16_len(&e.text) - if tracking { 0 } else { e.len as i32 })
+        .map(|c| utf16_len(&c.text) - if tracking { 0 } else { c.to - c.from })
         .sum();
     if let Ok(caret) = range(doc, end + grown, end + grown) {
         let _ = caret.call("Select", Vec::new());
@@ -409,39 +416,6 @@ fn replace_in(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn paragraph_marks_become_line_breaks_one_for_one() {
-        assert_eq!(
-            selection_text(10, 26, "Hi team,\r\u{b}build\t"),
-            Some((26, "Hi team,\n\nbuild\t".to_string()))
-        );
-    }
-
-    #[test]
-    fn paragraph_marks_at_the_end_stay_out_of_the_selection() {
-        assert_eq!(
-            selection_text(0, 7, "Hello\r\r"),
-            Some((5, "Hello".to_string()))
-        );
-        assert_eq!(selection_text(0, 1, "\r"), None);
-    }
-
-    #[test]
-    fn text_whose_offsets_do_not_map_is_left_to_the_paste() {
-        // A field: its code takes positions that the text does not show.
-        assert_eq!(selection_text(0, 30, "see page 4"), None);
-        // A table cell, a field mark, a picture.
-        for raw in ["a\r\u{7}", "a\u{13}b", "a\u{1}"] {
-            assert_eq!(selection_text(0, utf16_len(raw), raw), None, "{raw:?}");
-        }
-    }
-
-    #[test]
-    fn offsets_are_utf16_units() {
-        let raw = "Anh gửi 🙂";
-        assert_eq!(selection_text(3, 3 + 10, raw), Some((13, raw.to_string())));
-    }
 
     #[test]
     fn context_keeps_line_breaks_and_drops_word_marks() {
@@ -692,6 +666,60 @@ mod word_tests {
             );
             assert_eq!(outcome.ok(), Some(Outcome::Untouched));
             assert_eq!(word.text(), "The quick brown fox\r");
+        })
+        .expect("the test thread ran");
+    }
+
+    #[test]
+    #[ignore = "starts Microsoft Word: run with cargo test word_tests -- --ignored"]
+    fn a_link_keeps_its_address_when_words_around_and_inside_it_change() {
+        com::on_mta_thread(|| {
+            let word = Word::start("see the release notes now");
+            let notes = range(&word.doc, 8, 21).expect("the link text");
+            word.doc
+                .object("Hyperlinks")
+                .and_then(|links| {
+                    links.call(
+                        "Add",
+                        vec![
+                            Value::object(&notes),
+                            Value::text("https://example.com/notes"),
+                        ],
+                    )
+                })
+                .expect("the link");
+            let end = word
+                .doc
+                .object("Content")
+                .and_then(|c| c.int("End"))
+                .expect("the end");
+
+            let selection = word.select(0, end);
+            let read = read_selection(&selection, &word.doc, 100)
+                .expect("Word answers")
+                .expect("the link's code and marks map to positions");
+            assert_eq!(read.text, "see the release notes now");
+            let anchor = Anchor {
+                pane: 0,
+                start: read.start,
+                end: read.end,
+                marks: read.marks,
+                text: read.text,
+            };
+            assert_eq!(
+                word.replace(&anchor, "read the release summary today"),
+                Outcome::Edited
+            );
+            assert_eq!(word.text(), "read the release summary today\r");
+            let link = item(&word.doc, "Hyperlinks", 1);
+            assert_eq!(
+                link.text("TextToDisplay").ok().as_deref(),
+                Some("release summary")
+            );
+            assert_eq!(
+                link.text("Address").ok().as_deref(),
+                Some("https://example.com/notes")
+            );
         })
         .expect("the test thread ran");
     }

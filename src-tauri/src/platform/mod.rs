@@ -195,6 +195,10 @@ pub fn apply(target: Target, anchor: Option<&Anchor>, text: &str) -> bool {
 }
 
 /// What editing in place did.
+#[cfg_attr(
+    not(windows),
+    allow(dead_code, reason = "only Word on Windows is edited in place")
+)]
 enum InPlace {
     Edited,
     /// The app is told nothing more; the caller offers the text to paste by hand.
