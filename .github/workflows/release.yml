@@ -103,12 +103,20 @@ jobs:
       - name: Build the installers
         run: pnpm tauri build
 
+      # Tauri names the files ToneSnap_<version>_…; a release names them with its tag, ToneSnap_v<version>_….
       - name: Collect the installers and checksums
         shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           mkdir -p release
-          cp src-tauri/target/release/bundle/nsis/*.exe release/
-          cp src-tauri/target/release/bundle/msi/*.msi release/
+          for installer in src-tauri/target/release/bundle/nsis/*.exe src-tauri/target/release/bundle/msi/*.msi; do
+            name="$(basename "$installer")"
+            case "$name" in
+              "ToneSnap_${VERSION}_"*) cp "$installer" "release/ToneSnap_v${name#ToneSnap_}" ;;
+              *) echo "::error::${name} is not named ToneSnap_${VERSION}_…"; exit 1 ;;
+            esac
+          done
           cd release
           sha256sum -- * > SHA256SUMS.txt
           cat SHA256SUMS.txt

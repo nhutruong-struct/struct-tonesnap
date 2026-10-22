@@ -10,21 +10,21 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ### Install
 
-On Windows, download `ToneSnap_1.2.0_x64-setup.exe` (installer) or `ToneSnap_1.2.0_x64_en-US.msi` (for managed
-deployment) below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks
-first, if you chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot
+On Windows, download `ToneSnap_v1.2.0_x64-setup.exe` (installer) or `ToneSnap_v1.2.0_x64_en-US.msi` (for managed
+deployment) below. If you use v1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks
+first, if you chose **Ask before updating**). If you use v1.0.0, install this version by hand once, because v1.0.0 cannot
 update itself. The Windows installers are still **not code-signed**, so your browser and Windows SmartScreen ask
 first: keep the file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file
 came from this page.
 
-On a Mac (macOS 14 or later, Apple Silicon), download `ToneSnap_1.2.0_aarch64.dmg`, open it and drag ToneSnap to
+On a Mac (macOS 14 or later, Apple Silicon), download `ToneSnap_v1.2.0_aarch64.dmg`, open it and drag ToneSnap to
 Applications. It is signed and notarized. At first start, the **Permissions** section of Settings asks for
 **Accessibility** and, optionally, **Screen Recording** (on-device OCR context).
 
 You can check that a file was built by this repository's GitHub Actions from this tag:
 
 ```
-gh attestation verify ToneSnap_1.2.0_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
+gh attestation verify ToneSnap_v1.2.0_x64-setup.exe --repo nhutruong-struct/struct-tonesnap
 ```
 
 and compare its SHA-256 with `SHA256SUMS.txt`.
@@ -57,8 +57,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 ### Install
 
 Download `ToneSnap_1.1.4_x64-setup.exe` (installer) or `ToneSnap_1.1.4_x64_en-US.msi` (for managed deployment)
-below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
-chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update
+below. If you use v1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
+chose **Ask before updating**). If you use v1.0.0, install this version by hand once, because v1.0.0 cannot update
 itself. The installers are still **not code-signed**, so your browser and Windows SmartScreen ask first: keep the
 file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file came from this
 page. You can check that a file was built by this repository's GitHub Actions from this tag:
@@ -79,8 +79,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 ### Install
 
 Download `ToneSnap_1.1.3_x64-setup.exe` (installer) or `ToneSnap_1.1.3_x64_en-US.msi` (for managed deployment)
-below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
-chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update
+below. If you use v1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
+chose **Ask before updating**). If you use v1.0.0, install this version by hand once, because v1.0.0 cannot update
 itself. The installers are still **not code-signed**, so your browser and Windows SmartScreen ask first: keep the
 file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file came from this
 page. You can check that a file was built by this repository's GitHub Actions from this tag:
@@ -100,8 +100,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 ### Install
 
 Download `ToneSnap_1.1.2_x64-setup.exe` (installer) or `ToneSnap_1.1.2_x64_en-US.msi` (for managed deployment)
-below. If you use 1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
-chose **Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update
+below. If you use v1.1.0 or later, you do not need to: ToneSnap installs this version by itself (or asks first, if you
+chose **Ask before updating**). If you use v1.0.0, install this version by hand once, because v1.0.0 cannot update
 itself. The installers are still **not code-signed**, so your browser and Windows SmartScreen ask first: keep the
 file (**… → Keep → Show more → Keep anyway**), then choose **More info → Run anyway** if the file came from this
 page. You can check that a file was built by this repository's GitHub Actions from this tag:
@@ -124,8 +124,8 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 ### Install
 
 Download `ToneSnap_1.1.1_x64-setup.exe` (installer) or `ToneSnap_1.1.1_x64_en-US.msi` (for managed deployment)
-below. If you use 1.1.0, you do not need to: ToneSnap installs this version by itself (or asks first, if you chose
-**Ask before updating**). If you use 1.0.0, install this version by hand once, because 1.0.0 cannot update itself.
+below. If you use v1.1.0, you do not need to: ToneSnap installs this version by itself (or asks first, if you chose
+**Ask before updating**). If you use v1.0.0, install this version by hand once, because v1.0.0 cannot update itself.
 The installers are still **not code-signed**, so Windows SmartScreen shows "Windows protected your PC" the first
 time. Choose **More info → Run anyway** if the file came from this page. You can check that a file was built by
 this repository's GitHub Actions from this tag:
@@ -151,7 +151,7 @@ and compare its SHA-256 with `SHA256SUMS.txt`.
 ### Install
 
 Download `ToneSnap_1.1.0_x64-setup.exe` (installer) or `ToneSnap_1.1.0_x64_en-US.msi` (for managed deployment)
-below. If you use 1.0.0, install this version by hand once: 1.0.0 cannot update itself, and later versions arrive
+below. If you use v1.0.0, install this version by hand once: v1.0.0 cannot update itself, and later versions arrive
 by themselves. The installers are still **not code-signed**, so Windows SmartScreen shows "Windows protected your
 PC" the first time. Choose **More info → Run anyway** if the file came from this page. You can check that a file
 was built by this repository's GitHub Actions from this tag:

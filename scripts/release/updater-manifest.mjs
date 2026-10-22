@@ -32,7 +32,7 @@ export function updaterManifest({ version, repo, notes, pubDate, nsis, msi, mac 
 
 /** The one installer in `files` whose name ends with `suffix`, and its signature. */
 export function signedInstaller(dir, files, version, suffix) {
-  const matches = files.filter((f) => f.endsWith(suffix) && f.includes(`_${version}_`));
+  const matches = files.filter((f) => f.endsWith(suffix) && f.includes(`_v${version}_`));
   if (matches.length !== 1) {
     throw new Error(`expected one ${suffix} for ${version} in ${dir}, found ${matches.length}`);
   }

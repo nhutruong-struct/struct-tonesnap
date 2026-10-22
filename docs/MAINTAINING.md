@@ -159,7 +159,7 @@ admin and re-run the failed jobs: a release on an existing tag needs no ref crea
 
 ## macOS
 
-The app runs on macOS 14 or later, Apple Silicon (`./dev.sh` in development; the `check (macOS)` job of `ci.yml` lints and tests the macOS layer on every pull request). A release carries `ToneSnap_<version>_aarch64.dmg` and the signed update archive `ToneSnap_<version>_aarch64.app.tar.gz` next to the Windows installers, and `latest.json` lists `darwin-aarch64` for the in-app updater.
+The app runs on macOS 14 or later, Apple Silicon (`./dev.sh` in development; the `check (macOS)` job of `ci.yml` lints and tests the macOS layer on every pull request). A release carries `ToneSnap_v<version>_aarch64.dmg` and the signed update archive `ToneSnap_v<version>_aarch64.app.tar.gz` next to the Windows installers, and `latest.json` lists `darwin-aarch64` for the in-app updater.
 
 How a release is made (`release.yml`): `build macOS app` builds `ToneSnap.app` without any secret (it also runs on pull requests, as a check); `sign and notarize macOS app`, in the `release` environment, runs only `scripts/release/sign-macos.sh`, which signs with the Developer ID certificate and the hardened runtime, notarizes the app and the disk image with Apple, staples both and writes the `.dmg` and the `.app.tar.gz`; the `sign for the updater` job signs the archive with the Tauri key like the installers.
 
