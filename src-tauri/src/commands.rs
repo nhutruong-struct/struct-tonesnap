@@ -109,13 +109,13 @@ pub fn send_request(app: AppHandle, target_language: TargetLanguage, mode: Mode)
 
 #[tauri::command]
 pub fn apply_text(app: AppHandle, text: String) -> Result<(), String> {
-    let target = state(&app)
+    let (target, anchor) = state(&app)
         .session()
-        .map(|s| s.target)
+        .map(|s| (s.target, s.anchor))
         .ok_or("no session")?;
     window::dismiss_popup(&app);
     std::thread::spawn(move || {
-        if !platform::paste_into(target, &text) {
+        if !platform::apply(target, anchor.as_ref(), &text) {
             platform::copy_text(&text);
             window::show_notice(&app, NoticeKind::ApplyFailed, String::new());
         }

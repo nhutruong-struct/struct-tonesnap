@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use super::{Accessible, Foreground, Monitor, Target};
+use super::{Accessible, Anchor, Foreground, InPlace, Monitor, Target};
 use crate::geometry::Rect;
 
 pub fn cursor() -> (i32, i32) {
@@ -46,6 +46,10 @@ pub fn is_in_front(_target: Target) -> bool {
 pub fn bring_forward(_target: Target) {}
 
 pub fn send_paste() {}
+
+pub(super) fn edit_in_place(anchor: &Anchor, _text: &str) -> InPlace {
+    match *anchor {}
+}
 
 pub mod clipboard {
     pub struct Snapshot;

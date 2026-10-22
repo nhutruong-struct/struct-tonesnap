@@ -138,6 +138,7 @@ mod tests {
         Session {
             id: 1,
             target: Target::default(),
+            anchor: None,
             app: "Slack".into(),
             source: SelectionSource::Uia,
             context_source: ContextSource::Uia,

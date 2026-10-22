@@ -70,6 +70,16 @@ pub struct Foreground {
     pub own: bool,
 }
 
+/// Where an app that exposes its document model held the selection, so Apply can edit the text
+/// in place and keep its formatting: Word on Windows. Only the platform layer looks inside.
+#[cfg(windows)]
+pub use win::word::Anchor;
+
+/// No app is edited in place on this platform, so there is never an anchor.
+#[cfg(not(windows))]
+#[derive(Clone, Debug)]
+pub enum Anchor {}
+
 /// What the accessibility API (UI Automation, the macOS Accessibility API) tells about the
 /// focused control. Empty fields mean it did not say.
 #[derive(Debug, Default)]
@@ -82,6 +92,8 @@ pub struct Accessible {
     /// The selection's rectangle, in physical screen pixels.
     pub bounds: Option<Rect>,
     pub is_password: bool,
+    /// Set when the app itself gave the selection and Apply can edit it in place.
+    pub anchor: Option<Anchor>,
 }
 
 /// Mouse presses and scrolls the selection watchers have seen, so work that waits after a
@@ -166,10 +178,37 @@ pub fn copy_text(text: &str) {
     imp::clipboard::set_text(text, false);
 }
 
-/// Brings `target` back to the front and pastes `text` over its selection, then restores the
-/// user's clipboard. False when the target could not be brought forward or the clipboard could
-/// not be written.
-pub fn paste_into(target: Target, text: &str) -> bool {
+/// Puts `text` in place of the captured selection: edited in place where the capture left an
+/// anchor (Word keeps the formatting of the words that did not change), pasted otherwise. False
+/// when neither worked; the caller then offers the text to paste by hand.
+pub fn apply(target: Target, anchor: Option<&Anchor>, text: &str) -> bool {
+    let pasted = match anchor.map(|anchor| imp::edit_in_place(anchor, text)) {
+        Some(InPlace::Edited) => {
+            bring_to_front(target);
+            return true;
+        }
+        Some(InPlace::Failed) => return false,
+        Some(InPlace::Paste(pasted)) => pasted,
+        None => text.to_string(),
+    };
+    paste_into(target, &pasted)
+}
+
+/// What editing in place did.
+#[cfg_attr(
+    not(windows),
+    allow(dead_code, reason = "only Word on Windows is edited in place")
+)]
+enum InPlace {
+    Edited,
+    /// The app is told nothing more; the caller offers the text to paste by hand.
+    Failed,
+    /// Nothing changed: paste this instead.
+    Paste(String),
+}
+
+/// Brings `target` back to the front, trying for up to 800 ms. False when it did not come.
+fn bring_to_front(target: Target) -> bool {
     let start = Instant::now();
     while !imp::is_in_front(target) {
         if start.elapsed() > Duration::from_millis(800) {
@@ -177,6 +216,16 @@ pub fn paste_into(target: Target, text: &str) -> bool {
         }
         imp::bring_forward(target);
         sleep(Duration::from_millis(40));
+    }
+    true
+}
+
+/// Brings `target` back to the front and pastes `text` over its selection, then restores the
+/// user's clipboard. False when the target could not be brought forward or the clipboard could
+/// not be written.
+pub fn paste_into(target: Target, text: &str) -> bool {
+    if !bring_to_front(target) {
+        return false;
     }
     // Give the app a moment to restore its caret and selection.
     sleep(Duration::from_millis(80));

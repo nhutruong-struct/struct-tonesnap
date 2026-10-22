@@ -7,7 +7,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::capture::{self, CaptureError, Captured, ContextSource, SelectionSource, Trigger};
-use crate::platform::{self, Selection, Target};
+use crate::platform::{self, Anchor, Selection, Target};
 use crate::prompt::{self, Payload};
 use crate::redact::Redactor;
 use crate::request;
@@ -22,6 +22,9 @@ pub struct Session {
     /// The app Apply pastes into.
     #[serde(skip)]
     pub target: Target,
+    /// Where Apply can edit the selection in place (Word).
+    #[serde(skip)]
+    pub anchor: Option<Anchor>,
     pub app: String,
     pub source: SelectionSource,
     pub context_source: ContextSource,
@@ -141,6 +144,7 @@ fn start(app: &AppHandle, settings: &Settings, captured: Captured) {
     let session = Session {
         id: state(app).next_session_id(),
         target: captured.target,
+        anchor: captured.anchor,
         app: captured.app,
         source: captured.source,
         context_source: captured.context_source,
@@ -202,6 +206,7 @@ mod tests {
             cursor: (0, 0),
             source: SelectionSource::Uia,
             context_source: ContextSource::Uia,
+            anchor: None,
         }
     }
 
@@ -259,6 +264,7 @@ mod tests {
         let session = Session {
             id: 4,
             target: Target::default(),
+            anchor: None,
             app: captured.app.clone(),
             source: SelectionSource::Clipboard,
             context_source: ContextSource::None,
