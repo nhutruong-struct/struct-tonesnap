@@ -48,7 +48,7 @@ A Tauri 2 desktop app (Rust core, React/TS interface), Windows first, macOS late
 4. Update `docs/PLAN.md` (tick items, add decisions, fill the compatibility table) and the matching `docs/specs/` page.
 5. Odd frontend errors after quick edits usually mean Vite kept a stale module: restart `dev.ps1`.
 6. Git: `master` and `develop` change only through pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Branch from `develop` (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and target `develop`. Commit only when the user asks, or on a `feat/…`/`fix/…`/`chore/…` branch while executing a plan the user approved (see Superpowers). Never commit to `develop` or `master`, never push or open a PR unasked. Commit messages: English, imperative, summary under ~72 characters.
-7. Releases follow [docs/MAINTAINING.md](docs/MAINTAINING.md) → Releasing. Before the `develop` → `master` release PR, update the website (`site/`) through its own PR into `develop`, and name that PR (or "no site change needed") in the release PR.
+7. Releases follow [docs/MAINTAINING.md](docs/MAINTAINING.md) → Releasing (`/release`). Before the `develop` → `master` release PR, bring the README and the website (`site/`) up to date through a PR into `develop`, close the shipped issues with a comment, move them to Done on the Roadmap project and draft the Discussions announcement. The release PR uses `.github/PULL_REQUEST_TEMPLATE/release.md`; CI fails until every box is ticked. Each of these GitHub actions needs the user's yes.
 
 ## Superpowers
 

@@ -93,33 +93,45 @@ App compatibility reports also go into the compatibility table of [PLAN.md](PLAN
 
 ## Releasing
 
-There are no hotfix branches yet: fixes land in `develop` and ship with the next release.
+There are no hotfix branches yet: fixes land in `develop` and ship with the next release. The `/release` skill
+(`.claude/skills/release/`) walks an agent through these steps with `gh`, asking before each action on GitHub.
 
 1. On a `chore/release-x.y.z` branch, bump the version in `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json` (let cargo update `Cargo.lock`), move the `Unreleased` entries of
    `CHANGELOG.md` into a section for the new version, update `docs/PLAN.md`, and merge it into `develop` as usual.
-2. Bring the website up to date with the release. Read `site/index.html` against the new `CHANGELOG.md`
-   section: features, tones, languages, the mock popup, default settings, install and uninstall steps, and the
-   intro video in `site/media/` (re-render it when the popup or the flow changed, see PLAN.md). Fix what
-   no longer matches in a `docs/…` pull request into `develop`. The site deploys from `develop`
-   (`.github/workflows/pages.yml`), so it goes live as soon as that PR is merged. Merge it before the release PR,
-   and say in the release PR which PR updated the site, or that the site needed no change.
-3. Open a pull request from `develop` into `master` titled `Release vX.Y.Z`, wait for CI, and merge it with
-   **Create a merge commit**.
-4. The merge starts `.github/workflows/release.yml` on `master`. There is no tag to push: the workflow reads
+2. Bring the README and the website up to date with the release. Read `README.md` and `site/index.html`
+   against the new `CHANGELOG.md` section: features, supported platforms, tones, languages, the mock popup,
+   default settings, install, update and uninstall steps, file names, and the intro video in `site/media/`
+   (re-render it when the popup or the flow changed, see PLAN.md). Fix what no longer matches in a `docs/…` pull
+   request into `develop`. The site deploys from `develop` (`.github/workflows/pages.yml`), so it goes live as
+   soon as that PR is merged. Merge it before the release PR.
+3. Settle what the release changes on GitHub:
+   - **Issues:** every issue the release resolves (the `Closes #n` of its PRs, and open issues the changelog
+     answers) gets a comment naming the release and is closed; partly done ones say what is left and stay open.
+     The issue forms still offer the right platforms and versions.
+   - **Project:** on the **ToneSnap Roadmap** project, the shipped issues are **Done**.
+   - **Announcement:** draft the post for Discussions → Announcements ("ToneSnap X.Y.Z is released").
+4. Open a pull request from `develop` into `master` titled `Release vX.Y.Z` with the release template
+   (`gh pr create --base master --head develop --template release.md`, or `?template=release.md` on the compare
+   page). Fill in the version PR, the site PR (or why the site needed no change), the shipped issues and the
+   announcement draft, and tick each step as it is done. CI's `check` fails on a PR into `master` while the title
+   does not match the version in `tauri.conf.json`, a box is unticked or a placeholder is left (the `release-pr`
+   gate, `scripts/harness/release-pr.mjs`). When it is green, merge it with **Create a merge commit**.
+5. The merge starts `.github/workflows/release.yml` on `master`. There is no tag to push: the workflow reads
    the version from `src-tauri/tauri.conf.json`, checks that `CHANGELOG.md` has a section for it, builds the
    installers, attests their provenance and publishes the release `vX.Y.Z` with that section as notes, which
    creates the tag on the merge commit. The notes end with a **Contributors** list: the GitHub accounts that
    authored a commit since the previous release, bots excluded. A merge into `master` whose version already has a release (the version
    was not bumped) builds nothing and says so in the run's summary.
-5. Watch the **Release** workflow. Besides the installers it publishes `SHA256SUMS.txt` and `latest.json`,
+6. Watch the **Release** workflow. Besides the installers it publishes `SHA256SUMS.txt` and `latest.json`,
    which every installed ToneSnap reads to update itself ([specs/updates.md](specs/updates.md)): once the
    release is published, the installed apps start installing it within hours. Never attach an installer built
    on a personal machine. If the workflow fails before publishing, fix it through a PR into `develop` and
    re-run the workflow on `master` from the Actions tab (a draft left by the failed run is replaced); if a
    release was already published, it is immutable, so the fix ships as the next version.
    Merging `master` back into `develop` is not needed: the release PR's merge commit is the only commit `master`
-   has that `develop` lacks, and it changes no files. Announce the release in Discussions → Announcements.
+   has that `develop` lacks, and it changes no files.
+7. Once the release is published, post the drafted announcement in Discussions → Announcements.
 
 ### Update signing key
 
