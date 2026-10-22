@@ -1,5 +1,9 @@
 mod capture;
 mod commands;
+#[cfg_attr(
+    not(windows),
+    allow(dead_code, reason = "only Word on Windows is edited in place")
+)]
 mod edits;
 mod error;
 mod geometry;
