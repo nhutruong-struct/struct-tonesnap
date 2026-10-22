@@ -1,5 +1,6 @@
 mod capture;
 mod commands;
+mod error;
 mod geometry;
 mod i18n;
 mod llm;

@@ -1,5 +1,5 @@
-//! macOS integration. Selection, context, the foreground app, the clipboard and paste are real;
-//! OCR is the one piece still to come (Phase 3).
+//! macOS integration: the selection and its context through the Accessibility API, the
+//! foreground app, the clipboard, Cmd+C and Cmd+V, OCR through Vision, and the permissions.
 
 mod ax;
 mod cf;
@@ -11,16 +11,16 @@ pub mod permissions;
 pub mod selection_icon;
 mod window;
 
-use std::thread::sleep;
-use std::time::{Duration, Instant};
-
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication};
 
-pub use ax::capture;
-pub use ax::is_trusted;
+pub use clipboard::copy_selection;
 pub use input::refresh_layout as refresh;
+pub use input::wait_modifiers_released;
 use window::on_main;
 pub use window::{cursor, frontmost, monitor_at};
+
+use super::{Accessible, Foreground, Target};
+use crate::geometry::Rect;
 
 /// Whether ToneSnap's popup or Settings is in front. The popup never makes ToneSnap the active
 /// app, so the frontmost app alone does not tell: one of our windows holding the keyboard does.
@@ -65,38 +65,55 @@ pub fn focus_popup(window: &tauri::WebviewWindow) -> bool {
         .is_ok()
 }
 
-/// Puts `text` on the clipboard for the user to paste wherever they like.
-pub fn copy_text(text: &str) {
-    clipboard::set_text(text, false);
+/// Whether the user allowed ToneSnap under Privacy & Security → Accessibility.
+pub fn has_accessibility() -> bool {
+    ax::is_trusted()
 }
 
-/// Brings the app with process id `pid` back to the front and pastes `text` over its selection,
-/// then restores the user's clipboard. Returns false when the app could not be brought forward.
-pub fn paste_into(pid: isize, text: &str) -> bool {
-    let start = Instant::now();
-    while frontmost().map(|f| f.pid as isize) != Some(pid) {
-        if start.elapsed() > Duration::from_millis(800) {
-            return false;
-        }
-        if let Some(app) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid as i32)
-        {
-            app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows);
-        }
-        sleep(Duration::from_millis(40));
-    }
-    // Give the app a moment to restore its caret and selection.
-    sleep(Duration::from_millis(80));
+/// The frontmost app, identified by its process id. The popup does not make ToneSnap the
+/// active app, so one of our windows holding the keyboard also counts as ToneSnap.
+pub fn foreground() -> Option<Foreground> {
+    let front = frontmost()?;
+    let own = front.is_own() || own_window_in_front() == Some(true);
+    Some(Foreground {
+        target: Target(front.pid as isize),
+        process: front.process,
+        name: Some(front.name),
+        own,
+    })
+}
 
-    let snapshot = clipboard::snapshot();
-    if !clipboard::set_text(text, true) {
-        return false;
+/// The focused control of the app `target` as the Accessibility API sees it.
+pub fn read_focused(target: Target, context_chars: usize) -> Accessible {
+    let ax = ax::capture(target.0 as i32, context_chars);
+    Accessible {
+        selection: ax.selection,
+        before: ax.before,
+        after: ax.after,
+        editable: ax.editable,
+        bounds: ax.bounds,
+        is_password: ax.is_password,
     }
-    input::wait_modifiers_released(Duration::from_millis(400));
+}
+
+pub fn recognize_text(area: Rect, scale: f64) -> Option<Vec<String>> {
+    ocr::recognize(area, scale)
+}
+
+pub(super) fn is_in_front(target: Target) -> bool {
+    frontmost().map(|f| f.pid as isize) == Some(target.0)
+}
+
+pub(super) fn bring_forward(target: Target) {
+    if let Some(app) =
+        NSRunningApplication::runningApplicationWithProcessIdentifier(target.0 as i32)
+    {
+        app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows);
+    }
+}
+
+pub(super) fn send_paste() {
     input::send_command(input::key_v());
-    // Electron apps read the clipboard asynchronously; restoring too early pastes the old content.
-    sleep(Duration::from_millis(500));
-    clipboard::restore(&snapshot);
-    true
 }
 
 /// Tests that send real key presses and move focus. They run only on request
@@ -107,7 +124,10 @@ pub fn paste_into(pid: isize, text: &str) -> bool {
 /// Assertions never print clipboard contents: the clipboard and the selection are the user's.
 #[cfg(test)]
 mod input_tests {
+    use std::time::Duration;
+
     use super::*;
+    use crate::platform::paste_into;
 
     /// Puts the user's clipboard back however the test ends.
     struct KeepUserClipboard(clipboard::Snapshot);
@@ -139,7 +159,7 @@ mod input_tests {
             "the clipboard was not restored after Cmd+C"
         );
 
-        assert!(paste_into(front.pid as isize, "PASTED BY TONESNAP"));
+        assert!(paste_into(Target(front.pid as isize), "PASTED BY TONESNAP"));
         assert!(
             clipboard_is("what the user had copied"),
             "the clipboard was not restored after Cmd+V"

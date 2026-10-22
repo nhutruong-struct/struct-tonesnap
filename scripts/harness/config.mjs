@@ -154,7 +154,7 @@ export const SHAPES = [
   { rust: "src-tauri/src/prompt.rs", name: "Payload" },
   { rust: "src-tauri/src/request.rs", name: "RequestEvent" },
   { rust: "src-tauri/src/window.rs", name: "Notice" },
-  { rust: "src-tauri/src/commands.rs", name: "CommandError" },
+  { rust: "src-tauri/src/error.rs", name: "CommandError" },
   { rust: "src-tauri/src/update.rs", name: "UpdateInfo" },
   { rust: "src-tauri/src/platform/mod.rs", name: "Permissions" },
 ];
