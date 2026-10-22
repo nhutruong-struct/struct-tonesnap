@@ -74,10 +74,10 @@ const vi = {
   "trigger.icon": "Hiện icon nhỏ cạnh đoạn chọn",
   "trigger.icon.hint": "Bôi đen chữ là icon ToneSnap hiện cạnh con trỏ, bấm vào để mở popup. Phím tắt vẫn dùng được.",
   "trigger.auto": "Tự bật popup khi bôi đen",
-  "trigger.auto.hint": "Popup tự mở sau một khoảng trễ ngắn khi bạn bôi đen.",
+  "trigger.auto.hint":
+    "Bôi đen bằng chuột là popup tự mở và gửi đoạn chọn cho AI sau một khoảng trễ ngắn. App không cho đọc đoạn chọn, hoặc đoạn quá ngắn, thì hiện icon thay thế. Phím tắt vẫn dùng được.",
   "trigger.off": "Tắt",
   "trigger.off.hint": "Tạm dừng ToneSnap, kể cả phím tắt.",
-  "trigger.soon": "Sắp có",
   "hotkey.label": "Phím tắt",
   "hotkey.help": "Bấm vào ô rồi nhấn tổ hợp phím mới (cần ít nhất một phím Ctrl/Alt/Shift/Win).",
   "hotkey.taken": "Phím tắt {hotkey} đang bị app khác dùng nên chưa hoạt động. Hãy chọn tổ hợp khác rồi Lưu.",
@@ -85,6 +85,8 @@ const vi = {
   "hotkey.conflict":
     "Phím này thường bị {apps} dùng: ToneSnap có thể không nhận được, hoặc sẽ chiếm phím tắt của app đó.",
   "autoDelay.label": "Độ trễ trước khi tự bật (ms)",
+  "autoMinChars.label": "Số ký tự tối thiểu để tự bật",
+  "autoMinChars.hint": "Đoạn chọn ngắn hơn (vd. một từ bấm đúp) chỉ hiện icon.",
 
   "section.tones": "Ngôn ngữ và văn phong",
   "section.tones.desc": "Ngôn ngữ đích và chế độ mặc định của popup, cùng các văn phong hiển thị cho mỗi đoạn chọn.",
@@ -290,10 +292,10 @@ const en: Record<Key, string> = {
   "trigger.icon.hint":
     "Select text and the ToneSnap icon appears by the cursor; click it to open the popup. The hotkey still works.",
   "trigger.auto": "Open the popup automatically on selection",
-  "trigger.auto.hint": "Opens after a short delay when you select text.",
+  "trigger.auto.hint":
+    "Select text with the mouse and, after a short delay, the popup opens and sends it to the AI. Where the app does not share the selection, or it is too short, the icon shows instead. The hotkey still works.",
   "trigger.off": "Off",
   "trigger.off.hint": "Pause ToneSnap, including the hotkey.",
-  "trigger.soon": "Coming soon",
   "hotkey.label": "Hotkey",
   "hotkey.help": "Click the box and press a new key combination (with at least one of Ctrl/Alt/Shift/Win).",
   "hotkey.taken":
@@ -301,6 +303,8 @@ const en: Record<Key, string> = {
   "hotkey.invalid": "{hotkey} is not a valid hotkey: {detail}",
   "hotkey.conflict": "Commonly used by {apps}: ToneSnap may not receive it, or will take that app's shortcut away.",
   "autoDelay.label": "Delay before opening (ms)",
+  "autoMinChars.label": "Minimum characters to open",
+  "autoMinChars.hint": "Shorter selections (a double-clicked word, say) only show the icon.",
 
   "section.tones": "Language and tones",
   "section.tones.desc": "The popup's default target language and mode, and the tones shown for each selection.",

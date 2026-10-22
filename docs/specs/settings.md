@@ -11,10 +11,10 @@ The same `Settings` object exists in Rust and TypeScript, serialized in camelCas
 | Field | Default | Settings control | Effect |
 |---|---|---|---|
 | `uiLanguage` | `auto` | Interface → language (`auto`, `vi`, `en`) | APP-30 |
-| `triggerMode` | `icon` | Trigger → four options; `auto` disabled ("Coming soon") | [trigger.md](trigger.md) |
+| `triggerMode` | `icon` | Trigger → four options | [trigger.md](trigger.md) |
 | `hotkey` | `ctrl+alt+e` | Trigger → press a combination | TRG-10..17 |
-| `autoDelayMs` | `400` | Trigger → number 100–3000, step 50, enabled only in Auto mode | Reserved for Auto mode |
-| `autoMinChars` | `8` | none | Reserved for Auto mode |
+| `autoDelayMs` | `400` | Trigger → number 100–3000, step 50, enabled only in Auto mode | [trigger.md](trigger.md) TRG-41 |
+| `autoMinChars` | `8` | Trigger → number 1–200 (held to that range when used), enabled only in Auto mode | [trigger.md](trigger.md) TRG-44 |
 | `provider` | `gemini` | AI → Gemini, Groq, OpenRouter or Claude API | [ai-request.md](ai-request.md) |
 | `model` | `claude-opus-5-5` | AI (Claude) → Opus 5.5 / Sonnet 5.5 / Haiku 4.5 | AI-35 |
 | `effort` | `low` | AI (Claude) → low / medium / high; disabled for Haiku 4.5 | AI-36 |

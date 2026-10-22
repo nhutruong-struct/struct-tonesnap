@@ -1,16 +1,17 @@
 //! One use of ToneSnap: capture the selection, redact it, show the popup, then ask the model.
 
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Instant;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
-use crate::capture::{self, CaptureError, Captured, ContextSource, SelectionSource};
-use crate::platform::{self, Target};
+use crate::capture::{self, CaptureError, Captured, ContextSource, SelectionSource, Trigger};
+use crate::platform::{self, Selection, Target};
 use crate::prompt::{self, Payload};
 use crate::redact::Redactor;
 use crate::request;
-use crate::settings::Settings;
+use crate::settings::{Settings, TriggerMode};
 use crate::state::state;
 use crate::window::{self, NoticeKind, POPUP};
 
@@ -47,7 +48,7 @@ pub fn on_trigger(app: AppHandle) {
     let settings = state(&app).settings();
     std::thread::spawn(move || {
         let _capturing = capturing;
-        match capture::capture(&settings) {
+        match capture::capture(&settings, Trigger::Asked) {
             Ok(captured) => start(&app, &settings, captured),
             Err(CaptureError::OwnWindow) => window::dismiss_popup(&app),
             Err(CaptureError::NoSelection) => {
@@ -63,8 +64,50 @@ pub fn on_trigger(app: AppHandle) {
                 ask_for_accessibility_once();
                 window::show_notice(&app, NoticeKind::AccessibilityDenied, String::new())
             }
+            Err(CaptureError::LeftToIcon) => {}
         }
     });
+}
+
+/// Auto mode: opens the popup for a fresh selection without a click, once `autoDelayMs` has
+/// passed and the user has not moved on. Runs on the floating icon's worker thread. False
+/// leaves the selection to the icon, as in Icon mode: always when the accessibility API did not
+/// place the selection where the gesture ended, since the focused control may then hold an
+/// older selection the user did not mean to send.
+pub fn on_selection(app: &AppHandle, selection: &Selection) -> bool {
+    let settings = state(app).settings();
+    if settings.trigger_mode != TriggerMode::Auto || !selection.reported() {
+        return false;
+    }
+    let owner = platform::foreground().map(|f| f.target);
+    std::thread::sleep(
+        selection
+            .ready_at(settings.auto_delay())
+            .saturating_duration_since(Instant::now()),
+    );
+    // A press, a scroll or another app in front: the user moved on, so neither popup nor icon.
+    let moved_on = || !selection.untouched() || platform::foreground().map(|f| f.target) != owner;
+    if moved_on() {
+        return true;
+    }
+    let Some(_capturing) = CaptureInProgress::begin(app) else {
+        return true;
+    };
+    // Off the main thread the layout cannot be read; Apply needs it for Ctrl+V / Cmd+V.
+    let _ = app.run_on_main_thread(platform::refresh);
+    match capture::capture(&settings, Trigger::Auto) {
+        Ok(captured) => {
+            if !moved_on() {
+                start(app, &settings, captured);
+            }
+            true
+        }
+        Err(CaptureError::LeftToIcon) => moved_on(),
+        // The icon's click asks for the permission and explains it.
+        Err(CaptureError::AccessibilityDenied) => false,
+        // Nobody asked, so a notice would pop up out of nowhere.
+        Err(_) => true,
+    }
 }
 
 /// Shows the system's Accessibility prompt, once per run: at startup when the permission is

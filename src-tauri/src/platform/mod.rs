@@ -20,6 +20,7 @@ use stub as imp;
 #[cfg(windows)]
 use win as imp;
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
@@ -81,6 +82,83 @@ pub struct Accessible {
     /// The selection's rectangle, in physical screen pixels.
     pub bounds: Option<Rect>,
     pub is_password: bool,
+}
+
+/// Mouse presses and scrolls the selection watchers have seen, so work that waits after a
+/// gesture can tell whether the user has moved on.
+static PRESSES: AtomicU64 = AtomicU64::new(0);
+
+/// Called by the selection watchers for every button press and scroll.
+#[cfg_attr(
+    not(any(windows, target_os = "macos")),
+    allow(
+        dead_code,
+        reason = "only the Windows and macOS watchers see the mouse"
+    )
+)]
+fn note_press() {
+    PRESSES.fetch_add(1, Ordering::SeqCst);
+}
+
+/// The presses and scrolls seen so far, for `Selection::new`.
+#[cfg_attr(
+    not(any(windows, target_os = "macos")),
+    allow(
+        dead_code,
+        reason = "only the Windows and macOS watchers see the mouse"
+    )
+)]
+fn presses() -> u64 {
+    PRESSES.load(Ordering::SeqCst)
+}
+
+/// A selection gesture the floating icon's detection has confirmed, offered to Auto mode
+/// before the icon shows.
+pub struct Selection {
+    released: Instant,
+    /// How long another click could still extend it (a triple click after a double click).
+    settle: Duration,
+    /// `presses()` when the gesture ended.
+    presses: u64,
+    /// The accessibility API reported a selection where the gesture ended. Set by the watcher
+    /// before the selection is offered; false where the app did not say.
+    reported: bool,
+}
+
+impl Selection {
+    /// A gesture that ended at `released`, when `presses()` was `presses`.
+    #[cfg_attr(
+        not(any(windows, target_os = "macos")),
+        allow(
+            dead_code,
+            reason = "only the Windows and macOS watchers see the mouse"
+        )
+    )]
+    fn new(released: Instant, settle: Duration, presses: u64) -> Self {
+        Self {
+            released,
+            settle,
+            presses,
+            reported: false,
+        }
+    }
+
+    /// Whether the accessibility API said the selection is where the gesture ended. Without
+    /// that, the focused control's selection may be an older one somewhere else.
+    pub fn reported(&self) -> bool {
+        self.reported
+    }
+
+    /// When the selection may be acted on: `delay` after the release, and not while another
+    /// click could still extend it.
+    pub fn ready_at(&self, delay: Duration) -> Instant {
+        self.released + delay.max(self.settle)
+    }
+
+    /// False once the user has pressed a mouse button or scrolled since the gesture.
+    pub fn untouched(&self) -> bool {
+        presses() == self.presses
+    }
 }
 
 /// Puts `text` on the clipboard for the user to paste wherever they like.
@@ -217,6 +295,21 @@ mod tests {
             Permission::ScreenRecording
         );
         assert!(parse("camera").is_err());
+    }
+
+    #[test]
+    fn a_selection_waits_for_a_possible_triple_click_and_ends_at_the_next_press() {
+        let now = Instant::now();
+        let dragged = Selection::new(now, Duration::ZERO, presses());
+        let clicked = Selection::new(now, Duration::from_millis(500), presses());
+        let delay = Duration::from_millis(400);
+        assert_eq!(dragged.ready_at(delay), now + delay);
+        assert_eq!(clicked.ready_at(delay), now + Duration::from_millis(500));
+
+        assert!(dragged.untouched());
+        note_press();
+        assert!(!dragged.untouched());
+        assert!(Selection::new(now, Duration::ZERO, presses()).untouched());
     }
 
     #[test]
