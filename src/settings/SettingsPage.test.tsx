@@ -393,11 +393,15 @@ describe("popup trigger", () => {
     expect(saved(backend)[0].triggerMode).toBe("off");
   });
 
-  test("opening the popup automatically is not available yet, so its delay stays off", async () => {
-    await openTrigger();
-    expect(screen.getByLabelText<HTMLInputElement>(/Open the popup automatically on selection/).disabled).toBe(true);
-    expect(screen.getByText("Coming soon")).toBeTruthy();
+  test("the automatic popup's delay and minimum length only apply in that mode, and are saved with it", async () => {
+    const backend = await openTrigger();
     expect((field("Delay before opening (ms)") as HTMLInputElement).disabled).toBe(true);
+    expect((field("Minimum characters to open") as HTMLInputElement).disabled).toBe(true);
+    await click("Open the popup automatically on selection");
+    fireEvent.change(field("Delay before opening (ms)"), { target: { value: "600" } });
+    fireEvent.change(field("Minimum characters to open"), { target: { value: "12" } });
+    await click("Save Settings");
+    expect(saved(backend)[0]).toMatchObject({ triggerMode: "auto", autoDelayMs: 600, autoMinChars: 12 });
   });
 });
 

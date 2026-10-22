@@ -373,7 +373,7 @@ html[data-window="settings"] #root {
 
 .toggle:hover,
 .check:hover,
-.radio:hover:not(.disabled) {
+.radio:hover {
   background: var(--surface-2);
 }
 
@@ -391,22 +391,6 @@ html[data-window="settings"] #root {
 
 .radio:has(input:checked) {
   background: var(--accent-soft);
-}
-
-.radio.disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.soon {
-  margin-left: var(--s-2);
-  padding: 1px var(--s-2);
-  border-radius: var(--r-pill);
-  background: var(--warn-bg);
-  color: var(--warn);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 500;
 }
 
 /* ----------------------------------------------------------- narrow window */

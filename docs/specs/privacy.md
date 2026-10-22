@@ -48,6 +48,7 @@ When `redact` is on (default), sensitive values are replaced by placeholders bef
 ## Preview before sending
 
 - **PRV-20** With `previewBeforeSend` on, the popup shows exactly what will be sent (app, context before, selection, context after, screen text, all redacted) and **nothing is sent** until the user presses *Send* or Enter. *Cancel* or Esc closes the popup without sending. Empty context rows are hidden.
+- **PRV-21** In Auto mode the popup opens, and with `previewBeforeSend` off sends, without a click: a mouse selection of at least `autoMinChars` characters that the accessibility API reports is enough ([trigger.md](trigger.md) TRG-40 to TRG-46). Blocked apps and password fields stay out (PRV-07), the text is redacted as always, and Auto mode never copies through the clipboard. The Settings hint for the mode says so.
 
 ## Clipboard hygiene
 

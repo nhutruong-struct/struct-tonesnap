@@ -46,6 +46,16 @@ pub struct Captured {
     pub context_source: ContextSource,
 }
 
+/// What started the capture, which decides how far it may go to read the selection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Trigger {
+    /// The hotkey or the icon: the user asked, so the selection may be copied with Ctrl+C / Cmd+C.
+    Asked,
+    /// Auto mode: nobody asked, so only what the accessibility API reports, and only when it is
+    /// at least `autoMinChars` long. A synthetic Ctrl+C would interrupt a terminal.
+    Auto,
+}
+
 #[derive(Debug)]
 pub enum CaptureError {
     /// The hotkey was pressed while one of our own windows was in front.
@@ -55,6 +65,9 @@ pub enum CaptureError {
     BlockedApp(String),
     /// The Accessibility permission is missing (macOS).
     AccessibilityDenied,
+    /// Auto mode only: the accessibility API reported no selection, or a shorter one than
+    /// `autoMinChars`; the floating icon is offered instead.
+    LeftToIcon,
 }
 
 /// The name the popup shows for an app the OS does not name itself (Windows).
@@ -185,11 +198,15 @@ impl Desktop for Os {
 }
 
 /// Captures the selection and its context from the app in front.
-pub fn capture(settings: &Settings) -> Result<Captured, CaptureError> {
-    capture_from(&Os, settings)
+pub fn capture(settings: &Settings, trigger: Trigger) -> Result<Captured, CaptureError> {
+    capture_from(&Os, settings, trigger)
 }
 
-fn capture_from(desktop: &impl Desktop, settings: &Settings) -> Result<Captured, CaptureError> {
+fn capture_from(
+    desktop: &impl Desktop,
+    settings: &Settings,
+    trigger: Trigger,
+) -> Result<Captured, CaptureError> {
     if !desktop.has_accessibility() {
         return Err(CaptureError::AccessibilityDenied);
     }
@@ -215,12 +232,17 @@ fn capture_from(desktop: &impl Desktop, settings: &Settings) -> Result<Captured,
     // `Uia` stands for the platform's accessibility API on every system.
     let (selection, source) = if !focused.selection.trim().is_empty() {
         (focused.selection.clone(), SelectionSource::Uia)
+    } else if trigger == Trigger::Auto {
+        return Err(CaptureError::LeftToIcon);
     } else {
         match desktop.copy_selection() {
             Some(text) => (text, SelectionSource::Clipboard),
             None => return Err(CaptureError::NoSelection),
         }
     };
+    if trigger == Trigger::Auto && selection.trim().chars().count() < settings.auto_min_chars() {
+        return Err(CaptureError::LeftToIcon);
+    }
 
     let mut captured = Captured {
         target: front.target,
@@ -336,7 +358,7 @@ mod tests {
     #[test]
     fn the_accessibility_api_comes_first() {
         let desktop = desktop();
-        let captured = capture_from(&desktop, &Settings::default()).unwrap();
+        let captured = capture_from(&desktop, &Settings::default(), Trigger::Asked).unwrap();
         assert_eq!(captured.app, "Slack");
         assert_eq!(captured.selection, "pls check my PR");
         assert_eq!(captured.source, SelectionSource::Uia);
@@ -358,7 +380,7 @@ mod tests {
             context_chars: 7,
             ..Settings::default()
         };
-        let captured = capture_from(&desktop(), &settings).unwrap();
+        let captured = capture_from(&desktop(), &settings, Trigger::Asked).unwrap();
         assert_eq!(captured.before, "0 mins\n");
         assert_eq!(captured.after, "\nthanks");
     }
@@ -371,7 +393,7 @@ mod tests {
             "Minh: back in 30 mins".into(),
             "pls check my PR".into(),
         ]);
-        let captured = capture_from(&desktop, &Settings::default()).unwrap();
+        let captured = capture_from(&desktop, &Settings::default(), Trigger::Asked).unwrap();
         assert_eq!(captured.source, SelectionSource::Clipboard);
         assert_eq!(captured.context_source, ContextSource::Ocr);
         assert!(captured.screen_text.contains("back in 30 mins"));
@@ -386,22 +408,58 @@ mod tests {
             ocr_fallback: false,
             ..Settings::default()
         };
-        let captured = capture_from(&desktop, &settings).unwrap();
+        let captured = capture_from(&desktop, &settings, Trigger::Asked).unwrap();
         assert_eq!(captured.context_source, ContextSource::None);
         assert!(!desktop.recognized.get());
     }
 
     #[test]
     fn nothing_selected_anywhere_is_reported() {
-        let result = capture_from(&silent(desktop()), &Settings::default());
+        let result = capture_from(&silent(desktop()), &Settings::default(), Trigger::Asked);
         assert!(matches!(result, Err(CaptureError::NoSelection)));
+    }
+
+    #[test]
+    fn auto_mode_never_copies_and_leaves_unreadable_selections_to_the_icon() {
+        let mut desktop = silent(desktop());
+        desktop.clipboard = Some("pls check my PR".into());
+        let result = capture_from(&desktop, &Settings::default(), Trigger::Auto);
+        assert!(matches!(result, Err(CaptureError::LeftToIcon)));
+        assert!(!desktop.copied.get(), "no synthetic Ctrl+C unasked");
+    }
+
+    #[test]
+    fn auto_mode_leaves_short_selections_to_the_icon() {
+        let settings = Settings {
+            auto_min_chars: 16,
+            ..Settings::default()
+        };
+        // "pls check my PR" is 15 characters.
+        let short = capture_from(&desktop(), &settings, Trigger::Auto);
+        assert!(matches!(short, Err(CaptureError::LeftToIcon)));
+
+        let settings = Settings {
+            auto_min_chars: 15,
+            ..settings
+        };
+        let captured = capture_from(&desktop(), &settings, Trigger::Auto).unwrap();
+        assert_eq!(captured.selection, "pls check my PR");
+        let asked = capture_from(
+            &desktop(),
+            &Settings {
+                auto_min_chars: 99,
+                ..Settings::default()
+            },
+            Trigger::Asked,
+        );
+        assert!(asked.is_ok(), "the minimum only applies to Auto mode");
     }
 
     #[test]
     fn password_fields_are_never_read_or_copied() {
         let desktop = desktop();
         desktop.focused.borrow_mut().is_password = true;
-        let result = capture_from(&desktop, &Settings::default());
+        let result = capture_from(&desktop, &Settings::default(), Trigger::Asked);
         assert!(matches!(result, Err(CaptureError::PasswordField)));
         assert!(!desktop.copied.get());
     }
@@ -413,7 +471,7 @@ mod tests {
             blocked_apps: vec!["slack.exe".into()],
             ..Settings::default()
         };
-        let result = capture_from(&desktop, &settings);
+        let result = capture_from(&desktop, &settings, Trigger::Asked);
         assert!(matches!(result, Err(CaptureError::BlockedApp(name)) if name == "Slack"));
         assert!(!desktop.copied.get());
     }
@@ -425,7 +483,7 @@ mod tests {
             front.own = true;
         }
         assert!(matches!(
-            capture_from(&own, &Settings::default()),
+            capture_from(&own, &Settings::default(), Trigger::Asked),
             Err(CaptureError::OwnWindow)
         ));
 
@@ -434,7 +492,7 @@ mod tests {
             ..desktop()
         };
         assert!(matches!(
-            capture_from(&denied, &Settings::default()),
+            capture_from(&denied, &Settings::default(), Trigger::Asked),
             Err(CaptureError::AccessibilityDenied)
         ));
     }
@@ -445,7 +503,7 @@ mod tests {
         if let Some(front) = desktop.front.borrow_mut().as_mut() {
             front.name = Some("Slack for Mac".into());
         }
-        let captured = capture_from(&desktop, &Settings::default()).unwrap();
+        let captured = capture_from(&desktop, &Settings::default(), Trigger::Asked).unwrap();
         assert_eq!(captured.app, "Slack for Mac");
     }
 

@@ -62,8 +62,11 @@ pub mod clipboard {
 }
 
 pub mod selection_icon {
+    use crate::platform::Selection;
+
     pub fn set_image(_rgba: Vec<u8>, _width: u32, _height: u32) {}
     pub fn set_on_click(_f: impl Fn() + Send + Sync + 'static) {}
+    pub fn set_on_selection(_f: impl Fn(&Selection) -> bool + Send + Sync + 'static) {}
     pub fn set_app_filter(_f: impl Fn(&str) -> bool + Send + Sync + 'static) {}
     pub fn start() {}
     pub fn stop() {}

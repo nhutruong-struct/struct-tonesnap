@@ -92,30 +92,19 @@ export function CheckField(props: ChoiceProps) {
   );
 }
 
-/** One option of a radio group: a radio button, then the label, an optional badge and the hint. */
+/** One option of a radio group: a radio button, then the label and the hint. */
 export function RadioField(props: {
   name: string;
   label: string;
   hint: string;
   checked: boolean;
   onSelect: () => void;
-  disabled?: boolean;
-  badge?: ReactNode;
 }) {
   return (
-    <label className={props.disabled ? "item radio disabled" : "item radio"}>
-      <input
-        type="radio"
-        name={props.name}
-        disabled={props.disabled}
-        checked={props.checked}
-        onChange={props.onSelect}
-      />
+    <label className="item radio">
+      <input type="radio" name={props.name} checked={props.checked} onChange={props.onSelect} />
       <span className="item-text">
-        <span className="item-label">
-          {props.label}
-          {props.badge}
-        </span>
+        <span className="item-label">{props.label}</span>
         <small>{props.hint}</small>
       </span>
     </label>

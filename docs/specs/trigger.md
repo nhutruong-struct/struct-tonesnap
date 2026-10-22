@@ -1,9 +1,9 @@
 # Triggers
 
-> **Status:** Hotkey, Icon and Off modes implemented (Phase 0). Auto mode not implemented.
-> **Source:** `src-tauri/src/trigger.rs`, `session.rs` (`on_trigger`), `platform/win/selection_icon/`, `platform/gesture.rs`, `platform/mac/selection_icon.rs`, `src/lib/hotkey.ts`, `src/settings/sections/TriggerSection.tsx`.
+> **Status:** Hotkey, Icon, Auto and Off modes implemented (Phase 0).
+> **Source:** `src-tauri/src/trigger.rs`, `session.rs` (`on_trigger`, `on_selection`), `platform/mod.rs` (`Selection`), `platform/win/selection_icon/`, `platform/gesture.rs`, `platform/mac/selection_icon.rs`, `src/lib/hotkey.ts`, `src/settings/sections/TriggerSection.tsx`.
 
-A trigger starts one use of ToneSnap: capture the selection, then show the popup. There are two triggers, the global hotkey and a click on the floating icon, and both do exactly the same thing.
+A trigger starts one use of ToneSnap: capture the selection, then show the popup. The global hotkey and a click on the floating icon do exactly the same thing; Auto mode starts the same flow from the selection itself, with the limits in TRG-40 to TRG-46.
 
 ## Trigger modes
 
@@ -13,11 +13,11 @@ The `triggerMode` setting decides which triggers are active.
 |---|---|---|---|
 | `hotkey` | on | off | implemented |
 | `icon` (default) | on | shown after a selection | implemented |
-| `auto` | on | off | **not implemented**: the option is disabled in Settings ("Coming soon") |
+| `auto` | on | shown when the popup does not open by itself (TRG-44) | implemented |
 | `off` | off | off | implemented: ToneSnap is paused |
 
 - **TRG-01** The hotkey works in every mode except Off.
-- **TRG-02** A saved `auto` mode (only possible by editing the settings file) behaves like `hotkey`.
+- **TRG-02** Icon and Auto mode share one selection watcher (TRG-20 to TRG-33); saving settings starts it in either mode and stops it in the others.
 
 ## Common rules
 
@@ -57,8 +57,16 @@ The icon lets mouse users open ToneSnap without the keyboard. Only the mouse is 
 - **TRG-32** The icon is a borderless non-activating `NSPanel` of 26 points at the status window level, on every Space and over full-screen apps, placed 10 points right and 14 below where the mouse was released and kept inside the screen's visible area. It never becomes the key window, so the app keeps its selection. Its click is seen by a local monitor, hides the icon and triggers the capture like the hotkey (TRG-23).
 - **TRG-33** The icon hides on a press elsewhere, a right or other button press, a scroll, when another app comes to the front, or after 6 s unhovered, checked every 150 ms.
 
-**Verified by:** `state.rs` test (only one capture at a time, TRG-03), `src/lib/hotkey.test.ts` (normalizing, display, known conflicts), `src/settings/SettingsPage.test.tsx` (capturing a new hotkey, the conflict warning, a taken hotkey keeps the window open), `selection_icon/gesture.rs` tests (drag, single click, double click within the system limits, presses on the icon), `uia.rs` integration test (a gesture outside the focused element is not judged by it), `selection_icon/paint.rs` tests (resampling). Registering the global hotkey and the mouse hook in other apps are checked by hand (`/smoke-test`).
+## Automatic popup (Auto mode)
 
-## Not implemented
+Auto mode is Icon mode that skips the click when it can: the same gestures, the same vetoes, and the icon whenever the popup does not open by itself.
 
-- **Auto mode** (`docs/PLAN.md`: "Automatic popup on selection"). Planned to reuse the icon's gesture detection. The settings already exist: `autoDelayMs` (default 400 ms, shown but disabled in Settings) and `autoMinChars` (default 8, no control yet). Settings lists it as *Coming soon*.
+- **TRG-40** Only selections the icon would get are considered: a mouse gesture (TRG-20, TRG-30) confirmed as for the icon (TRG-21, TRG-31), so never in ToneSnap's own windows, blocked apps or password fields. Selections made with the keyboard are never seen, because the keyboard is never watched.
+- **TRG-41** The popup waits `autoDelayMs` after the mouse button is released (default 400 ms; values outside 100–3000 are held to that range). After a double click it waits at least the system's double-click time, so a triple click can still extend the selection to the paragraph.
+- **TRG-42** Any mouse button press (including the side buttons) or scroll, vertical or horizontal, during the wait, or another app coming to the front, cancels it: neither the popup nor the icon appears. A press or a new front app while the selection is being read cancels the popup too. A new selection then starts its own wait.
+- **TRG-43** The selection is read only through the accessibility API (UI Automation, the macOS Accessibility API). Auto mode never sends Ctrl+C / Cmd+C: nobody asked for it, and in a terminal Ctrl+C interrupts the running program ([capture.md](capture.md) CAP-08). It also opens only when the watcher's check found the selection where the gesture ended (`Selected` in TRG-21, TRG-31): when that check could not tell (the gesture ended outside the focused control, as on Google Docs' canvas, or the app does not say), the focused control may still hold an older selection the user did not mean to send, so the icon is shown at once instead.
+- **TRG-44** When the accessibility API reports no selection (many Electron apps), or a selection of fewer than `autoMinChars` characters after trimming (default 8, so a double-clicked word does not open it; values outside 1–200 are held to that range), the floating icon is shown instead, once the wait is over, and works as in Icon mode.
+- **TRG-45** A capture already running (TRG-03) cancels the automatic popup. Its failures (a blocked app, a password field) show no notice, since the user did not ask; the hotkey still shows them. A missing Accessibility permission (macOS) shows the icon, whose click explains it.
+- **TRG-46** The popup takes the keyboard as usual: by the time it opens the mouse button is up and the wait is over, so the selection is complete.
+
+**Verified by:** `state.rs` test (only one capture at a time, TRG-03), `src/lib/hotkey.test.ts` (normalizing, display, known conflicts), `src/settings/SettingsPage.test.tsx` (capturing a new hotkey, the conflict warning, a taken hotkey keeps the window open, the Auto mode fields are enabled and saved only with it), `platform/gesture.rs` tests (drag, single click, double click within the system limits, presses on the icon, only a selection made by clicking waits for a triple click), `platform/mod.rs` test (the wait after a double click, a press ends the selection's wait, TRG-41/42), `capture.rs` tests (Auto mode never copies and leaves unreadable or short selections to the icon, TRG-43/44), `settings.rs` tests (the delay and minimum length ranges), `uia.rs` integration test (a gesture outside the focused element is not judged by it), `selection_icon/paint.rs` tests (resampling). Registering the global hotkey and the mouse hook in other apps, and the automatic popup in other apps (TRG-40 to TRG-46), are checked by hand (`/smoke-test`).

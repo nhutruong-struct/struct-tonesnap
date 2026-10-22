@@ -4,7 +4,9 @@
 //! Accessibility API then vetoes the obvious misses (nothing selected, password fields), and
 //! the text I-beam stands in where an app does not say. The icon is a non-activating panel, so
 //! the app keeps its selection and clicking the icon behaves exactly like pressing the hotkey.
-//! Only mouse events are watched, which needs no permission; the keyboard is never watched.
+//! In Auto mode the confirmed selection is first offered to `set_on_selection`, which may open
+//! the popup instead. Only mouse events are watched, which needs no permission; the keyboard is
+//! never watched.
 
 use std::ptr::NonNull;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -26,6 +28,7 @@ use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
 use super::ax::{self, SelectionState};
 use super::window::{self, pointer, Point};
 use crate::platform::gesture::{DoubleClick, Gesture};
+use crate::platform::{note_press, presses, Selection};
 
 const ICON_SIZE: f64 = 26.0;
 /// Hidden again after this long if the user ignores it.
@@ -41,6 +44,8 @@ static ON_CLICK: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();
 static IMAGE: OnceLock<(Vec<u8>, u32, u32)> = OnceLock::new();
 type AppFilter = Box<dyn Fn(&str) -> bool + Send + Sync>;
 static APP_FILTER: OnceLock<AppFilter> = OnceLock::new();
+type SelectionHandler = Box<dyn Fn(&Selection) -> bool + Send + Sync>;
+static ON_SELECTION: OnceLock<SelectionHandler> = OnceLock::new();
 
 static RUNNING: AtomicBool = AtomicBool::new(false);
 static GESTURE: Mutex<Option<Gesture>> = Mutex::new(None);
@@ -79,6 +84,12 @@ pub fn set_image(rgba: Vec<u8>, width: u32, height: u32) {
 /// Called (on the main thread) when the user clicks the icon.
 pub fn set_on_click(f: impl Fn() + Send + Sync + 'static) {
     let _ = ON_CLICK.set(Box::new(f));
+}
+
+/// Called (on a worker thread, may block) with each confirmed selection before the icon shows.
+/// True means it was handled and the icon stays hidden.
+pub fn set_on_selection(handled: impl Fn(&Selection) -> bool + Send + Sync + 'static) {
+    let _ = ON_SELECTION.set(Box::new(handled));
 }
 
 /// Decides, from the lower-case process name of the app holding the selection, whether the
@@ -298,6 +309,7 @@ fn on_mouse(kind: NSEventType) {
     let at = (p.x as i32, p.y as i32);
     match kind {
         NSEventType::LeftMouseDown => {
+            note_press();
             hide();
             GESTURE
                 .lock()
@@ -307,17 +319,17 @@ fn on_mouse(kind: NSEventType) {
                 .press(at, Instant::now(), false, true, double_click());
         }
         NSEventType::LeftMouseUp => {
-            let selected = GESTURE
-                .lock()
-                .unwrap()
-                .get_or_insert_with(Gesture::default)
-                .release(at, Instant::now(), || true);
-            if selected {
+            let mut guard = GESTURE.lock().unwrap();
+            let gesture = guard.get_or_insert_with(Gesture::default);
+            if gesture.release(at, Instant::now(), || true) {
+                let settle = gesture.settle_time(double_click());
+                let selection = Selection::new(Instant::now(), settle, presses());
                 let ibeam = cursor_is_ibeam();
-                std::thread::spawn(move || candidate(p, ibeam));
+                std::thread::spawn(move || candidate(p, ibeam, selection));
             }
         }
         NSEventType::RightMouseDown | NSEventType::OtherMouseDown | NSEventType::ScrollWheel => {
+            note_press();
             hide();
         }
         _ => {}
@@ -326,7 +338,7 @@ fn on_mouse(kind: NSEventType) {
 
 /// Runs off the main thread: Accessibility calls can take a while. `at` is where the gesture
 /// ended.
-fn candidate(at: Point, ibeam: bool) {
+fn candidate(at: Point, ibeam: bool, mut selection: Selection) {
     // Let the app finish updating its selection first.
     sleep(Duration::from_millis(120));
     let Some(front) = window::frontmost() else {
@@ -339,12 +351,19 @@ fn candidate(at: Point, ibeam: bool) {
     {
         return;
     }
-    let shown = match ax::selection_state(front.pid, at) {
+    let state = ax::selection_state(front.pid, at);
+    selection.reported = state == SelectionState::Selected;
+    let shown = match state {
         SelectionState::Selected => true,
         SelectionState::Unknown => ibeam,
         SelectionState::Empty | SelectionState::Password => false,
     };
-    if shown && RUNNING.load(Ordering::SeqCst) {
+    if shown
+        && RUNNING.load(Ordering::SeqCst)
+        && !ON_SELECTION
+            .get()
+            .is_some_and(|handled| handled(&selection))
+    {
         on_main_async(move |_| show(at, front.pid));
     }
 }
