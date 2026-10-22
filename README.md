@@ -50,7 +50,7 @@ different tone, in the language you choose. **Apply** pastes the version you pic
 
 ## Status
 
-ToneSnap runs on **Windows 10/11**. **macOS 14 or later (Apple Silicon)** is supported too: the releases carry a signed and notarized `ToneSnap_x.y.z_aarch64.dmg` (see [Run on a Mac](#run-on-a-mac)). On Windows, download `ToneSnap_x.y.z_x64-setup.exe` from the
+ToneSnap runs on **Windows 10/11**. **macOS 14 or later (Apple Silicon)** is supported too: the releases carry a signed and notarized `ToneSnap_vx.y.z_aarch64.dmg` (see [Run on a Mac](#run-on-a-mac)). On Windows, download `ToneSnap_vx.y.z_x64-setup.exe` from the
 [latest release](https://github.com/nhutruong-struct/struct-tonesnap/releases/latest) (or use the
 **Download for Windows** button on the [website](https://nhutruong-struct.github.io/struct-tonesnap/)), or build it from source
 as described below. The installers are not code-signed yet, so Windows SmartScreen asks for confirmation the

@@ -23,7 +23,8 @@ It works the same whether you write the code yourself or let Claude Code do it.
 | Hooks | `scripts/harness/hooks.mjs` + `.claude/settings.json` | Wire the harness into Claude Code's loop |
 | Git hooks | `.githooks/pre-commit`, `.githooks/pre-push` | Optional: run the gates before a commit or push (see Enforcement layers) |
 | PR title rules | `scripts/harness/pr-title.mjs` | The pull request title becomes the commit message; CI checks its form |
-| Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test` |
+| Release PR rules | `scripts/harness/release-pr.mjs`, `.github/PULL_REQUEST_TEMPLATE/release.md` | A PR into `master` publishes a release; CI checks its title, the `## [vX.Y.Z]` changelog section, and that every step of the template (README, website, issues, project, announcement) is ticked |
+| Workflows | `.claude/skills/*/SKILL.md` | `/check`, `/feature`, `/smoke-test`, `/release` |
 | Review | `.claude/agents/tonesnap-reviewer.md` | Read-only agent that reviews against the invariants and code rules |
 | Superpowers | `enabledPlugins` in `.claude/settings.json`, `AGENTS.md` → Superpowers | Trial of the Superpowers plugin (brainstorming, plans, TDD, subagents). `AGENTS.md` decides where its specs go (`docs/superpowers/`, gitignored), where worktrees live, and when it may commit. `/feature` stays as the project's own workflow for comparison |
 | State | `.claude/.state/harness.json` | Last check result and the source groups changed since (not committed); each worktree keeps its own |
@@ -71,6 +72,8 @@ fix at hand (`pnpm run fix`), rather than in a red pull request. What the `check
 
 - the PR title rules (`pr-title.mjs`; the title becomes the squashed commit message), on `pull_request` events,
   skipped for Dependabot whose titles are generated;
+- the release PR rules (`release-pr.mjs`) on pull requests into `master`: the title is `Release v` + the version
+  in `tauri.conf.json`, `CHANGELOG.md` has its `## [vX.Y.Z]` section, the body comes from the release template, and no box or placeholder is left;
 - the frontend build (`vite build`), because `tauri-build` embeds `dist/`;
 - `check.mjs`, the fast gates below, with every failure printed with a hint, as a line annotation on the pull
   request (`::error file=…,line=…`) and in the job summary.
@@ -130,6 +133,7 @@ Parallel Claude sessions each work in a git worktree under `.claude/worktrees/<n
 | `deps` (`cargo deny check`, `pnpm audit`; needs network) | only with `--full` | ~10 s |
 | `input` | only with `--only=input` | ~3 s |
 | `pr-title` (`PR_TITLE="…"`; CI sets it) | only with `--only=pr-title` | instant |
+| `release-pr` (`PR_BASE`, `PR_TITLE`, `PR_BODY`; CI sets them) | only with `--only=release-pr` | instant |
 
 The first run after `target/` is deleted takes a few minutes because everything rebuilds.
 
@@ -233,7 +237,7 @@ In Claude Code:
 - **A cross-file rule**: add a function to `CROSS_RULES`, returning `{ errors, warnings }`. Its parsers belong in `scripts/harness/contracts.mjs`, tested in `contracts.test.mjs`.
 - **A new type or enum the UI shares with Rust**: add it to `SHAPES` or `ENUMS` in `config.mjs`.
 - **A gate**: add it to `GATES` in `check.mjs` and map it to a source group in `GATES_FOR_GROUP` (`config.mjs`).
-- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs`, the hooks' path handling (worktrees included) in `scripts/harness/hooks.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the contract parsers in `scripts/harness/contracts.test.mjs`, and every cross-file rule by planting a violation in a copy of the repository.
+- Test every new rule: the per-file rules and the PR title rules have unit tests in `scripts/harness/invariants.test.mjs`, the release PR rules and the `v` of every changelog version in `scripts/harness/release-pr.test.mjs`, the hooks' path handling (worktrees included) in `scripts/harness/hooks.test.mjs` (the `harness` gate; build samples that would trip the rule from pieces so the test file passes its own checks), the contract parsers in `scripts/harness/contracts.test.mjs`, and every cross-file rule by planting a violation in a copy of the repository.
 
 ## Troubleshooting
 

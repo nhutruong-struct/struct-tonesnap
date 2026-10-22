@@ -8,6 +8,7 @@
 //   --fix                                          run cargo fmt, eslint --fix, prettier --write and the whitespace
 //                                                  fixes first (what most style failures need)
 //   PR_TITLE="…" node scripts/harness/check.mjs --only=pr-title    check a pull request title (CI does this)
+//   PR_BASE=master PR_TITLE="…" PR_BODY="…" … --only=release-pr    check a release pull request (CI does this)
 //
 // Results are recorded in .claude/.state/harness.json for the hooks.
 
@@ -17,6 +18,7 @@ import { dirname, join } from "node:path";
 import { GATES_FOR_GROUP, MANIFEST, ROOT, toolEnv } from "./config.mjs";
 import { fixWhitespace, runInvariants, scannedFiles } from "./invariants.mjs";
 import { titleProblems } from "./pr-title.mjs";
+import { releaseProblems } from "./release-pr.mjs";
 import { changedGroups, fingerprints, readState, writeState } from "./state.mjs";
 
 const PRETTIER = join(ROOT, "node_modules/prettier/bin/prettier.cjs");
@@ -160,7 +162,7 @@ const GATES = [
   },
   {
     id: "harness",
-    title: "harness tests (project rules, PR title rules, hook paths)",
+    title: "harness tests (project rules, PR title and release PR rules, hook paths)",
     hint: "A test of scripts/harness/ fails: node --test scripts/harness shows the full output.",
     run: tool(node, ["--test", ...harnessTests()]),
   },
@@ -176,6 +178,21 @@ const GATES = [
       if (title === undefined || process.env.PR_AUTHOR === "dependabot[bot]") return { ok: true };
       const problems = titleProblems(title);
       return { ok: problems.length === 0, details: problems.map((p) => `"${title}": ${p}`) };
+    },
+  },
+  {
+    // Merging into master publishes a release, so its PR must show the README, website, issues, project board and
+    // announcement were handled. Needs the pull request event, so it runs only when asked for by name (CI does).
+    id: "release-pr",
+    title: "release pull request (develop → master) is complete",
+    hint: "Edit the PR on GitHub: use .github/PULL_REQUEST_TEMPLATE/release.md, do each step and tick its box (docs/MAINTAINING.md → Releasing).",
+    explicit: true,
+    run: () => {
+      if (process.env.PR_BASE !== "master") return { ok: true };
+      const { version } = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
+      const changelog = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
+      const problems = releaseProblems({ title: process.env.PR_TITLE, body: process.env.PR_BODY, version, changelog });
+      return { ok: problems.length === 0, details: problems };
     },
   },
   {

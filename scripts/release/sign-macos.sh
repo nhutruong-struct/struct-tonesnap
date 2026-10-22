@@ -4,7 +4,7 @@
 #
 #   scripts/release/sign-macos.sh <ToneSnap.app> <version> <output dir>
 #
-# It writes ToneSnap_<version>_aarch64.dmg and ToneSnap_<version>_aarch64.app.tar.gz (the file the in-app
+# It writes ToneSnap_v<version>_aarch64.dmg and ToneSnap_v<version>_aarch64.app.tar.gz (the file the in-app
 # updater downloads) to the output directory.
 #
 # Environment:
@@ -95,14 +95,14 @@ fi
 
 echo "Packaging the updater archive"
 # COPYFILE_DISABLE keeps extended attributes out of the archive as `._` files.
-COPYFILE_DISABLE=1 tar -czf "$OUT/ToneSnap_${VERSION}_aarch64.app.tar.gz" -C "$(dirname "$APP")" "$(basename "$APP")"
+COPYFILE_DISABLE=1 tar -czf "$OUT/ToneSnap_v${VERSION}_aarch64.app.tar.gz" -C "$(dirname "$APP")" "$(basename "$APP")"
 
 echo "Building the disk image"
 STAGE="$WORK/dmg"
 mkdir -p "$STAGE"
 ditto "$APP" "$STAGE/ToneSnap.app"
 ln -s /Applications "$STAGE/Applications"
-DMG="$OUT/ToneSnap_${VERSION}_aarch64.dmg"
+DMG="$OUT/ToneSnap_v${VERSION}_aarch64.dmg"
 rm -f "$DMG"
 hdiutil create -volname "ToneSnap" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$DMG"

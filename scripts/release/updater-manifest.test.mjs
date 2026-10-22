@@ -7,9 +7,9 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { signedInstaller, updaterManifest } from "./updater-manifest.mjs";
 
-const NSIS = "ToneSnap_1.1.0_x64-setup.exe";
-const MSI = "ToneSnap_1.1.0_x64_en-US.msi";
-const MAC = "ToneSnap_1.1.0_aarch64.app.tar.gz";
+const NSIS = "ToneSnap_v1.1.0_x64-setup.exe";
+const MSI = "ToneSnap_v1.1.0_x64_en-US.msi";
+const MAC = "ToneSnap_v1.1.0_aarch64.app.tar.gz";
 
 test("the manifest points every key at the installer or archive of its kind", () => {
   const manifest = updaterManifest({
@@ -51,6 +51,8 @@ test("an installer is found with its signature, and a missing one is an error", 
     assert.throws(() => signedInstaller(dir, files, "1.1.0", ".msi"), /has no \.sig file/);
     assert.throws(() => signedInstaller(dir, files, "1.2.0", "-setup.exe"), /found 0/);
     assert.throws(() => signedInstaller(dir, files, "1.1.0", ".app.tar.gz"), /found 0/);
+    // Tauri's own name has no `v`; release.yml renames the files before they are signed.
+    assert.throws(() => signedInstaller(dir, ["ToneSnap_1.1.0_x64-setup.exe"], "1.1.0", "-setup.exe"), /found 0/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
