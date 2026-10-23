@@ -6,6 +6,11 @@ All notable changes to ToneSnap are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- On Windows, ToneSnap sometimes closed itself right after it started, so its tray icon never appeared. It happened
+  more often after quitting and starting it again a few times.
+
 ## [v1.2.0] - 2026-10-22
 
 ### Install
