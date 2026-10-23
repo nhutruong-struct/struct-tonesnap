@@ -46,7 +46,8 @@ export function PermissionsSection({ permissions, t }: { permissions: Permission
 
 function PermissionRow({ kind, allowed, t }: { kind: PermissionKind; allowed: boolean; t: Translate }) {
   return (
-    <div className="item field">
+    // Not a `field`: its fixed-width control column would squeeze the hint beside a lone chip.
+    <div className="item">
       <span className="item-text">
         <span className="item-label">{t(`permission.${kind}.label` as Key)}</span>
         <small>{t(`permission.${kind}.hint` as Key)}</small>
