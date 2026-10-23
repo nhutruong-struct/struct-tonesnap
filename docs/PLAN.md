@@ -143,6 +143,7 @@ Tracked in [issue #22](https://github.com/nhutruong-struct/struct-tonesnap/issue
 - [x] Permission onboarding: a Permissions section in Settings (status, system prompt, link to System Settings), a notice when Accessibility is missing, Settings opens at startup while it is (SET-70 to SET-72)
 - [x] API keys in the Keychain (`keyring` with `apple-native`; a store, replace and delete round trip is tested on a Mac)
 - [x] Signing and notarization written: `scripts/release/sign-macos.sh` (Developer ID signature with the hardened runtime, notarization with a notarytool profile or an App Store Connect key, stapling, `.dmg` and update archive), the `release.yml` jobs around it, `darwin-aarch64` in `latest.json`, in-app updates on macOS (UPD-50) and a Mac button on the website. The script was tried on this Mac with a development certificate and no notarization. The first notarized release was 1.2.0 (2026-10-23); Apple took 58 minutes, so the signing job's timeout went from one to three hours
+- [x] Fix: the floating icon did not show for a selection in Edge. Edge exposes no page to the Accessibility API, so only the I-beam decides, and it was read only on release, where a drag past the end of a line leaves an arrow. The I-beam at the press now counts too, as on Windows (TRG-31). Still to be checked by hand in Edge and Chrome
 - [ ] macOS integration tests
 
 ## Phase 5 progress
