@@ -1,6 +1,6 @@
 [package]
 name = "tonesnap"
-version = "1.2.0"
+version = "1.2.1"
 description = "Select English text anywhere and get better phrasings in the tone you need"
 authors = ["Nhu Truong"]
 license = "MIT"
