@@ -8,14 +8,14 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 ## Startup
 
 - **APP-01** Only one ToneSnap runs at a time. Starting it again opens the Settings window of the running instance instead.
-- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, registers the hotkey, and starts checking for updates ([updates.md](updates.md) UPD-10).
+- **APP-02** On startup ToneSnap, in order: loads the settings (see [settings.md](settings.md) SET-30..), creates the two hidden windows (APP-04), builds the tray icon, prepares the floating icon and starts it if the trigger mode is Icon, registers the hotkey, and starts checking for updates ([updates.md](updates.md) UPD-10).
 - **APP-03** The Settings window opens by itself at startup when the user needs to act:
   - the hotkey could not be registered (another app holds it, or it is invalid);
   - the saved settings had a problem (invalid fields, a broken file, or a file that could not be read);
   - no API key is stored for the chosen provider (so a first run opens Settings to ask for one);
   - on macOS, the Accessibility permission has not been granted: Settings opens on its Permissions section and the system's prompt is shown at once (once per run), which adds ToneSnap to the list in System Settings and offers a button to open it.
   Otherwise ToneSnap starts silently in the tray.
-- **APP-04** Both windows exist from the start but are hidden (`tauri.conf.json`). One web bundle serves both; the window label (`popup` or `settings`) decides which page renders.
+- **APP-04** Both windows exist from the start but are hidden. `tauri.conf.json` describes them with `"create": false`, and `setup` creates them only once the app state is managed: on Windows, WebView2 handles messages while it builds a webview, so a page that has already loaded can call a command (such as `get_settings`) before Tauri would run `setup`. The state was then missing, and the panic ended the app at startup, some launches but not others. One web bundle serves both; the window label (`popup` or `settings`) decides which page renders.
 
 ## Tray
 

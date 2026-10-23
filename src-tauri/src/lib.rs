@@ -93,6 +93,12 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let settings_need_attention = issue.is_some();
     app.manage(AppState::new(settings.clone(), issue));
     app.manage(update::Updates::default());
+    // The windows are created here, after the state they read (`"create": false` in
+    // tauri.conf.json). While WebView2 builds one webview it pumps messages, so a page that
+    // already loaded can call a command before Tauri would have run this function.
+    for config in app.config().app.windows.clone() {
+        tauri::WebviewWindowBuilder::from_config(app, &config)?.build()?;
+    }
     platform::init(&handle);
     if let Some(popup) = app.get_webview_window(window::POPUP) {
         platform::prepare_popup(&popup);
