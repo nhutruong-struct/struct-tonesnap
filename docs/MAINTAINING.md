@@ -180,6 +180,8 @@ How a release is made (`release.yml`): `build macOS app` builds `ToneSnap.app` w
 
 A release stops with a message naming the secret when one is missing. The Tauri update key (`TAURI_SIGNING_PRIVATE_KEY`) is the one already used for Windows.
 
+Notarization usually takes minutes, but Apple's first submissions from a team can wait much longer (58 minutes for 1.2.0); `sign and notarize macOS app` allows three hours. If it still times out, wait for Apple's "successfully notarized" email, then re-run the failed jobs: the next submission is quick.
+
 ### Trying it on your own Mac
 
 With the certificate in your login keychain and a notarization profile (`xcrun notarytool store-credentials tonesnap-notary --apple-id … --team-id …`):
