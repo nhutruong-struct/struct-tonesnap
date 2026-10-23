@@ -173,14 +173,15 @@ jobs:
           retention-days: 14
 
   # Signs and notarizes the app. Only this job and the publish job see the Apple credentials, and it runs
-  # nothing but the signing script and Apple's tools.
+  # nothing but the signing script and Apple's tools. Apple's notary service can be slow: the first
+  # notarized release (1.2.0) waited 58 minutes for it, so the job gets three hours.
   sign-macos:
     name: sign and notarize macOS app
     if: needs.plan.outputs.release == 'true'
     needs: [plan, build-macos]
     runs-on: macos-latest
     environment: release
-    timeout-minutes: 60
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
