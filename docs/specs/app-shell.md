@@ -19,7 +19,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 
 ## Tray
 
-- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are 20 px grey bitmaps drawn by `scripts/make-tray-icons.mjs`; Windows draws a menu icon at its pixel size and cannot tint it for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, with a download arrow ([updates.md](updates.md) UPD-40).
+- **APP-10** The tray icon shows the tooltip "ToneSnap". A left click opens Settings. The right-click menu has two items, each with an icon: *Settings…* (a gear) and *Quit ToneSnap* (a power symbol). The icons are grey bitmaps drawn by `scripts/make-tray-icons.mjs` at the exact size the menu shows them (16 px on Windows, 18 pt = 36 Retina px on macOS), since a bitmap rescaled to another size comes out blurred. Windows cannot tint a menu icon for a dark or light menu, so one neutral grey is used. While a new version can be installed, *Update to {version} & Restart* comes first, with a download arrow ([updates.md](updates.md) UPD-40).
 - **APP-11** Menu labels follow the interface language and are updated as soon as settings are saved.
 - **APP-12** *Quit ToneSnap* exits at once.
 
@@ -46,7 +46,7 @@ ToneSnap is a tray app: it has no main window, runs in the background and only s
 - **APP-53** The interface names macOS instead of Windows where it speaks of the system (macOS, Keychain, Vision, the menu bar, `⌘V`) and shows shortcuts with the Mac symbols (`⌃⌥E`). The strings are overrides in `i18n.ts`, checked for the same placeholders as the originals.
 - **APP-54** The macOS bundle (`tauri build --bundles app`) needs macOS 14 or later (`LSMinimumSystemVersion`: the OCR calls ScreenCaptureKit's screenshot API), is categorized as a productivity app, and carries `LSUIElement` from `src-tauri/Info.plist`, so it has no Dock icon from the first launch. A build made on a Mac is ad-hoc signed; a release is signed with the Developer ID certificate and notarized by `scripts/release/sign-macos.sh` ([MAINTAINING.md](../MAINTAINING.md), macOS).
 
-**Verified by:** `tray.rs` test (the menu icons decode and share one size), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
+**Verified by:** `tray.rs` test (the menu icons decode at the size the platform's menu shows), `i18n.rs` tests (the menu labels and the update item in both languages), `src/lib/i18n.test.ts` (both languages have the same keys and placeholders, every tone, trigger, notice, error, provider and update string has a label, button labels are in title case, language resolution), `src/settings/SettingsPage.test.tsx` ("the interface language preview follows the unsaved choice").
 
 ## Installing
 

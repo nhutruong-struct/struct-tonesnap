@@ -10,10 +10,23 @@ use crate::{i18n, update, window};
 
 const TRAY: &str = "main";
 
-// Drawn by `scripts/make-tray-icons.mjs`.
-const SETTINGS_ICON: &[u8] = include_bytes!("../icons/tray/settings.png");
-const UPDATE_ICON: &[u8] = include_bytes!("../icons/tray/update.png");
-const QUIT_ICON: &[u8] = include_bytes!("../icons/tray/quit.png");
+// Drawn by `scripts/make-tray-icons.mjs` at the size the menu shows them, so they are not rescaled
+// into a blur: 16 pixels on Windows, 18 points (36 Retina pixels) on macOS.
+#[cfg(target_os = "macos")]
+macro_rules! menu_icon {
+    ($name:literal) => {
+        include_bytes!(concat!("../icons/tray/macos/", $name, ".png"))
+    };
+}
+#[cfg(not(target_os = "macos"))]
+macro_rules! menu_icon {
+    ($name:literal) => {
+        include_bytes!(concat!("../icons/tray/windows/", $name, ".png"))
+    };
+}
+const SETTINGS_ICON: &[u8] = menu_icon!("settings");
+const UPDATE_ICON: &[u8] = menu_icon!("update");
+const QUIT_ICON: &[u8] = menu_icon!("quit");
 
 fn menu_item(
     app: &AppHandle,
@@ -98,10 +111,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_menu_icons_are_valid_images_of_the_same_size() {
+    fn the_menu_icons_are_valid_images_of_the_size_the_menu_shows() {
+        let size = if cfg!(target_os = "macos") { 36 } else { 16 };
         for bytes in [SETTINGS_ICON, UPDATE_ICON, QUIT_ICON] {
             let icon = Image::from_bytes(bytes).unwrap();
-            assert_eq!((icon.width(), icon.height()), (20, 20));
+            assert_eq!((icon.width(), icon.height()), (size, size));
         }
     }
 }

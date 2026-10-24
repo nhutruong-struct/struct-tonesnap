@@ -49,6 +49,8 @@ static ON_SELECTION: OnceLock<SelectionHandler> = OnceLock::new();
 
 static RUNNING: AtomicBool = AtomicBool::new(false);
 static GESTURE: Mutex<Option<Gesture>> = Mutex::new(None);
+/// The pointer was the text I-beam when the left button went down.
+static IBEAM_AT_PRESS: AtomicBool = AtomicBool::new(false);
 /// Where the visible icon is, so the watcher can hide it.
 static VISIBLE: Mutex<Option<Visible>> = Mutex::new(None);
 /// The panel and the event monitors, created and dropped on the main thread only.
@@ -311,11 +313,13 @@ fn on_mouse(kind: NSEventType) {
         NSEventType::LeftMouseDown => {
             note_press();
             hide();
+            // A drag that starts on the text often ends past it, where the pointer is an arrow.
+            IBEAM_AT_PRESS.store(cursor_is_ibeam(), Ordering::SeqCst);
             GESTURE
                 .lock()
                 .unwrap()
                 .get_or_insert_with(Gesture::default)
-                // The I-beam is judged on release, once the pointer rests on the text.
+                // The I-beam only matters when the app does not say; `candidate` judges it.
                 .press(at, Instant::now(), false, true, double_click());
         }
         NSEventType::LeftMouseUp => {
@@ -324,8 +328,8 @@ fn on_mouse(kind: NSEventType) {
             if gesture.release(at, Instant::now(), || true) {
                 let settle = gesture.settle_time(double_click());
                 let selection = Selection::new(Instant::now(), settle, presses());
-                let ibeam = cursor_is_ibeam();
-                std::thread::spawn(move || candidate(p, ibeam, selection));
+                let over_text = IBEAM_AT_PRESS.load(Ordering::SeqCst) || cursor_is_ibeam();
+                std::thread::spawn(move || candidate(p, over_text, selection));
             }
         }
         NSEventType::RightMouseDown | NSEventType::OtherMouseDown | NSEventType::ScrollWheel => {
@@ -338,7 +342,7 @@ fn on_mouse(kind: NSEventType) {
 
 /// Runs off the main thread: Accessibility calls can take a while. `at` is where the gesture
 /// ended.
-fn candidate(at: Point, ibeam: bool, mut selection: Selection) {
+fn candidate(at: Point, over_text: bool, mut selection: Selection) {
     // Let the app finish updating its selection first.
     sleep(Duration::from_millis(120));
     let Some(front) = window::frontmost() else {
@@ -353,18 +357,24 @@ fn candidate(at: Point, ibeam: bool, mut selection: Selection) {
     }
     let state = ax::selection_state(front.pid, at);
     selection.reported = state == SelectionState::Selected;
-    let shown = match state {
-        SelectionState::Selected => true,
-        SelectionState::Unknown => ibeam,
-        SelectionState::Empty | SelectionState::Password => false,
-    };
-    if shown
+    if shows_icon(state, over_text)
         && RUNNING.load(Ordering::SeqCst)
         && !ON_SELECTION
             .get()
             .is_some_and(|handled| handled(&selection))
     {
         on_main_async(move |_| show(at, front.pid));
+    }
+}
+
+/// Whether a gesture gets the icon. When the app does not say (Edge and Chrome expose no page to
+/// the Accessibility API), the pointer must have been the I-beam at the press or the release, as
+/// on Windows, so dragging a file or a window does not bring the icon up.
+fn shows_icon(state: SelectionState, over_text: bool) -> bool {
+    match state {
+        SelectionState::Selected => true,
+        SelectionState::Unknown => over_text,
+        SelectionState::Empty | SelectionState::Password => false,
     }
 }
 
@@ -404,5 +414,23 @@ fn watch() {
         if !owner_in_front || (!hovered && v.shown_at.elapsed() > IDLE_TIMEOUT) {
             hide();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn an_app_that_does_not_say_gets_the_icon_only_for_a_gesture_over_text() {
+        assert!(shows_icon(SelectionState::Unknown, true));
+        assert!(!shows_icon(SelectionState::Unknown, false));
+    }
+
+    #[test]
+    fn what_the_app_reports_wins_over_the_pointer() {
+        assert!(shows_icon(SelectionState::Selected, false));
+        assert!(!shows_icon(SelectionState::Empty, true));
+        assert!(!shows_icon(SelectionState::Password, true));
     }
 }
