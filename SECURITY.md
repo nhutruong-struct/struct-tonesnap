@@ -45,7 +45,8 @@ reach a release unnoticed:
 - **Secret scanning with push protection** blocks commits that contain API keys or tokens.
 - **Pinned CI.** Every GitHub Action is pinned to a full commit SHA, workflows get a read-only token by
   default, and workflows from outside contributors run only after a maintainer approves them.
-- **Dependabot** proposes dependency and security updates, which go through the same review.
+- **Dependabot** alerts report vulnerable dependencies and security updates propose fixes. Other dependency
+  updates are made by hand when needed. All of them go through the same review.
 - **Release tags** (`v*`) can be created only by maintainers and by the release workflow.
 - **[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/nhutruong-struct/struct-tonesnap)**
   checks these practices weekly.

@@ -88,8 +88,11 @@ App compatibility reports also go into the compatibility table of [PLAN.md](PLAN
   message) and trim the body to what is useful. The branch is deleted automatically.
 - Your own PRs: CI must still be green. Merging uses the admin bypass for the missing approval; never use it
   to merge a red build.
-- Dependabot PRs: merge when CI is green and the changelog has nothing alarming. The `windows` crate is pinned
-  to Tauri's version and is ignored by Dependabot; update it together with Tauri.
+- Dependency updates: Dependabot version updates are off (no `.github/dependabot.yml`), so the maintainer bumps
+  packages by hand in a dedicated PR when needed. Update the `windows` crate together with Tauri, keep native TLS
+  when upgrading `reqwest` (0.13 defaults to rustls), and bump all `github/codeql-action/*` steps together,
+  because CodeQL fails when they run different versions. Merge a Dependabot security update when CI is green and
+  the changelog has nothing alarming.
 
 ## Releasing
 
